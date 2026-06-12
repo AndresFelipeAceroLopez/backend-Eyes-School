@@ -14,9 +14,19 @@ from app.application.asistencia.schemas import AsistenciaOut
 from app.application.asistencia.service import AsistenciaService
 from app.application.novedades.schemas import NovedadOut
 from app.application.novedades.service import NovedadService
-from app.core.dependencies import DbSession, require_roles
+from app.core.dependencies import AuthUser, DbSession, require_roles
+from app.core.exceptions import NotFoundException
 
 router = APIRouter(prefix="/estudiantes", tags=["Estudiantes"])
+
+
+@router.get("/me", response_model=EstudianteOut, dependencies=[require_roles("estudiante")])
+async def get_mi_estudiante(current_user: AuthUser, db: DbSession):
+    from app.infrastructure.repositories.actores_repository import EstudianteRepository
+    est = await EstudianteRepository(db).get_by_usuario(current_user.id_usuario)
+    if not est:
+        raise NotFoundException("Perfil estudiante no encontrado")
+    return EstudianteOut.model_validate(est)
 
 
 @router.get("", response_model=list[EstudianteOut], dependencies=[require_roles("admin", "docente")])
