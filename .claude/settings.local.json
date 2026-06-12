@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"d:\\\\fronend eyesschool\" -Force)",
+      "Bash(Select-Object Name, Mode)",
+      "Bash(Format-Table -AutoSize)",
+      "PowerShell(Get-ChildItem -Path \"d:\\\\fronend eyesschool\\\\proyecto-eyesschool\\\\src\\\\app\" -Recurse -Directory | ForEach-Object { $_.FullName.Replace\\('d:\\\\fronend eyesschool\\\\proyecto-eyesschool\\\\src\\\\app\\\\', ''\\) } | Sort-Object)",
+      "Bash(mkdir -p \"d:\\\\backend Eyes School\\\\docs\" \"d:\\\\backend Eyes School\\\\app\\\\core\" \"d:\\\\backend Eyes School\\\\app\\\\domain\\\\entities\" \"d:\\\\backend Eyes School\\\\app\\\\domain\\\\repositories\" \"d:\\\\backend Eyes School\\\\app\\\\infrastructure\\\\models\" \"d:\\\\backend Eyes School\\\\app\\\\infrastructure\\\\repositories\" \"d:\\\\backend Eyes School\\\\app\\\\application\\\\auth\" \"d:\\\\backend Eyes School\\\\app\\\\application\\\\usuarios\" \"d:\\\\backend Eyes School\\\\app\\\\application\\\\profesores\" \"d:\\\\backend Eyes School\\\\app\\\\application\\\\estudiantes\" \"d:\\\\backend Eyes School\\\\app\\\\application\\\\cursos\" \"d:\\\\backend Eyes School\\\\app\\\\application\\\\materias\" \"d:\\\\backend Eyes School\\\\app\\\\application\\\\asignaciones\" \"d:\\\\backend Eyes School\\\\app\\\\application\\\\horarios\" \"d:\\\\backend Eyes School\\\\app\\\\application\\\\asistencia\" \"d:\\\\backend Eyes School\\\\app\\\\application\\\\notas\" \"d:\\\\backend Eyes School\\\\app\\\\application\\\\novedades\" \"d:\\\\backend Eyes School\\\\app\\\\application\\\\reportes\" \"d:\\\\backend Eyes School\\\\app\\\\application\\\\dashboard\" \"d:\\\\backend Eyes School\\\\app\\\\api\\\\v1\" \"d:\\\\backend Eyes School\\\\alembic\\\\versions\" 2>&1; echo \"done\")",
+      "Bash(python -c ' *)"
+    ],
+    "additionalDirectories": [
+      "d:\\backend Eyes School"
+    ]
+  }
+}
