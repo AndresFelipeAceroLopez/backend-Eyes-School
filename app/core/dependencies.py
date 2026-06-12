@@ -27,7 +27,6 @@ class CurrentUser:
 
 async def get_current_user(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
-    redis: RedisClient,
 ) -> CurrentUser:
     try:
         payload = decode_token(credentials.credentials)

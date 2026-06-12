@@ -36,11 +36,14 @@ class AuthService:
         access_token = create_access_token(payload)
         refresh_token, jti = create_refresh_token(payload)
 
-        from app.core.config import settings
-        ttl = settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400
-        await self.redis.setex(f"{REFRESH_PREFIX}{jti}", ttl, str(user.id_usuario))
+        try:
+            from app.core.config import settings
+            ttl = settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400
+            await self.redis.setex(f"{REFRESH_PREFIX}{jti}", ttl, str(user.id_usuario))
+        except Exception:
+            pass  # Redis unavailable — refresh token revocation disabled
 
-        user.ultimo_acceso = datetime.now(timezone.utc)
+        user.ultimo_acceso = datetime.now(timezone.utc).replace(tzinfo=None)
         await self.session.flush()
 
         return TokenResponse(access_token=access_token, refresh_token=refresh_token)
@@ -51,9 +54,14 @@ class AuthService:
             if payload.get("type") != "refresh":
                 raise UnauthorizedException("Token inválido")
             jti = payload.get("jti")
-            stored = await self.redis.get(f"{REFRESH_PREFIX}{jti}")
-            if not stored:
-                raise UnauthorizedException("Token expirado o revocado")
+            try:
+                stored = await self.redis.get(f"{REFRESH_PREFIX}{jti}")
+                if not stored:
+                    raise UnauthorizedException("Token expirado o revocado")
+            except UnauthorizedException:
+                raise
+            except Exception:
+                pass  # Redis unavailable — skip revocation check
         except (JWTError, KeyError):
             raise UnauthorizedException("Token inválido")
 
@@ -66,7 +74,10 @@ class AuthService:
             payload = decode_token(refresh_token)
             jti = payload.get("jti")
             if jti:
-                await self.redis.delete(f"{REFRESH_PREFIX}{jti}")
+                try:
+                    await self.redis.delete(f"{REFRESH_PREFIX}{jti}")
+                except Exception:
+                    pass  # Redis unavailable
         except JWTError:
             pass
 

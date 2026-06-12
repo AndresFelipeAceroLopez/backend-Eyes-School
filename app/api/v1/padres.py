@@ -3,7 +3,7 @@ from typing import Literal
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
-from app.core.dependencies import DbSession, require_roles
+from app.core.dependencies import AuthUser, DbSession, require_roles
 from app.infrastructure.repositories.actores_repository import PadreRepository
 
 
@@ -24,6 +24,15 @@ class PadreOut(BaseModel):
 
 
 router = APIRouter(prefix="/padres", tags=["Padres"])
+
+
+@router.get("/me", response_model=PadreOut, dependencies=[require_roles("padre")])
+async def get_mi_padre(current_user: AuthUser, db: DbSession):
+    from app.core.exceptions import NotFoundException
+    item = await PadreRepository(db).get_by_usuario(current_user.id_usuario)
+    if not item:
+        raise NotFoundException("Perfil padre no encontrado")
+    return PadreOut.model_validate(item)
 
 
 @router.get("", response_model=list[PadreOut], dependencies=[require_roles("admin")])
