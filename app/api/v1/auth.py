@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, File, UploadFile
 
 from app.application.auth.schemas import AccessTokenResponse, LoginRequest, MeResponse, RefreshRequest, RegisterRequest, TokenResponse
 from app.application.auth.service import AuthService
@@ -34,3 +34,7 @@ async def logout(data: RefreshRequest, db: DbSession, redis: RedisClient):
 @router.get("/me", response_model=MeResponse)
 async def me(current_user: AuthUser, db: DbSession, redis: RedisClient):
     return await AuthService(db, redis).get_me(current_user.id_usuario)
+
+@router.post("/me/avatar", response_model=str)
+async def upload_avatar(current_user: AuthUser, db: DbSession, file: UploadFile = File(...)):
+    return await AuthService(db).upload_avatar(current_user.id_usuario, file)

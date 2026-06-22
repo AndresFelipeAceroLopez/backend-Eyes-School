@@ -1,8 +1,11 @@
 from datetime import datetime, timezone
 
 from jose import JWTError
+from fastapi import UploadFile
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
+import os
+import uuid
 
 from app.application.auth.schemas import AccessTokenResponse, LoginRequest, MeResponse, TokenResponse
 from app.core.exceptions import UnauthorizedException
@@ -151,3 +154,22 @@ class AuthService:
             id_rol=user.id_rol,
             estado=user.estado,
         )
+
+    async def upload_avatar(self, id_usuario: int, file: UploadFile) -> str:
+        user = await self.repo.get_by_id_with_rol(id_usuario)
+        if not user:
+            raise UnauthorizedException("Usuario no encontrado")
+            
+        if not file.content_type.startswith("image/"):
+            from app.core.exceptions import ConflictException
+            raise ConflictException("El archivo debe ser una imagen")
+            
+        ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
+        filename = f"{uuid.uuid4()}.{ext}"
+        filepath = os.path.join("static/avatars", filename)
+        
+        with open(filepath, "wb") as f:
+            f.write(await file.read())
+            
+        await self.repo.update(user, {"foto_perfil": f"/static/avatars/{filename}"})
+        return f"/static/avatars/{filename}"
