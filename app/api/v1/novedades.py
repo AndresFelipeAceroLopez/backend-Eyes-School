@@ -13,7 +13,7 @@ from app.core.dependencies import DbSession, require_roles
 router = APIRouter(tags=["Novedades"])
 
 
-@router.get("/tipos-novedad", response_model=list[TipoNovedadOut], dependencies=[require_roles("admin", "docente")])
+@router.get("/tipos-novedad", response_model=list[TipoNovedadOut], dependencies=[require_roles("admin", "docente", "padre")])
 async def list_tipos(db: DbSession):
     return await NovedadService(db).list_tipos()
 
@@ -28,7 +28,7 @@ async def update_tipo(id_tipo: int, data: TipoNovedadCreate, db: DbSession):
     return await NovedadService(db).update_tipo(id_tipo, data)
 
 
-@router.get("/novedades", response_model=list[NovedadOut], dependencies=[require_roles("admin", "docente")])
+@router.get("/novedades", response_model=list[NovedadOut], dependencies=[require_roles("admin", "docente", "padre")])
 async def list_novedades(
     db: DbSession,
     id_estudiante: int | None = None,
@@ -45,7 +45,7 @@ async def create_novedad(data: NovedadCreate, db: DbSession):
     return await NovedadService(db).create(data)
 
 
-@router.get("/novedades/{id_novedad}", response_model=NovedadOut, dependencies=[require_roles("admin", "docente")])
+@router.get("/novedades/{id_novedad}", response_model=NovedadOut, dependencies=[require_roles("admin", "docente", "padre")])
 async def get_novedad(id_novedad: int, db: DbSession):
     return await NovedadService(db).get(id_novedad)
 
