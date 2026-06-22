@@ -1,0 +1,83 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+ENV/
+
+# Variables de entorno
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Archivos de configuración local
+*.local
+
+# Distribución / empaquetado
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Type checking
+.mypy_cache/
+.pyre/
+.pytype/
+
+# Linting
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDEs
+.vscode/
+.idea/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Base de datos local
+*.sqlite3
+*.db
+
+# FastAPI / Uvicorn
+uvicorn.log
+
+# Archivos temporales
+tmp/
+temp/
+*.tmp
+
+# Caché de Python
+.cache/
+
+# Docker
+docker-compose.override.yml
+
+# Archivos de certificados locales
+*.pem
+*.key
+
+# Cobertura
+coverage.xml
+
+# Archivos generados
+*.pid
+*.seed
