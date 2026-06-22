@@ -2,9 +2,20 @@ from fastapi import APIRouter
 
 from app.application.auth.schemas import AccessTokenResponse, LoginRequest, MeResponse, RefreshRequest, TokenResponse
 from app.application.auth.service import AuthService
+from app.application.usuarios.schemas import UsuarioCreate, UsuarioOut
+from app.application.usuarios.service import UsuarioService
 from app.core.dependencies import AuthUser, DbSession, RedisClient
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
+
+
+@router.post("/register", response_model=UsuarioOut, status_code=201)
+async def register(data: UsuarioCreate, db: DbSession):
+    """
+    Endpoint para registro público de usuarios. 
+    A diferencia de la creación en /usuarios, este no requiere rol de administrador.
+    """
+    return await UsuarioService(db).create(data)
 
 
 @router.post("/login", response_model=TokenResponse)
