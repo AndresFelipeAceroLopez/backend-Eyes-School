@@ -40,6 +40,7 @@ class UsuarioModel(Base):
     id_rol: Mapped[int] = mapped_column("idRol", Integer, ForeignKey("public.roles.idRol"), nullable=False)
     auth_id: Mapped[uuid.UUID | None] = mapped_column("auth_id", UUID(as_uuid=True))
     id_usuario_uuid: Mapped[uuid.UUID] = mapped_column("idUsuario_uuid", UUID(as_uuid=True), default=uuid.uuid4)
+    foto_perfil: Mapped[str | None] = mapped_column("fotoPerfil", String(255))
 
     rol: Mapped["RolModel"] = relationship(back_populates="usuarios")
     administrador: Mapped["AdministradorModel | None"] = relationship(back_populates="usuario")
