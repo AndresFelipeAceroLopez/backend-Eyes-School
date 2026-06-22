@@ -7,6 +7,12 @@
       "skillPath": "plugins/architecture-patterns/skills/architecture-patterns/SKILL.md",
       "computedHash": "f6c1e6524aeff32cf49c71ab7130f21fcc19e46709129fbd07ce236bdc75ab11"
     },
+    "backend-standards": {
+      "source": "local",
+      "sourceType": "local",
+      "skillPath": ".agents/skills/backend-standards/SKILL.md",
+      "computedHash": "50abf3b73d3688b2ce5799c10db2d76d56df137c0e5a4ca4b22cb732e09cd9b8"
+    },
     "clean-architecture": {
       "source": "pproenca/dot-skills",
       "sourceType": "github",
@@ -19,11 +25,23 @@
       "skillPath": "skills/clean-code/SKILL.md",
       "computedHash": "551e1ac1c416d9df11fce8bc613c3595794f1f5e634d20c5b3e257afded11ed7"
     },
+    "fastapi-enterprise": {
+      "source": "local",
+      "sourceType": "local",
+      "skillPath": ".agents/skills/fastapi-enterprise/SKILL.md",
+      "computedHash": "be5260c2785afc52653ac6f4489d3fb17671c1d8a3f560716ec984058bb43056"
+    },
     "fastapi-python": {
       "source": "mindrally/skills",
       "sourceType": "github",
       "skillPath": "fastapi-python/SKILL.md",
       "computedHash": "4521c6090735152b7b8df670cefe5c1c6d1dcaa115de67bb96e74ebf802d4f24"
+    },
+    "supabase-analysis": {
+      "source": "local",
+      "sourceType": "local",
+      "skillPath": ".agents/skills/supabase-analysis/SKILL.md",
+      "computedHash": "398056649b1d875be38eec08592103b36b7d09d6d15964e0ac718f441895b420"
     }
   }
 }
