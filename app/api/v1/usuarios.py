@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Response
 
 from app.application.usuarios.schemas import UsuarioCreate, UsuarioOut, UsuarioUpdate
 from app.application.usuarios.service import UsuarioService
@@ -37,3 +37,9 @@ async def update_usuario(id_usuario: int, data: UsuarioUpdate, db: DbSession):
 @router.patch("/{id_usuario}/estado", response_model=UsuarioOut, dependencies=[require_roles("admin")])
 async def toggle_estado(id_usuario: int, estado: bool, db: DbSession):
     return await UsuarioService(db).toggle_estado(id_usuario, estado)
+
+
+@router.delete("/{id_usuario}", status_code=204, dependencies=[require_roles("admin")])
+async def delete_usuario(id_usuario: int, db: DbSession):
+    await UsuarioService(db).delete(id_usuario)
+    return Response(status_code=204)
