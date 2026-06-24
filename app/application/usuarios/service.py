@@ -66,6 +66,12 @@ class UsuarioService:
         updated = await self.repo.update(user, {"estado": estado})
         return UsuarioOut.model_validate(await self.repo.get_by_id_with_rol(updated.id_usuario))
 
+    async def delete(self, id_usuario: int) -> None:
+        user = await self.repo.get_by_id(id_usuario)
+        if not user:
+            raise NotFoundException("Usuario no encontrado")
+        await self.repo.delete(user)
+
     async def list_roles(self) -> list:
         roles = await self.rol_repo.get_all()
         return roles
