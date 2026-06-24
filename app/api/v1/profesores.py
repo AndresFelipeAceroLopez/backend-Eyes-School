@@ -38,6 +38,11 @@ async def update_profesor(id_profesor: int, data: ProfesorUpdate, db: DbSession)
     return await ProfesorService(db).update(id_profesor, data)
 
 
+@router.delete("/{id_profesor}", status_code=204, dependencies=[require_roles("admin")])
+async def delete_profesor(id_profesor: int, db: DbSession):
+    await ProfesorService(db).delete(id_profesor)
+
+
 @router.get("/{id_profesor}/especializaciones", response_model=list[ProfesorEspecializacionOut], dependencies=[require_roles("admin", "docente")])
 async def get_especializaciones(id_profesor: int, db: DbSession):
     return await ProfesorService(db).get_especializaciones(id_profesor)

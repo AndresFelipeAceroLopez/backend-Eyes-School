@@ -42,4 +42,3 @@ async def toggle_estado(id_usuario: int, estado: bool, db: DbSession):
 @router.delete("/{id_usuario}", status_code=204, dependencies=[require_roles("admin")])
 async def delete_usuario(id_usuario: int, db: DbSession):
     await UsuarioService(db).delete(id_usuario)
-    return Response(status_code=204)

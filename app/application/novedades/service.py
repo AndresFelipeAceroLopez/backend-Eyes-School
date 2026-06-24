@@ -33,6 +33,12 @@ class NovedadService:
         updated = await self.tipo_repo.update(item, data.model_dump())
         return TipoNovedadOut.model_validate(updated)
 
+    async def delete_tipo(self, id_tipo: int) -> None:
+        item = await self.tipo_repo.get_by_id(id_tipo)
+        if not item:
+            raise NotFoundException("Tipo de novedad no encontrado")
+        await self.tipo_repo.update(item, {"activo": False})
+
     async def list(
         self,
         id_estudiante: int | None = None,

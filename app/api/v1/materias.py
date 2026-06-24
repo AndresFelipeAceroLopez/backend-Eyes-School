@@ -40,3 +40,13 @@ async def update_materia(id_materia: int, data: s.MateriaUpdate, db: DbSession):
         raise NotFoundException("Materia no encontrada")
     updated = await repo.update(item, data.model_dump(exclude_none=True))
     return s.MateriaOut.model_validate(updated)
+
+
+@router.delete("/{id_materia}", status_code=204, dependencies=[require_roles("admin")])
+async def delete_materia(id_materia: int, db: DbSession):
+    from app.core.exceptions import NotFoundException
+    repo = MateriaRepository(db)
+    item = await repo.get_by_id(id_materia)
+    if not item:
+        raise NotFoundException("Materia no encontrada")
+    await repo.update(item, {"activa": False})

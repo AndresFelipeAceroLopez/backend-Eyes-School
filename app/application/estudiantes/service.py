@@ -50,6 +50,12 @@ class EstudianteService:
         updated = await self.repo.update(item, data.model_dump(exclude_none=True))
         return EstudianteOut.model_validate(updated)
 
+    async def delete(self, id_estudiante: int) -> None:
+        item = await self.repo.get_by_id(id_estudiante)
+        if not item:
+            raise NotFoundException("Estudiante no encontrado")
+        await self.repo.update(item, {"estado": "Inactivo"})
+
     async def get_ips(self, id_estudiante: int) -> list[EstudianteIPSOut]:
         items = await self.ips_repo.get_by_estudiante(id_estudiante)
         return [EstudianteIPSOut.model_validate(i) for i in items]
@@ -62,3 +68,9 @@ class EstudianteService:
         payload["id_estudiante"] = id_estudiante
         item = await self.ips_repo.create(payload)
         return EstudianteIPSOut.model_validate(item)
+
+    async def delete_ips(self, id_estudiante: int, id_ips: int) -> None:
+        item = await self.ips_repo.get_one(id_estudiante, id_ips)
+        if not item:
+            raise NotFoundException("Afiliación IPS no encontrada")
+        await self.ips_repo.delete(item)

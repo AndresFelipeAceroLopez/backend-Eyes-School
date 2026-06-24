@@ -28,6 +28,11 @@ async def update_tipo(id_tipo: int, data: TipoNovedadCreate, db: DbSession):
     return await NovedadService(db).update_tipo(id_tipo, data)
 
 
+@router.delete("/tipos-novedad/{id_tipo}", status_code=204, dependencies=[require_roles("admin")])
+async def delete_tipo(id_tipo: int, db: DbSession):
+    await NovedadService(db).delete_tipo(id_tipo)
+
+
 @router.get("/novedades", response_model=list[NovedadOut], dependencies=[require_roles("admin", "docente", "padre")])
 async def list_novedades(
     db: DbSession,
