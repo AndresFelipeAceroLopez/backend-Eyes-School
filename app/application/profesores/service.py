@@ -44,6 +44,12 @@ class ProfesorService:
         updated = await self.repo.update(item, data.model_dump(exclude_none=True))
         return ProfesorOut.model_validate(updated)
 
+    async def delete(self, id_profesor: int) -> None:
+        item = await self.repo.get_by_id(id_profesor)
+        if not item:
+            raise NotFoundException("Profesor no encontrado")
+        await self.repo.update(item, {"estado": "Inactivo"})
+
     async def get_especializaciones(self, id_profesor: int) -> list[ProfesorEspecializacionOut]:
         items = await self.esp_repo.get_by_profesor(id_profesor)
         return [ProfesorEspecializacionOut.model_validate(e) for e in items]

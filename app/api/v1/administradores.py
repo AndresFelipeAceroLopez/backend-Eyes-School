@@ -59,3 +59,13 @@ async def update_admin(id_administrador: int, data: AdministradorCreate, db: DbS
         raise NotFoundException("Administrador no encontrado")
     updated = await repo.update(item, data.model_dump())
     return AdministradorOut.model_validate(updated)
+
+
+@router.delete("/{id_administrador}", status_code=204, dependencies=[require_roles("admin")])
+async def delete_admin(id_administrador: int, db: DbSession):
+    from app.core.exceptions import NotFoundException
+    repo = AdministradorRepository(db)
+    item = await repo.get_by_id(id_administrador)
+    if not item:
+        raise NotFoundException("Administrador no encontrado")
+    await repo.update(item, {"estado": "Inactivo"})

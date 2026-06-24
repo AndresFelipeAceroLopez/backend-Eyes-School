@@ -36,6 +36,11 @@ async def update_curso(id_curso: int, data: CursoUpdate, db: DbSession):
     return await CursoService(db).update(id_curso, data)
 
 
+@router.delete("/{id_curso}", status_code=204, dependencies=[require_roles("admin")])
+async def delete_curso(id_curso: int, db: DbSession):
+    await CursoService(db).delete(id_curso)
+
+
 @router.get("/{id_curso}/estudiantes", response_model=list[EstudianteOut], dependencies=[require_roles("admin", "docente")])
 async def get_estudiantes_curso(id_curso: int, db: DbSession):
     return await EstudianteService(db).list(id_curso=id_curso)

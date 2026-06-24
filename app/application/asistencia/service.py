@@ -75,6 +75,12 @@ class AsistenciaService:
         updated = await self.repo.update(item, data.model_dump(exclude_none=True))
         return AsistenciaOut.model_validate(updated)
 
+    async def delete(self, id_asistencia: int) -> None:
+        item = await self.repo.get_by_id(id_asistencia)
+        if not item:
+            raise NotFoundException("Asistencia no encontrada")
+        await self.repo.update(item, {"activo": False})
+
     async def list_aula(self, id_horario: int | None = None, id_estudiante: int | None = None, skip: int = 0, limit: int = 100) -> list[AsistenciaAulaOut]:
         if id_horario and id_estudiante is None:
             items = await self.aula_repo.get_by_horario_fecha(id_horario, date.today())
@@ -87,3 +93,9 @@ class AsistenciaService:
     async def create_aula(self, data: AsistenciaAulaCreate) -> AsistenciaAulaOut:
         item = await self.aula_repo.create(data.model_dump())
         return AsistenciaAulaOut.model_validate(item)
+
+    async def delete_aula(self, id_asistencia_aula: int) -> None:
+        item = await self.aula_repo.get_by_id(id_asistencia_aula)
+        if not item:
+            raise NotFoundException("Asistencia de aula no encontrada")
+        await self.aula_repo.delete(item)
