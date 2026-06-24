@@ -65,3 +65,13 @@ async def update_padre(id_padre: int, data: PadreCreate, db: DbSession):
         raise NotFoundException("Padre no encontrado")
     updated = await repo.update(item, data.model_dump())
     return PadreOut.model_validate(updated)
+
+
+@router.delete("/{id_padre}", status_code=204, dependencies=[require_roles("admin")])
+async def delete_padre(id_padre: int, db: DbSession):
+    from app.core.exceptions import NotFoundException
+    repo = PadreRepository(db)
+    item = await repo.get_by_id(id_padre)
+    if not item:
+        raise NotFoundException("Padre no encontrado")
+    await repo.delete(item)
