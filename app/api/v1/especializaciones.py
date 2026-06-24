@@ -44,3 +44,13 @@ async def update_especializacion(id_especializacion: int, data: EspecializacionC
         raise NotFoundException("Especialización no encontrada")
     updated = await repo.update(item, data.model_dump())
     return EspecializacionOut.model_validate(updated)
+
+
+@router.delete("/{id_especializacion}", status_code=204, dependencies=[require_roles("admin")])
+async def delete_especializacion(id_especializacion: int, db: DbSession):
+    from app.core.exceptions import NotFoundException
+    repo = EspecializacionRepository(db)
+    item = await repo.get_by_id(id_especializacion)
+    if not item:
+        raise NotFoundException("Especialización no encontrada")
+    await repo.update(item, {"activo": False})

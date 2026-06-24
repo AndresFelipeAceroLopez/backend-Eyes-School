@@ -34,3 +34,9 @@ class CursoService:
             raise NotFoundException("Curso no encontrado")
         updated = await self.repo.update(item, data.model_dump(exclude_none=True))
         return CursoOut.model_validate(updated)
+
+    async def delete(self, id_curso: int) -> None:
+        item = await self.repo.get_by_id(id_curso)
+        if not item:
+            raise NotFoundException("Curso no encontrado")
+        await self.repo.update(item, {"activo": False})

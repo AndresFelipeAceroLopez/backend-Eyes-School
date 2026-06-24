@@ -55,6 +55,11 @@ async def update_estudiante(id_estudiante: int, data: EstudianteUpdate, db: DbSe
     return await EstudianteService(db).update(id_estudiante, data)
 
 
+@router.delete("/{id_estudiante}", status_code=204, dependencies=[require_roles("admin")])
+async def delete_estudiante(id_estudiante: int, db: DbSession):
+    await EstudianteService(db).delete(id_estudiante)
+
+
 @router.get("/{id_estudiante}/notas", response_model=list[NotaOut], dependencies=[require_roles("admin", "docente", "estudiante", "padre")])
 async def get_notas_estudiante(
     id_estudiante: int,
@@ -88,3 +93,8 @@ async def get_ips_estudiante(id_estudiante: int, db: DbSession):
 @router.post("/{id_estudiante}/ips", response_model=EstudianteIPSOut, status_code=201, dependencies=[require_roles("admin")])
 async def create_ips_estudiante(id_estudiante: int, data: EstudianteIPSCreate, db: DbSession):
     return await EstudianteService(db).create_ips(id_estudiante, data)
+
+
+@router.delete("/{id_estudiante}/ips/{id_ips}", status_code=204, dependencies=[require_roles("admin")])
+async def delete_ips_estudiante(id_estudiante: int, id_ips: int, db: DbSession):
+    await EstudianteService(db).delete_ips(id_estudiante, id_ips)
