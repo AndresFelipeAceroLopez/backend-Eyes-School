@@ -126,7 +126,9 @@ class ProfesorEspecializacionRepository(BaseRepository[ProfesorEspecializacionMo
 
     async def get_one(self, id_profesor: int, id_especializacion: int) -> ProfesorEspecializacionModel | None:
         result = await self.session.execute(
-            select(ProfesorEspecializacionModel).where(
+            select(ProfesorEspecializacionModel)
+            .options(selectinload(ProfesorEspecializacionModel.especializacion))
+            .where(
                 ProfesorEspecializacionModel.id_profesor == id_profesor,
                 ProfesorEspecializacionModel.id_especializacion == id_especializacion,
             )
