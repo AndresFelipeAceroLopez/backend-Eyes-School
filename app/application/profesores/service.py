@@ -58,12 +58,13 @@ class ProfesorService:
         existing = await self.esp_repo.get_one(id_profesor, data.id_especializacion)
         if existing:
             raise ConflictException("El profesor ya tiene esta especialización")
-        item = await self.esp_repo.create({
+        await self.esp_repo.create({
             "id_profesor": id_profesor,
             "id_especializacion": data.id_especializacion,
             "institucion": data.institucion,
         })
-        return ProfesorEspecializacionOut.model_validate(item)
+        item_with_rel = await self.esp_repo.get_one(id_profesor, data.id_especializacion)
+        return ProfesorEspecializacionOut.model_validate(item_with_rel)
 
     async def quitar_especializacion(self, id_profesor: int, id_especializacion: int) -> None:
         item = await self.esp_repo.get_one(id_profesor, id_especializacion)
