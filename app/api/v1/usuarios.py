@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Response
 
 from app.application.usuarios.schemas import UsuarioCreate, UsuarioOut, UsuarioUpdate
 from app.application.usuarios.service import UsuarioService
