@@ -34,7 +34,9 @@ class NovedadUpdate(BaseModel):
     descripcion: str | None = None
     accion_tomada: str | None = None
     fecha_resolucion: date | None = None
-    estado: Literal["Pendiente", "En Proceso", "Resuelta", "Cerrada"] | None = None
+    id_tipo_novedad: int | None = None
+    # El front maneja dos estados: "Pendiente" y "Completado".
+    estado: Literal["Pendiente", "Completado"] | None = None
 
 
 class NovedadOut(BaseModel):

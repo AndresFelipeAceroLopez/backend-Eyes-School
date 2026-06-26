@@ -7,7 +7,7 @@ from app.core.dependencies import DbSession, require_roles
 router = APIRouter(prefix="/horarios", tags=["Horarios"])
 
 
-@router.get("", response_model=list[HorarioOut])
+@router.get("", response_model=list[HorarioOut], dependencies=[require_roles("admin", "docente", "estudiante", "padre")])
 async def list_horarios(
     db: DbSession,
     id_curso: int | None = None,
@@ -22,7 +22,7 @@ async def create_horario(data: HorarioCreate, db: DbSession):
     return await HorarioService(db).create(data)
 
 
-@router.get("/{id_horario}", response_model=HorarioOut)
+@router.get("/{id_horario}", response_model=HorarioOut, dependencies=[require_roles("admin", "docente", "estudiante", "padre")])
 async def get_horario(id_horario: int, db: DbSession):
     return await HorarioService(db).get(id_horario)
 

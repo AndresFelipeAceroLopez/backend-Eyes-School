@@ -1,7 +1,22 @@
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.infrastructure.models.academico import (
+    AsignacionModel,
+    ProfesorEspecializacionModel,
+    ProfesorHorarioModel,
+)
+from app.infrastructure.models.actores import (
+    AdministradorModel,
+    EstudianteModel,
+    PadreModel,
+    ProfesorModel,
+)
+from app.infrastructure.models.asistencia import AsistenciaAulaModel, AsistenciaModel
+from app.infrastructure.models.notas import NotaModel
+from app.infrastructure.models.novedades import NovedadModel
+from app.infrastructure.models.reportes import EstudianteIPSModel, ReporteModel
 from app.infrastructure.models.usuario import RolModel, UsuarioModel
 from app.infrastructure.repositories.base_repository import BaseRepository
 
@@ -65,6 +80,59 @@ class UsuarioRepository(BaseRepository[UsuarioModel]):
             query = query.where(UsuarioModel.id_usuario != exclude_id)
         result = await self.session.execute(query)
         return result.scalar_one_or_none() is not None
+
+    async def delete_cascade(self, id_usuario: int) -> None:
+        """Elimina el usuario y TODO lo que lo referencia por FK, en orden de
+        dependencia y dentro de la misma transacción de la petición.
+
+        Usa DELETEs por subconsulta (no carga objetos en la sesión) para no
+        disparar lazy-loads en contexto async. El backend NO tenía cascade ni a
+        nivel ORM ni de BD, por eso un `DELETE /usuarios/{id}` reventaba con 500
+        cuando el usuario tenía fila de rol o registros asociados.
+        """
+        s = self.session
+
+        async def run(stmt) -> None:
+            # synchronize_session=False: no necesitamos sincronizar la sesión en
+            # memoria (la petición termina tras el borrado) y así los DELETE por
+            # subconsulta no fallan al intentar evaluarse en Python.
+            await s.execute(stmt.execution_options(synchronize_session=False))
+
+        prof_ids = select(ProfesorModel.id_profesor).where(ProfesorModel.id_usuario == id_usuario)
+        est_ids = select(EstudianteModel.id_estudiante).where(EstudianteModel.id_usuario == id_usuario)
+        admin_ids = select(AdministradorModel.id_administrador).where(AdministradorModel.id_usuario == id_usuario)
+
+        # 1) Registros creados por el usuario (FK registradoPor → usuario)
+        await run(delete(AsistenciaModel).where(AsistenciaModel.registrado_por == id_usuario))
+        await run(delete(AsistenciaAulaModel).where(AsistenciaAulaModel.registrado_por == id_usuario))
+        await run(delete(NotaModel).where(NotaModel.registrado_por == id_usuario))
+        await run(delete(NovedadModel).where(NovedadModel.registrado_por == id_usuario))
+
+        # 2) Profesor → especializaciones, horarios, asignaciones y su fila
+        await run(delete(ProfesorEspecializacionModel).where(ProfesorEspecializacionModel.id_profesor.in_(prof_ids)))
+        await run(delete(ProfesorHorarioModel).where(ProfesorHorarioModel.id_profesor.in_(prof_ids)))
+        await run(delete(AsignacionModel).where(AsignacionModel.id_profesor.in_(prof_ids)))
+        await run(delete(ProfesorModel).where(ProfesorModel.id_usuario == id_usuario))
+
+        # 3) Estudiante → sus registros académicos, IPS, vínculos de padre y su fila
+        await run(delete(AsistenciaModel).where(AsistenciaModel.id_estudiante.in_(est_ids)))
+        await run(delete(AsistenciaAulaModel).where(AsistenciaAulaModel.id_estudiante.in_(est_ids)))
+        await run(delete(NotaModel).where(NotaModel.id_estudiante.in_(est_ids)))
+        await run(delete(NovedadModel).where(NovedadModel.id_estudiante.in_(est_ids)))
+        await run(delete(EstudianteIPSModel).where(EstudianteIPSModel.id_estudiante.in_(est_ids)))
+        await run(delete(PadreModel).where(PadreModel.id_estudiante.in_(est_ids)))
+        await run(delete(EstudianteModel).where(EstudianteModel.id_usuario == id_usuario))
+
+        # 4) Administrador → reportes y su fila
+        await run(delete(ReporteModel).where(ReporteModel.id_administrador.in_(admin_ids)))
+        await run(delete(AdministradorModel).where(AdministradorModel.id_usuario == id_usuario))
+
+        # 5) Padre (cuando el usuario ES el acudiente)
+        await run(delete(PadreModel).where(PadreModel.id_usuario == id_usuario))
+
+        # 6) Usuario
+        await run(delete(UsuarioModel).where(UsuarioModel.id_usuario == id_usuario))
+        await s.flush()
 
 
 class RolRepository(BaseRepository[RolModel]):

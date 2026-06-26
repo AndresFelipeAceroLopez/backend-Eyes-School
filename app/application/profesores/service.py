@@ -21,7 +21,20 @@ class ProfesorService:
 
     async def list(self, skip: int = 0, limit: int = 100, estado: str | None = None) -> list[ProfesorOut]:
         items = await self.repo.get_all_with_usuario(skip=skip, limit=limit, estado=estado)
-        return [ProfesorOut.model_validate(p) for p in items]
+        return [self._with_nombre(p) for p in items]
+
+    @staticmethod
+    def _with_nombre(p) -> ProfesorOut:
+        """Adjunta el nombre desde la relación usuario (precargada en el listado),
+        para que el front no necesite consultar /usuarios."""
+        dto = ProfesorOut.model_validate(p)
+        u = getattr(p, "usuario", None)
+        if u is not None:
+            dto.primer_nombre = u.primer_nombre
+            dto.segundo_nombre = u.segundo_nombre
+            dto.primer_apellido = u.primer_apellido
+            dto.segundo_apellido = u.segundo_apellido
+        return dto
 
     async def get(self, id_profesor: int) -> ProfesorOut:
         item = await self.repo.get_by_id(id_profesor)

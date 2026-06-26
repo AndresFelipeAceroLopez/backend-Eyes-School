@@ -35,6 +35,7 @@ def create_app() -> FastAPI:
     
     import os
     os.makedirs("static/avatars", exist_ok=True)
+    os.makedirs("static/reportes", exist_ok=True)
     app.mount("/static", StaticFiles(directory="static"), name="static")
 
     return app

@@ -2,6 +2,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.infrastructure.models.actores import EstudianteModel
 from app.infrastructure.models.notas import NotaModel
 from app.infrastructure.repositories.base_repository import BaseRepository
 
@@ -9,6 +10,14 @@ from app.infrastructure.repositories.base_repository import BaseRepository
 class NotaRepository(BaseRepository[NotaModel]):
     def __init__(self, session: AsyncSession):
         super().__init__(NotaModel, session)
+
+    async def get_estudiante_con_usuario(self, id_estudiante: int) -> EstudianteModel | None:
+        result = await self.session.execute(
+            select(EstudianteModel)
+            .options(selectinload(EstudianteModel.usuario))
+            .where(EstudianteModel.id_estudiante == id_estudiante)
+        )
+        return result.scalar_one_or_none()
 
     async def get_with_filters(
         self,
