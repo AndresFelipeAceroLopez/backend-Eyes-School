@@ -8,13 +8,18 @@ import os
 import uuid
 
 from app.application.auth.schemas import AccessTokenResponse, LoginRequest, MeResponse, TokenResponse
-from app.core.exceptions import UnauthorizedException
+from app.core.config import settings
+from app.core.email import build_reset_email_html, send_email
+from app.core.exceptions import BusinessRuleException, UnauthorizedException
 from app.core.security import (
     create_access_token,
+    create_password_reset_token,
     create_refresh_token,
     decode_token,
+    hash_password,
     verify_password,
 )
+import logging
 from app.infrastructure.repositories.usuario_repository import UsuarioRepository
 from app.application.usuarios.service import UsuarioService
 from app.application.usuarios.schemas import UsuarioCreate, UsuarioOut
@@ -79,7 +84,20 @@ class AuthService:
                 "cargo": data.cargo or "Administrador",
                 "fecha_asignacion": date.today()
             })
-            
+
+        # Profesor (id_rol=1) y Administrador (id_rol=3) quedan INACTIVOS al
+        # auto-registrarse: deben pasar por la bandeja de validación y ser activados
+        # por un administrador activo antes de poder iniciar sesión. (El login rechaza
+        # estado=False con "Usuario inactivo"; la bandeja lista los estado=False.)
+        # Estudiante (2) y Padre (4) siguen activos por defecto.
+        # Se compara por id_rol (estable) y no por nombre: en la BD los roles se
+        # llaman 'docente'/'admin', no 'profesor'/'administrador'.
+        if user_out.id_rol in (1, 3):
+            user_model = await self.repo.get_by_id(user_out.id_usuario)
+            if user_model:
+                user_model.estado = False
+                user_out.estado = False
+
         await self.session.commit()
         return user_out
 
@@ -140,6 +158,46 @@ class AuthService:
                     pass  # Redis unavailable
         except JWTError:
             pass
+
+    async def forgot_password(self, correo: str) -> None:
+        """Genera un token de reseteo y envía el enlace por correo.
+
+        No revela si el correo existe (respuesta siempre neutra desde el endpoint).
+        El token NUNCA se devuelve en la respuesta HTTP: sale solo por email (y, en
+        desarrollo, se registra en el log para poder probar sin Resend configurado).
+        """
+        user = await self.repo.get_by_correo(correo.strip().lower())
+        if not user or not user.estado:
+            return
+
+        token = create_password_reset_token(user.id_usuario)
+        reset_url = f"{settings.FRONTEND_URL.rstrip('/')}/reset-password?token={token}"
+        html = build_reset_email_html(user.primer_nombre or "", reset_url)
+        sent = await send_email(user.correo, "Restablece tu contraseña - EyeSchool", html)
+
+        if not sent and settings.ENVIRONMENT == "development":
+            logging.getLogger(__name__).warning(
+                "[DEV] Enlace de recuperación para %s: %s", correo, reset_url
+            )
+
+    async def reset_password(self, token: str, new_password: str) -> None:
+        try:
+            payload = decode_token(token)
+        except JWTError:
+            raise UnauthorizedException("El enlace de recuperación es inválido o expiró")
+
+        if payload.get("type") != "reset":
+            raise UnauthorizedException("Token inválido")
+
+        if len(new_password) < 8:
+            raise BusinessRuleException("La contraseña debe tener al menos 8 caracteres")
+
+        user = await self.repo.get_by_id(int(payload["sub"]))
+        if not user:
+            raise UnauthorizedException("Usuario no encontrado")
+
+        await self.repo.update(user, {"password": hash_password(new_password)})
+        await self.session.commit()
 
     async def get_me(self, id_usuario: int) -> MeResponse:
         user = await self.repo.get_by_id_with_rol(id_usuario)

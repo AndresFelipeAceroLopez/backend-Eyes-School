@@ -50,14 +50,12 @@ class UsuarioService:
         if data.correo and await self.repo.correo_exists(data.correo, exclude_id=id_usuario):
             raise ConflictException("El correo ya está en uso")
 
-        updated = await self.repo.update(user, data.model_dump(exclude_none=True))
-        return UsuarioOut.model_validate(await self.repo.get_by_id_with_rol(updated.id_usuario))
+        raw = data.model_dump(exclude_none=True)
+        if raw.get("password"):
+            raw["password"] = hash_password(raw["password"])
 
-    async def delete(self, id_usuario: int) -> None:
-        user = await self.repo.get_by_id_with_rol(id_usuario)
-        if not user:
-            raise NotFoundException("Usuario no encontrado")
-        await self.repo.update(user, {"estado": False})
+        updated = await self.repo.update(user, raw)
+        return UsuarioOut.model_validate(await self.repo.get_by_id_with_rol(updated.id_usuario))
 
     async def toggle_estado(self, id_usuario: int, estado: bool) -> UsuarioOut:
         user = await self.repo.get_by_id_with_rol(id_usuario)
@@ -70,7 +68,10 @@ class UsuarioService:
         user = await self.repo.get_by_id(id_usuario)
         if not user:
             raise NotFoundException("Usuario no encontrado")
-        await self.repo.delete(user)
+        # Borrado en cascada: elimina filas de rol y registros asociados
+        # (asistencia/notas/novedades/reportes/...) que apuntan al usuario por FK,
+        # en una sola transacción, para no violar las restricciones de clave foránea.
+        await self.repo.delete_cascade(id_usuario)
 
     async def list_roles(self) -> list:
         roles = await self.rol_repo.get_all()

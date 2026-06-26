@@ -11,6 +11,7 @@ colorama==0.4.6
 cryptography==49.0.0
 ecdsa==0.19.2
 fastapi==0.137.1
+fpdf2==2.8.7
 greenlet==3.5.1
 h11==0.16.0
 hiredis==3.4.0

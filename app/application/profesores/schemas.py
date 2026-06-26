@@ -46,6 +46,12 @@ class ProfesorOut(BaseModel):
     fecha_vinculacion: date
     estado: str
     fecha_registro: datetime
+    # Nombre embebido (join con usuario) para resolver el nombre del profesor en
+    # horarios sin leer /usuarios. Opcionales: solo se llenan en el listado.
+    primer_nombre: str | None = None
+    segundo_nombre: str | None = None
+    primer_apellido: str | None = None
+    segundo_apellido: str | None = None
     model_config = {"from_attributes": True}
 
 

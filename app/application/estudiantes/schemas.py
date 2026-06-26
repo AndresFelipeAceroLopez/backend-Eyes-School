@@ -29,6 +29,13 @@ class EstudianteOut(BaseModel):
     estado: str
     id_curso_actual: int | None
     fecha_registro: datetime
+    # Nombre embebido (join con usuario) para que docente/admin puedan ver al
+    # estudiante SIN leer /usuarios (recurso solo-admin). Son opcionales: solo se
+    # llenan en los listados, donde el repositorio precarga la relación usuario.
+    primer_nombre: str | None = None
+    segundo_nombre: str | None = None
+    primer_apellido: str | None = None
+    segundo_apellido: str | None = None
     model_config = {"from_attributes": True}
 
 

@@ -35,6 +35,7 @@ class UsuarioUpdate(BaseModel):
     direccion: str | None = None
     correo: str | None = None
     telefono: str | None = None
+    password: str | None = None
     id_rol: int | None = None
 
 
@@ -54,6 +55,7 @@ class UsuarioOut(BaseModel):
     fecha_registro: datetime
     ultimo_acceso: datetime | None
     id_rol: int
+    foto_perfil: str | None = None
     rol: RolOut | None = None
 
     model_config = {"from_attributes": True}

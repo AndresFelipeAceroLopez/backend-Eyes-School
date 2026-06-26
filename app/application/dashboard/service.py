@@ -56,7 +56,7 @@ class DashboardService:
             total_novedades_activas=total_novedades,
         )
 
-    async def get_docente_dashboard(self, id_profesor: int) -> DocenteDashboard:
+    async def get_docente_dashboard(self, id_profesor: int, id_usuario: int) -> DocenteDashboard:
         asignaciones = (await self.session.execute(
             select(func.count(AsignacionModel.id_curso.distinct()))
             .where(AsignacionModel.id_profesor == id_profesor, AsignacionModel.activo == True)  # noqa: E712
@@ -69,10 +69,12 @@ class DashboardService:
         )).scalar_one()
 
         today = date.today()
+        # registrado_por es el id_usuario del que registró (FK a usuario), NO el
+        # id_profesor: comparar contra id_profesor daba siempre 0.
         notas_hoy = (await self.session.execute(
             select(func.count()).select_from(NotaModel)
             .where(
-                NotaModel.registrado_por == id_profesor,
+                NotaModel.registrado_por == id_usuario,
                 func.date(NotaModel.fecha_registro) == today,
             )
         )).scalar_one()
@@ -80,7 +82,7 @@ class DashboardService:
         asistencias_hoy = (await self.session.execute(
             select(func.count()).select_from(AsistenciaModel)
             .where(
-                AsistenciaModel.registrado_por == id_profesor,
+                AsistenciaModel.registrado_por == id_usuario,
                 AsistenciaModel.fecha == today,
             )
         )).scalar_one()

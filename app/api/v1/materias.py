@@ -7,7 +7,7 @@ from app.infrastructure.repositories.academico_repository import MateriaReposito
 router = APIRouter(prefix="/materias", tags=["Materias"])
 
 
-@router.get("", response_model=list[s.MateriaOut])
+@router.get("", response_model=list[s.MateriaOut], dependencies=[require_roles("admin", "docente", "estudiante", "padre")])
 async def list_materias(db: DbSession):
     repo = MateriaRepository(db)
     items = await repo.get_all()
@@ -21,7 +21,7 @@ async def create_materia(data: s.MateriaCreate, db: DbSession):
     return s.MateriaOut.model_validate(item)
 
 
-@router.get("/{id_materia}", response_model=s.MateriaOut)
+@router.get("/{id_materia}", response_model=s.MateriaOut, dependencies=[require_roles("admin", "docente", "estudiante", "padre")])
 async def get_materia(id_materia: int, db: DbSession):
     from app.core.exceptions import NotFoundException
     repo = MateriaRepository(db)
