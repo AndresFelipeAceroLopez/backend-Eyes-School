@@ -59,7 +59,8 @@ BEGIN
 
       INSERT INTO public.usuario
         ("tipoDocumento", "numeroDocumento", "primerNombre", "primerApellido",
-         "segundoApellido", genero, correo, password, estado, "fechaRegistro", "idRol")
+         "segundoApellido", genero, correo, password, estado, "fechaRegistro", "idRol",
+         "idUsuario_uuid")
       VALUES
         ('CC',
          v_doc,
@@ -71,7 +72,8 @@ BEGIN
          v_pwd,
          true,
          NOW(),
-         2)
+         2,
+         gen_random_uuid())
       RETURNING "idUsuario" INTO v_id_usuario;
 
       INSERT INTO public.estudiantes
