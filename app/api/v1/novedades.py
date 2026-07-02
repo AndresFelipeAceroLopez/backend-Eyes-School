@@ -13,7 +13,7 @@ from app.core.dependencies import DbSession, require_roles
 router = APIRouter(tags=["Novedades"])
 
 
-@router.get("/tipos-novedad", response_model=list[TipoNovedadOut], dependencies=[require_roles("admin", "docente", "padre")])
+@router.get("/tipos-novedad", response_model=list[TipoNovedadOut], dependencies=[require_roles("admin", "docente", "estudiante", "padre")])
 async def list_tipos(db: DbSession):
     return await NovedadService(db).list_tipos()
 
@@ -33,7 +33,10 @@ async def delete_tipo(id_tipo: int, db: DbSession):
     await NovedadService(db).delete_tipo(id_tipo)
 
 
-@router.get("/novedades", response_model=list[NovedadOut], dependencies=[require_roles("admin", "docente", "padre")])
+# Listado global = vista de gestión. Profesor y admin hacen el CRUD completo.
+# Estudiantes y padres NO lo consumen: leen las novedades del estudiante
+# asociado vía /estudiantes/{id}/novedades.
+@router.get("/novedades", response_model=list[NovedadOut], dependencies=[require_roles("admin", "docente")])
 async def list_novedades(
     db: DbSession,
     id_estudiante: int | None = None,
@@ -50,7 +53,7 @@ async def create_novedad(data: NovedadCreate, db: DbSession):
     return await NovedadService(db).create(data)
 
 
-@router.get("/novedades/{id_novedad}", response_model=NovedadOut, dependencies=[require_roles("admin", "docente", "padre")])
+@router.get("/novedades/{id_novedad}", response_model=NovedadOut, dependencies=[require_roles("admin", "docente")])
 async def get_novedad(id_novedad: int, db: DbSession):
     return await NovedadService(db).get(id_novedad)
 
@@ -60,6 +63,8 @@ async def update_novedad(id_novedad: int, data: NovedadUpdate, db: DbSession):
     return await NovedadService(db).update(id_novedad, data)
 
 
-@router.delete("/novedades/{id_novedad}", status_code=204, dependencies=[require_roles("admin")])
+# CRUD completo de novedades = profesor y admin. El borrado que hace el admin
+# al eliminar un usuario va además por la cascada de DELETE /usuarios/{id}.
+@router.delete("/novedades/{id_novedad}", status_code=204, dependencies=[require_roles("admin", "docente")])
 async def delete_novedad(id_novedad: int, db: DbSession):
     await NovedadService(db).delete(id_novedad)

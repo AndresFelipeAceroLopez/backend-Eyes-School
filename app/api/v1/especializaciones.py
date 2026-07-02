@@ -14,7 +14,10 @@ class EspecializacionCreate(BaseModel):
 router = APIRouter(prefix="/especializaciones", tags=["Especializaciones"])
 
 
-@router.get("", response_model=list[EspecializacionOut], dependencies=[require_roles("admin", "docente")])
+# Listado público (como GET /cursos): lo consume el formulario de registro,
+# donde el usuario aún no está autenticado y no puede enviar token. Solo expone
+# nombres de especializaciones; el alta/edición/baja sigue restringida a admin.
+@router.get("", response_model=list[EspecializacionOut])
 async def list_especializaciones(db: DbSession):
     items = await EspecializacionRepository(db).get_all()
     return [EspecializacionOut.model_validate(e) for e in items]

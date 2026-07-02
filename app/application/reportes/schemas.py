@@ -11,10 +11,13 @@ class ReporteCreate(BaseModel):
     fecha_fin: date
     id_administrador: int
     parametros: str = " "
+    # Archivo opcional como data URL base64 (la columna es Text).
+    archivo_generado: str | None = None
 
 
 class ReporteEstadoUpdate(BaseModel):
-    estado: Literal["Pendiente", "Procesando", "Completado", "Error"]
+    # "Generando" es el estado que usa el front (equivalente a "Procesando").
+    estado: Literal["Pendiente", "Generando", "Procesando", "Completado", "Error"]
     archivo_generado: str | None = None
 
 
