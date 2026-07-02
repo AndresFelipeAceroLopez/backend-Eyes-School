@@ -13,7 +13,8 @@ from datetime import date
 import asyncpg
 
 
-DATABASE_URL = "postgresql://postgres:Andres2023*@localhost:5432/eyesschool"
+DATABASE_URL = "postgresql://eyesschool_zia0_user:13ZI07GWMlG2EI0MSJyhFSWMgzrXh99v@dpg-d92jl71kh4rs73cllun0-a.oregon-postgres.render.com/eyesschool_zia0"
+
 
 
 def hash_password(password: str) -> str:

@@ -20,6 +20,10 @@ class PadreOut(BaseModel):
     id_estudiante: int
     parentesco: str
     ocupacion: str | None
+    # Datos del estudiante asociado (resueltos en /me para mostrarlos en el perfil
+    # del padre sin que tenga que consultar /usuarios, que es admin-only).
+    nombre_estudiante: str | None = None
+    documento_estudiante: str | None = None
     model_config = {"from_attributes": True}
 
 
@@ -29,10 +33,20 @@ router = APIRouter(prefix="/padres", tags=["Padres"])
 @router.get("/me", response_model=PadreOut, dependencies=[require_roles("padre")])
 async def get_mi_padre(current_user: AuthUser, db: DbSession):
     from app.core.exceptions import NotFoundException
+    from app.infrastructure.models.actores import EstudianteModel
+    from app.infrastructure.models.usuario import UsuarioModel
     item = await PadreRepository(db).get_by_usuario(current_user.id_usuario)
     if not item:
         raise NotFoundException("Perfil padre no encontrado")
-    return PadreOut.model_validate(item)
+    out = PadreOut.model_validate(item)
+    # Resuelve nombre y documento del estudiante asociado (estudiante → usuario).
+    estudiante = await db.get(EstudianteModel, item.id_estudiante)
+    if estudiante:
+        usuario = await db.get(UsuarioModel, estudiante.id_usuario)
+        if usuario:
+            out.nombre_estudiante = f"{usuario.primer_nombre} {usuario.primer_apellido}"
+            out.documento_estudiante = usuario.numero_documento
+    return out
 
 
 @router.get("", response_model=list[PadreOut], dependencies=[require_roles("admin")])

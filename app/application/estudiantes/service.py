@@ -27,7 +27,20 @@ class EstudianteService:
         estado: str | None = None,
     ) -> list[EstudianteOut]:
         items = await self.repo.get_all_with_filters(skip=skip, limit=limit, id_curso=id_curso, estado=estado)
-        return [EstudianteOut.model_validate(e) for e in items]
+        return [self._with_nombre(e) for e in items]
+
+    @staticmethod
+    def _with_nombre(e) -> EstudianteOut:
+        """Adjunta el nombre desde la relación usuario (precargada en el listado),
+        para que el front no necesite consultar /usuarios."""
+        dto = EstudianteOut.model_validate(e)
+        u = getattr(e, "usuario", None)
+        if u is not None:
+            dto.primer_nombre = u.primer_nombre
+            dto.segundo_nombre = u.segundo_nombre
+            dto.primer_apellido = u.primer_apellido
+            dto.segundo_apellido = u.segundo_apellido
+        return dto
 
     async def get(self, id_estudiante: int) -> EstudianteOut:
         item = await self.repo.get_by_id(id_estudiante)

@@ -32,5 +32,14 @@ def create_refresh_token(payload: dict) -> tuple[str, str]:
     return token, jti
 
 
+def create_password_reset_token(id_usuario: int) -> str:
+    data = {
+        "sub": str(id_usuario),
+        "type": "reset",
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=settings.RESET_TOKEN_EXPIRE_MINUTES),
+    }
+    return jwt.encode(data, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
 def decode_token(token: str) -> dict:
     return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])

@@ -34,7 +34,8 @@ class ReporteModel(Base):
     estado: Mapped[str] = mapped_column("estado", Text, nullable=False)
     id_administrador: Mapped[int] = mapped_column("idAdministrador", Integer, ForeignKey("public.administrador.idAdministrador"), nullable=False)
     parametros: Mapped[str] = mapped_column("parametros", String(1), nullable=False)
-    archivo_generado: Mapped[str | None] = mapped_column("archivoGenerado", String(255))
+    # Text (no varchar(255)): guarda el archivo del reporte como data URL base64.
+    archivo_generado: Mapped[str | None] = mapped_column("archivoGenerado", Text)
 
     administrador: Mapped["AdministradorModel"] = relationship(back_populates="reportes")
 
