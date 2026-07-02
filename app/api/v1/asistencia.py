@@ -13,7 +13,7 @@ from app.core.dependencies import DbSession, require_roles
 router = APIRouter(prefix="/asistencia", tags=["Asistencia"])
 
 
-@router.get("", response_model=list[AsistenciaOut], dependencies=[require_roles("admin", "docente")])
+@router.get("", response_model=list[AsistenciaOut], dependencies=[require_roles("admin", "docente", "padre", "estudiante")])
 async def list_asistencia(
     db: DbSession,
     id_estudiante: int | None = None,
@@ -30,7 +30,7 @@ async def create_asistencia(data: AsistenciaCreate, db: DbSession):
     return await AsistenciaService(db).create(data)
 
 
-@router.get("/{id_asistencia}", response_model=AsistenciaOut, dependencies=[require_roles("admin", "docente")])
+@router.get("/{id_asistencia}", response_model=AsistenciaOut, dependencies=[require_roles("admin", "docente", "padre", "estudiante")])
 async def get_asistencia(id_asistencia: int, db: DbSession):
     return await AsistenciaService(db).get(id_asistencia)
 
