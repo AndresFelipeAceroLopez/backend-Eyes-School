@@ -1,17 +1,26 @@
+import logging
+import os
+import uuid
 from datetime import datetime, timezone
 
-from jose import JWTError
 from fastapi import UploadFile
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
-import os
-import uuid
 
-from app.application.auth.schemas import AccessTokenResponse, LoginRequest, MeResponse, TokenResponse
+from app.application.auth.schemas import (
+    AccessTokenResponse,
+    LoginRequest,
+    MeResponse,
+    RegisterRequest,
+    TokenResponse,
+)
+from app.application.usuarios.schemas import UsuarioCreate, UsuarioOut
+from app.application.usuarios.service import UsuarioService
 from app.core.config import settings
 from app.core.email import build_reset_email_html, send_email
 from app.core.exceptions import BusinessRuleException, UnauthorizedException
 from app.core.security import (
+    JWTError,
     create_access_token,
     create_password_reset_token,
     create_refresh_token,
@@ -19,15 +28,22 @@ from app.core.security import (
     hash_password,
     verify_password,
 )
-import logging
-from app.infrastructure.repositories.usuario_repository import UsuarioRepository
-from app.application.usuarios.service import UsuarioService
-from app.application.usuarios.schemas import UsuarioCreate, UsuarioOut
-from app.application.auth.schemas import RegisterRequest
-from app.infrastructure.repositories.actores_repository import AdministradorRepository, EstudianteRepository, PadreRepository, ProfesorRepository
 from app.infrastructure.repositories.academico_repository import ProfesorEspecializacionRepository
+from app.infrastructure.repositories.actores_repository import (
+    AdministradorRepository,
+    EstudianteRepository,
+    PadreRepository,
+    ProfesorRepository,
+)
+from app.infrastructure.repositories.usuario_repository import UsuarioRepository
 
 REFRESH_PREFIX = "refresh:"
+
+# id_rol de la tabla roles (ver seed_data.sql).
+ROL_DOCENTE = 1
+ROL_ESTUDIANTE = 2
+ROL_ADMIN = 3
+ROL_PADRE = 4
 
 
 class AuthService:
@@ -40,11 +56,15 @@ class AuthService:
         user_service = UsuarioService(self.session)
         user_data = UsuarioCreate.model_validate(data.model_dump())
         user_out = await user_service.create(user_data)
-        
-        rol_nombre = user_out.rol.nombre_rol.lower() if user_out.rol else ""
+
         from datetime import date
-        
-        if rol_nombre == "estudiante":
+
+        # El perfil se elige por id_rol, igual que la regla de activación de
+        # abajo: en la BD los roles se llaman 'docente'/'admin', así que comparar
+        # por nombre contra 'profesor'/'administrador' nunca creaba esos perfiles.
+        id_rol = user_out.id_rol
+
+        if id_rol == ROL_ESTUDIANTE:
             est_repo = EstudianteRepository(self.session)
             await est_repo.create({
                 "id_usuario": user_out.id_usuario,
@@ -52,7 +72,7 @@ class AuthService:
                 "fecha_ingreso": date.today(),
                 "id_curso_actual": data.id_curso_actual
             })
-        elif rol_nombre == "profesor":
+        elif id_rol == ROL_DOCENTE:
             prof_repo = ProfesorRepository(self.session)
             prof = await prof_repo.create({
                 "id_usuario": user_out.id_usuario,
@@ -68,7 +88,7 @@ class AuthService:
                     "id_especializacion": data.id_especializacion,
                     "institucion": data.institucion
                 })
-        elif rol_nombre == "padre":
+        elif id_rol == ROL_PADRE:
             if data.id_estudiante_vinculado and data.parentesco:
                 padre_repo = PadreRepository(self.session)
                 await padre_repo.create({
@@ -77,7 +97,7 @@ class AuthService:
                     "parentesco": data.parentesco,
                     "ocupacion": None
                 })
-        elif rol_nombre == "administrador":
+        elif id_rol == ROL_ADMIN:
             admin_repo = AdministradorRepository(self.session)
             await admin_repo.create({
                 "id_usuario": user_out.id_usuario,
@@ -92,7 +112,7 @@ class AuthService:
         # Estudiante (2) y Padre (4) siguen activos por defecto.
         # Se compara por id_rol (estable) y no por nombre: en la BD los roles se
         # llaman 'docente'/'admin', no 'profesor'/'administrador'.
-        if user_out.id_rol in (1, 3):
+        if id_rol in (ROL_DOCENTE, ROL_ADMIN):
             user_model = await self.repo.get_by_id(user_out.id_usuario)
             if user_model:
                 user_model.estado = False
@@ -217,17 +237,17 @@ class AuthService:
         user = await self.repo.get_by_id_with_rol(id_usuario)
         if not user:
             raise UnauthorizedException("Usuario no encontrado")
-            
+
         if not file.content_type.startswith("image/"):
             from app.core.exceptions import ConflictException
             raise ConflictException("El archivo debe ser una imagen")
-            
+
         ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
         filename = f"{uuid.uuid4()}.{ext}"
         filepath = os.path.join("static/avatars", filename)
-        
+
         with open(filepath, "wb") as f:
             f.write(await file.read())
-            
+
         await self.repo.update(user, {"foto_perfil": f"/static/avatars/{filename}"})
         return f"/static/avatars/{filename}"
