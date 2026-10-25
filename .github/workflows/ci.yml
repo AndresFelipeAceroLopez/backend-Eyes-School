@@ -1,0 +1,46 @@
+name: CI
+
+# Punto de control QG3 del modelo de calidad (MC-01): cada pull request debe
+# pasar lint, pruebas y auditoría de dependencias antes de fusionarse.
+on:
+  pull_request:
+  push:
+    branches:
+      - developer
+      - main
+
+jobs:
+  lint_test_audit:
+    name: Lint, pruebas y auditoria
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio pytest-cov ruff pip-audit
+
+      - name: Lint (ruff)
+        run: ruff check app main.py tests
+
+      # Las pruebas no necesitan Postgres ni Redis: tests/conftest.py fija
+      # direcciones ficticias para que nada toque una base real.
+      - name: Tests
+        run: pytest -q --cov=app --cov-report=term --cov-report=xml
+
+      - name: Dependency audit
+        run: pip-audit -r requirements.txt
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: coverage.xml
