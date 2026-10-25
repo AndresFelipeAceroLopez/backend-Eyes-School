@@ -2,7 +2,10 @@ from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 import bcrypt as _bcrypt
-from jose import JWTError, jwt
+import jwt
+
+# Las capas de arriba capturan JWTError sin depender de la librería que firma.
+from jwt import PyJWTError as JWTError  # noqa: F401 (reexportado)
 
 from app.core.config import settings
 
