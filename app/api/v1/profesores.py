@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Query
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.profesores.schemas import (
     AgregarEspecializacionRequest,
@@ -7,8 +8,6 @@ from app.application.profesores.schemas import (
     ProfesorOut,
     ProfesorUpdate,
 )
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.application.profesores.service import ProfesorService
 from app.core.dependencies import AuthUser, CurrentUser, DbSession, require_roles
 from app.core.exceptions import ForbiddenException

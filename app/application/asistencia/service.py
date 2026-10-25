@@ -13,8 +13,11 @@ from app.application.asistencia.schemas import (
     AsistenciaUpdate,
 )
 from app.core.exceptions import NotFoundException
-from app.infrastructure.repositories.asistencia_repository import AsistenciaAulaRepository, AsistenciaRepository
 from app.infrastructure.repositories.actores_repository import EstudianteRepository
+from app.infrastructure.repositories.asistencia_repository import (
+    AsistenciaAulaRepository,
+    AsistenciaRepository,
+)
 
 
 class AsistenciaService:
@@ -48,6 +51,7 @@ class AsistenciaService:
 
     async def register_qr(self, data: AsistenciaQRCreate) -> AsistenciaOut:
         from sqlalchemy import select
+
         from app.infrastructure.models.actores import EstudianteModel
         result = await self.est_repo.session.execute(
             select(EstudianteModel).where(EstudianteModel.codigo_estudiante == data.codigo_qr)

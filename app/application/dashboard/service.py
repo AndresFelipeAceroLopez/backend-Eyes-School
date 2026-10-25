@@ -5,14 +5,18 @@ from datetime import date
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.application.dashboard.schemas import AdminDashboard, DocenteDashboard, EstudianteDashboard, PadreDashboard
+from app.application.dashboard.schemas import (
+    AdminDashboard,
+    DocenteDashboard,
+    EstudianteDashboard,
+    PadreDashboard,
+)
 from app.core.exceptions import NotFoundException
-from app.infrastructure.models.actores import EstudianteModel, ProfesorModel
 from app.infrastructure.models.academico import AsignacionModel, CursoModel
+from app.infrastructure.models.actores import EstudianteModel, ProfesorModel
 from app.infrastructure.models.asistencia import AsistenciaModel
 from app.infrastructure.models.notas import NotaModel
 from app.infrastructure.models.novedades import NovedadModel
-from app.infrastructure.repositories.actores_repository import EstudianteRepository, PadreRepository
 
 
 class DashboardService:

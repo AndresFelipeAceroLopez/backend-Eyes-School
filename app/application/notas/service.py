@@ -70,12 +70,13 @@ class NotaService:
 
         promedio = await self.get_promedio(id_estudiante)
 
-        from fpdf import FPDF
-        import uuid
         import os
+        import uuid
         from datetime import date
 
-        def L(value) -> str:
+        from fpdf import FPDF
+
+        def L(value) -> str:  # noqa: N802 (atajo usado en todo el PDF)
             # Las fuentes core de fpdf usan latin-1; reemplaza caracteres fuera de ese rango.
             return str(value).encode("latin-1", "replace").decode("latin-1")
 

@@ -1,5 +1,7 @@
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel
+
 from app.application.usuarios.schemas import UsuarioCreate
+
 
 class LoginRequest(BaseModel):
     correo: str
@@ -43,14 +45,14 @@ class MeResponse(BaseModel):
 class RegisterRequest(UsuarioCreate):
     # Campos para Administrador
     cargo: str | None = None
-    
+
     # Campos para Estudiante
     id_curso_actual: int | None = None
-    
+
     # Campos para Padre
     id_estudiante_vinculado: int | None = None
     parentesco: str | None = None
-    
+
     # Campos para Profesor
     titulo: str | None = None
     nivel_estudios: str | None = None

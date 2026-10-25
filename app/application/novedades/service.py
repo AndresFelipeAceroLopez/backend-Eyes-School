@@ -10,7 +10,10 @@ from app.application.novedades.schemas import (
     TipoNovedadOut,
 )
 from app.core.exceptions import NotFoundException
-from app.infrastructure.repositories.novedades_repository import NovedadRepository, TipoNovedadRepository
+from app.infrastructure.repositories.novedades_repository import (
+    NovedadRepository,
+    TipoNovedadRepository,
+)
 
 
 class NovedadService:
