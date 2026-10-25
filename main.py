@@ -6,8 +6,6 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.router import api_router
 from app.core.config import settings
-from app.core.database import engine
-from app.infrastructure.models.base import Base
 
 
 @asynccontextmanager
@@ -23,16 +21,19 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    origins = settings.cors_origins
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
+        allow_origins=origins,
+        # Con "*" Starlette refleja cualquier origen si hay credenciales, lo que
+        # abre la API a cualquier sitio. Las credenciales solo con lista explícita.
+        allow_credentials=origins != ["*"],
         allow_methods=["*"],
         allow_headers=["*"],
     )
 
     app.include_router(api_router, prefix="/api/v1")
-    
+
     import os
     os.makedirs("static/avatars", exist_ok=True)
     os.makedirs("static/reportes", exist_ok=True)
