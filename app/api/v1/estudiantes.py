@@ -1,5 +1,8 @@
 from fastapi import APIRouter, Query
 
+from app.application.asistencia.schemas import AsistenciaOut
+from app.application.asistencia.service import AsistenciaService
+from app.application.common.authz import assert_acceso_estudiante
 from app.application.estudiantes.schemas import (
     EstudianteCreate,
     EstudianteIPSCreate,
@@ -8,11 +11,8 @@ from app.application.estudiantes.schemas import (
     EstudianteUpdate,
 )
 from app.application.estudiantes.service import EstudianteService
-from app.application.common.authz import assert_acceso_estudiante
 from app.application.notas.schemas import NotaOut
 from app.application.notas.service import NotaService
-from app.application.asistencia.schemas import AsistenciaOut
-from app.application.asistencia.service import AsistenciaService
 from app.application.novedades.schemas import NovedadOut
 from app.application.novedades.service import NovedadService
 from app.core.dependencies import AuthUser, DbSession, require_roles

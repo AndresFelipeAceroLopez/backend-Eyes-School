@@ -1,6 +1,11 @@
 from fastapi import APIRouter, Query
 
-from app.application.horarios.schemas import AsignarProfesorHorarioRequest, HorarioCreate, HorarioOut, HorarioUpdate
+from app.application.horarios.schemas import (
+    AsignarProfesorHorarioRequest,
+    HorarioCreate,
+    HorarioOut,
+    HorarioUpdate,
+)
 from app.application.horarios.service import HorarioService
 from app.core.dependencies import DbSession, require_roles
 

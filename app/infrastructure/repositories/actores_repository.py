@@ -2,7 +2,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.infrastructure.models.actores import AdministradorModel, EstudianteModel, PadreModel, ProfesorModel
+from app.infrastructure.models.actores import (
+    AdministradorModel,
+    EstudianteModel,
+    PadreModel,
+    ProfesorModel,
+)
 from app.infrastructure.repositories.base_repository import BaseRepository
 
 

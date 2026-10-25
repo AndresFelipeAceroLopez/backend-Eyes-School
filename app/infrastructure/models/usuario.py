@@ -49,4 +49,9 @@ class UsuarioModel(Base):
     padre: Mapped["PadreModel | None"] = relationship(back_populates="usuario")
 
 
-from app.infrastructure.models.actores import AdministradorModel, EstudianteModel, PadreModel, ProfesorModel  # noqa: E402
+from app.infrastructure.models.actores import (  # noqa: E402
+    AdministradorModel,
+    EstudianteModel,
+    PadreModel,
+    ProfesorModel,
+)
