@@ -22,8 +22,9 @@ async def docente_dashboard(current_user: AuthUser, db: DbSession):
 @router.get("/estudiante", response_model=EstudianteDashboard, dependencies=[require_roles("estudiante", "padre")])
 async def estudiante_dashboard(current_user: AuthUser, db: DbSession):
     if "padre" in current_user.roles:
-        from app.infrastructure.models.actores import PadreModel
         from sqlalchemy import select
+
+        from app.infrastructure.models.actores import PadreModel
         padre = await db.execute(select(PadreModel).where(PadreModel.id_usuario == current_user.id_usuario))
         padre = padre.scalar_one_or_none()
         if not padre:

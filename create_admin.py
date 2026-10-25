@@ -12,8 +12,9 @@ from datetime import date
 
 import asyncpg
 
+from app.core.config import settings
 
-DATABASE_URL = "postgresql://eyesschool_zia0_user:13ZI07GWMlG2EI0MSJyhFSWMgzrXh99v@dpg-d92jl71kh4rs73cllun0-a.oregon-postgres.render.com/eyesschool_zia0"
+DATABASE_URL = settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
 
 
 

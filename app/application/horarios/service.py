@@ -2,7 +2,12 @@ from __future__ import annotations
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.application.horarios.schemas import AsignarProfesorHorarioRequest, HorarioCreate, HorarioOut, HorarioUpdate
+from app.application.horarios.schemas import (
+    AsignarProfesorHorarioRequest,
+    HorarioCreate,
+    HorarioOut,
+    HorarioUpdate,
+)
 from app.core.exceptions import NotFoundException
 from app.infrastructure.repositories.academico_repository import HorarioRepository
 

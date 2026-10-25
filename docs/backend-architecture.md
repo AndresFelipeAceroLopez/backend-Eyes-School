@@ -6,14 +6,14 @@
 
 | Componente        | Tecnología                    | Versión   |
 |-------------------|-------------------------------|-----------|
-| Lenguaje          | Python                        | 3.12      |
+| Lenguaje          | Python                        | 3.11      |
 | Framework HTTP    | FastAPI                       | 0.115+    |
 | ORM               | SQLAlchemy (Async)            | 2.x       |
 | Migraciones       | Alembic                       | 1.14+     |
 | Validación        | Pydantic v2                   | 2.x       |
 | Base de datos     | PostgreSQL                    | 15+       |
 | Caché / Sesiones  | Redis                         | 7+        |
-| Autenticación     | JWT (python-jose + bcrypt)    | —         |
+| Autenticación     | JWT (PyJWT + bcrypt)          | —         |
 | Servidor ASGI     | Uvicorn                       | —         |
 
 ---

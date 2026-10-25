@@ -43,6 +43,6 @@ class AsistenciaAulaModel(Base):
     registrado_por_usuario: Mapped["UsuarioModel"] = relationship(foreign_keys=[registrado_por])
 
 
-from app.infrastructure.models.actores import EstudianteModel  # noqa: E402
 from app.infrastructure.models.academico import HorarioModel  # noqa: E402
+from app.infrastructure.models.actores import EstudianteModel  # noqa: E402
 from app.infrastructure.models.usuario import UsuarioModel  # noqa: E402
