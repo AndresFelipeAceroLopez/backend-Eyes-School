@@ -61,6 +61,68 @@ Se registran en Azure Boards antes del 6 nov con estado New, etiqueta `revision-
 | DEF-019 | H-08 | seed_data.sql trae en un comentario las contraseñas de 4 usuarios de prueba, incluido el admin | Crítica | P1 | CP-NF-012 | Andrés Acero | 30/10/2026 | S7 (día 1) |
 | DEF-020 | BE-INF-4 | La API de QA (apieyeschool-q) responde 500 en todo lo que consulta la base: bloquea la integración y los E2E | Alta | P1 | Preflight de BE-INF-4 | Mariana Cortés · Andrés Acero | 05/11/2026 | S8 (primero) |
 | DEF-021 | BE-01 | create_admin.py trae la DATABASE_URL con usuario y contraseña embebida, y el commit que está en main (producción) todavía la tiene | Crítica | P1 | CP-NF-012 (B8 de E1) | Andrés Acero | 09/11/2026 | S8 |
+| DEF-022 | — | Con 50 usuarios concurrentes la API falla: 8,05 % de peticiones sin respuesta y p95 de 3,06 s contra la meta de 800 ms | Alta | P2 | CP-NF-001 | Andrés Acero | 09/11/2026 | S9 |
+| DEF-023 | — | Cualquier endpoint con un id fuera del rango de PostgreSQL responde 500 en vez de 404 o 422 | Media | P3 | CP-INT (contrato OpenAPI) | Andrés Acero | 10/11/2026 | S9 |
+
+**DEF-022 · Rendimiento bajo carga (un solo bug, no uno por umbral).** La corrida S1 del
+09/11/2026 incumplió cuatro umbrales a la vez —errores, p95 global, p95 de navegación y p95 de
+login—, pero son síntomas de una misma saturación, así que se registra **un** defecto y no cuatro.
+Esto sigue la regla de la sección 8 de la planeación de análisis estático: un hallazgo con una
+causa común no se duplica.
+
+| Dato | Valor |
+|---|---|
+| Medición | 50 VUs + 5 docentes + 6 logins/min, 13 min, QA · 12 578 peticiones a 16,1/s |
+| Errores | 8,05 % (1 013). Máximo de 60,0 s = tiempo de espera agotado |
+| p95 | 3,06 s global · 2,72 s navegación · 11,31 s login |
+| Recuperación | La API volvió sola a su línea base sin reiniciar (criterio de CP-NF-002) |
+| Evidencia | `evidencias/PR-06/api/S1_k6_carga.{txt,json}` |
+
+**Lo que hay que decidir antes de corregir, y no es de QA:**
+
+1. **El entorno de medición.** QA está en `chilecentral` y su base en Render (Oregón): la misma
+   consulta tarda 1 526 ms allí y 411 ms en producción. El equipo decidió el 09/11/2026 **no mover
+   la Web App ni la base**, así que esta diferencia es permanente. El PO decide si CP-NF-001 se
+   evalúa en QA con un umbral ajustado, o si se acepta el incumplimiento como riesgo documentado.
+2. **No tocar el pool a ciegas.** `pool_size=10` + `max_overflow=20` son 30 conexiones; subirlas
+   solo ayuda si el plan de Render admite más, y si no, empeora. Hay que confirmar el límite antes.
+3. **La única palanca que no depende de la infraestructura** es reducir el número de consultas por
+   petición. Entra al plan de remediación del PR-03, no a este bug.
+
+**No se registran** como defectos aparte las 55 aserciones de tiempo que falló Newman (I1): son el
+mismo fenómeno medido sin carga y quedan enlazadas a DEF-022.
+
+**DEF-023 · Un id fuera de rango produce 500.** Lo encontró `schemathesis` contra el contrato
+publicado en `/openapi.json` y se verificó a mano con el entorno en reposo, para descartar que
+fuera una secuela de la prueba de carga:
+
+| Petición | Respuesta | Esperado |
+|---|---|---|
+| `GET /api/v1/estudiantes/9223372036854775808` | **500** | 404 o 422 |
+| `GET /api/v1/cursos/{id}/horarios` con ese id | **500** | 404 o 422 |
+| `GET /api/v1/especializaciones/87178291200` | **500** | 404 o 422 |
+| `GET /api/v1/cursos/2/horarios` (id válido) | 200 | ✔ |
+| `GET /api/v1/especializaciones/0` | 404 | ✔ |
+
+**Afecta a 9 de 9 endpoints probados** con parámetro de id (`estudiantes`, `cursos`, `usuarios`,
+`notas`, `asistencia`, `materias`, `profesores`, `novedades`, `reportes`), así que no es un
+endpoint defectuoso sino un patrón.
+
+**Causa.** FastAPI valida que el parámetro sea un entero, pero no su magnitud: el valor llega a la
+consulta y PostgreSQL rechaza lo que no cabe en `integer`/`bigint`. El error de la base sube sin
+capturar y se convierte en 500. Incumple dos reglas del propio proyecto: «validar todos los
+inputs» y «nunca exponer stack traces en producción».
+
+**Corrección propuesta** (dos opciones, la primera es la mínima):
+
+1. Acotar los parámetros de ruta: `id: int = Path(..., ge=1, le=2147483647)`. Devuelve 422 y no
+   llega a la base. Hay que tocar cada endpoint.
+2. Un manejador global de `sqlalchemy.exc.DBAPIError` en `main.py` que responda 422. Es un solo
+   cambio y cubre también los casos que aún no se conocen, pero atrapa más de lo que se busca.
+
+**Severidad Media:** no expone datos ni permite acceso indebido, y hace falta un id absurdo para
+provocarlo. Se registra porque es un 500 no controlado y porque el contrato de OpenAPI declara
+solo 200 y 422 para esas operaciones.
 
 **DEF-020 quedó resuelto el 09/11/2026.** Causa raíz: **Entorno** — la base de QA estaba en la revisión `a1b2c3d4e5f6` mientras el código desplegado desde `developer` ya necesitaba `b7d2e9a41c03` (tablas `sesiones_refresco` y `dispositivos`). Se aplicó la migración desde la consola SSH de `apieyeschool-q`. Verificación: login del admin con `QA_PASSWORD` → 200. La misma falta se encontró en producción y se corrigió igual, antes de desplegar `v1.1.0`.
 
@@ -102,7 +164,7 @@ Corte del registro: 21 nov 2026 (fin de S9) y 28 nov 2026 (fin de S10). En cada 
 
 | Actividad | Fecha | Responsable |
 |---|---|---|
-| Registrar los 21 defectos conocidos en Azure Boards | 3 – 6 nov | Mariana Cortés |
+| Registrar los 23 defectos conocidos en Azure Boards | 3 – 6 nov | Mariana Cortés |
 | Confirmar prioridades | Refinamiento de S7 | Sergio Gómez (PO) |
 | Registrar los defectos nuevos de PR-03 a PR-06 | Durante cada corrida | Quien ejecuta la corrida |
 | Verificar correcciones y cerrar | S8 a S10 | Mariana Cortés · Samuel Sierra |
@@ -110,6 +172,6 @@ Corte del registro: 21 nov 2026 (fin de S9) y 28 nov 2026 (fin de S10). En cada 
 
 ## 9. Definición de terminado
 
-- [ ] Los 21 defectos conocidos de este componente están en Azure Boards con su `AB#` anotado en el PR-07.
+- [ ] Los 23 defectos conocidos de este componente están en Azure Boards con su `AB#` anotado en el PR-07.
 - [ ] Cada bug cerrado tiene la verificación en QA, la causa raíz y el commit.
 - [ ] 0 defectos críticos o altos abiertos al cierre de S10 (criterio de salida del PR-01).
