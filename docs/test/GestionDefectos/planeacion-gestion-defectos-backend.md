@@ -68,31 +68,31 @@ is:issue label:reabierto                     -> reabiertos
 
 Se crean como issues de GitHub con la etiqueta `defecto`, la de severidad y la de origen, y la fecha en que se identificaron. El número `#n` que asigne GitHub se anota en la columna correspondiente de esta tabla y en el PR-07.
 
-| ID PR-07 | Corrección | Título | Severidad | Prioridad propuesta | Caso que lo verifica | Asignado | Identificado | Sprint |
-|---|---|---|---|---|---|---|---|---|
-| DEF-001 | BE-01 | El historial de git conserva un .env con la URL de la base de Render (usuario y contraseña) y la SECRET_KEY | Crítica | P1 | CP-NF-012 | Andrés Acero | 28/10/2026 | S7 (día 1) |
-| DEF-002 | BE-03 | GET /dashboard/estudiante responde 500 (AttributeError) y rompe el inicio del estudiante, también en producción | Crítica | P1 | CP-INT-060 | Andrés Acero | 28/10/2026 | S7 (día 1, hotfix) |
-| DEF-003 | BE-04 | Un padre o un estudiante lee la asistencia de cualquier estudiante por GET /asistencia | Crítica | P1 | CP-INT-036 a 038 | Andrés Acero | 28/10/2026 | S7 |
-| DEF-004 | BE-05 | Un padre lee el vínculo de otro padre en GET /padres/{id} | Media | P3 | CP-INT-065 | Andrés Acero | 28/10/2026 | S7 |
-| DEF-005 | BE-06 | La API acepta notas de 0 a 10 en vez de 0.0 a 5.0 | Alta | P2 | CP-INT-043, 046 | Andrés Acero | 28/10/2026 | S7 |
-| DEF-006 | BE-07 | Un padre con dos hijos provoca error 500 en /padres/me, el dashboard y la autorización | Alta | P2 | CP-INT-062 a 064 | Andrés Acero | 28/10/2026 | S8 |
-| DEF-007 | BE-08 | Se guardan dos entradas o dos salidas del mismo estudiante el mismo día | Alta | P2 | CP-INT-031, 033, 034 | Andrés Acero | 28/10/2026 | S7 |
-| DEF-008 | BE-09 | La API no aplica la política de contraseña (5 reglas) ni pide la contraseña actual al cambiarla | Alta | P2 | CP-INT-013, 020, 028 | Andrés Acero | 28/10/2026 | S7 |
-| DEF-009 | BE-10 | registrado_por lo envía el cliente: se puede registrar a nombre de otro docente | Media | P3 | CP-INT-035 | Andrés Acero | 28/10/2026 | S7 |
-| DEF-010 | BE-11 | El docente califica cualquier materia, lee todas las notas y edita novedades de otros | Media | P3 | CP-INT-047, 048, 056 | Andrés Acero | 28/10/2026 | S8 |
-| DEF-011 | BE-12 | El correo distingue mayúsculas y no se valida su formato | Media | P3 | CP-INT-007, 018, 077 | Andrés Acero | 28/10/2026 | S7 |
-| DEF-012 | BE-13 | Un usuario desactivado sigue renovando su sesión y el enlace de recuperación se puede reutilizar | Media | P3 | CP-INT-009, 010, 014, 029 | Andrés Acero | 28/10/2026 | S8 |
-| DEF-013 | BE-14 | Los avatares no validan tipo ni tamaño y se sirven como públicos (permite XSS almacenado) | Media | P3 | CP-INT-072 | Andrés Acero | 28/10/2026 | S7 |
-| DEF-014 | BE-15 | Los reportes se descargan sin token por /static y los boletines PDF nunca se borran | Media | P3 | CP-INT-051, 071 | Andrés Acero | 28/10/2026 | S8 |
-| DEF-015 | BE-16 | No hay límite de intentos de inicio de sesión | Media | P3 | CP-INT-006 | Andrés Acero | 28/10/2026 | S8 |
-| DEF-016 | BE-17 | Si Redis falla, la revocación de sesiones se desactiva sin aviso (try/except pass) | Alta | P2 | CP-INT-009 | Andrés Acero | 30/10/2026 | S7 |
-| DEF-017 | BE-18 | Las notificaciones push al acudiente no se envían: no existe el emisor | Alta | P2 | CP-INT-057, 058 | Andrés Acero | 30/10/2026 | S8 |
-| DEF-018 | BE-19 | El boletín de un estudiante sin notas sale como PDF vacío en vez del mensaje del CA | Media | P3 | CP-INT-052 | Andrés Acero | 30/10/2026 | S8 |
-| DEF-019 | H-08 | seed_data.sql trae en un comentario las contraseñas de 4 usuarios de prueba, incluido el admin | Crítica | P1 | CP-NF-012 | Andrés Acero | 30/10/2026 | S7 (día 1) |
-| DEF-020 | BE-INF-4 | La API de QA (apieyeschool-q) responde 500 en todo lo que consulta la base: bloquea la integración y los E2E | Alta | P1 | Preflight de BE-INF-4 | Mariana Cortés · Andrés Acero | 05/11/2026 | S8 (primero) |
-| DEF-021 | BE-01 | create_admin.py trae la DATABASE_URL con usuario y contraseña embebida, y el commit que está en main (producción) todavía la tiene | Crítica | P1 | CP-NF-012 (B8 de E1) | Andrés Acero | 09/11/2026 | S8 |
-| DEF-022 | — | Con 50 usuarios concurrentes la API falla: 8,05 % de peticiones sin respuesta y p95 de 3,06 s contra la meta de 800 ms | Alta | P2 | CP-NF-001 | Andrés Acero | 09/11/2026 | S9 |
-| DEF-023 | — | Cualquier endpoint con un id fuera del rango de PostgreSQL responde 500 en vez de 404 o 422 | Media | P3 | CP-INT (contrato OpenAPI) | Andrés Acero | 10/11/2026 | S9 |
+| ID PR-07 | Issue | Corrección | Título | Severidad | Prioridad propuesta | Caso que lo verifica | Asignado | Identificado | Sprint |
+|---|---|---|---|---|---|---|---|---|---|
+| DEF-001 | [#22](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/22) | BE-01 | El historial de git conserva un .env con la URL de la base de Render (usuario y contraseña) y la SECRET_KEY | Crítica | P1 | CP-NF-012 | Andrés Acero | 28/10/2026 | S7 (día 1) |
+| DEF-002 | [#23](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/23) | BE-03 | GET /dashboard/estudiante responde 500 (AttributeError) y rompe el inicio del estudiante, también en producción | Crítica | P1 | CP-INT-060 | Andrés Acero | 28/10/2026 | S7 (día 1, hotfix) |
+| DEF-003 | [#24](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/24) | BE-04 | Un padre o un estudiante lee la asistencia de cualquier estudiante por GET /asistencia | Crítica | P1 | CP-INT-036 a 038 | Andrés Acero | 28/10/2026 | S7 |
+| DEF-004 | [#25](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/25) | BE-05 | Un padre lee el vínculo de otro padre en GET /padres/{id} | Media | P3 | CP-INT-065 | Andrés Acero | 28/10/2026 | S7 |
+| DEF-005 | [#26](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/26) | BE-06 | La API acepta notas de 0 a 10 en vez de 0.0 a 5.0 | Alta | P2 | CP-INT-043, 046 | Andrés Acero | 28/10/2026 | S7 |
+| DEF-006 | [#27](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/27) | BE-07 | Un padre con dos hijos provoca error 500 en /padres/me, el dashboard y la autorización | Alta | P2 | CP-INT-062 a 064 | Andrés Acero | 28/10/2026 | S8 |
+| DEF-007 | [#28](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/28) | BE-08 | Se guardan dos entradas o dos salidas del mismo estudiante el mismo día | Alta | P2 | CP-INT-031, 033, 034 | Andrés Acero | 28/10/2026 | S7 |
+| DEF-008 | [#29](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/29) | BE-09 | La API no aplica la política de contraseña (5 reglas) ni pide la contraseña actual al cambiarla | Alta | P2 | CP-INT-013, 020, 028 | Andrés Acero | 28/10/2026 | S7 |
+| DEF-009 | [#30](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/30) | BE-10 | registrado_por lo envía el cliente: se puede registrar a nombre de otro docente | Media | P3 | CP-INT-035 | Andrés Acero | 28/10/2026 | S7 |
+| DEF-010 | [#31](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/31) | BE-11 | El docente califica cualquier materia, lee todas las notas y edita novedades de otros | Media | P3 | CP-INT-047, 048, 056 | Andrés Acero | 28/10/2026 | S8 |
+| DEF-011 | [#32](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/32) | BE-12 | El correo distingue mayúsculas y no se valida su formato | Media | P3 | CP-INT-007, 018, 077 | Andrés Acero | 28/10/2026 | S7 |
+| DEF-012 | [#33](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/33) | BE-13 | Un usuario desactivado sigue renovando su sesión y el enlace de recuperación se puede reutilizar | Media | P3 | CP-INT-009, 010, 014, 029 | Andrés Acero | 28/10/2026 | S8 |
+| DEF-013 | [#34](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/34) | BE-14 | Los avatares no validan tipo ni tamaño y se sirven como públicos (permite XSS almacenado) | Media | P3 | CP-INT-072 | Andrés Acero | 28/10/2026 | S7 |
+| DEF-014 | [#35](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/35) | BE-15 | Los reportes se descargan sin token por /static y los boletines PDF nunca se borran | Media | P3 | CP-INT-051, 071 | Andrés Acero | 28/10/2026 | S8 |
+| DEF-015 | [#36](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/36) | BE-16 | No hay límite de intentos de inicio de sesión | Media | P3 | CP-INT-006 | Andrés Acero | 28/10/2026 | S8 |
+| DEF-016 | [#37](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/37) | BE-17 | Si Redis falla, la revocación de sesiones se desactiva sin aviso (try/except pass) | Alta | P2 | CP-INT-009 | Andrés Acero | 30/10/2026 | S7 |
+| DEF-017 | [#38](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/38) | BE-18 | Las notificaciones push al acudiente no se envían: no existe el emisor | Alta | P2 | CP-INT-057, 058 | Andrés Acero | 30/10/2026 | S8 |
+| DEF-018 | [#39](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/39) | BE-19 | El boletín de un estudiante sin notas sale como PDF vacío en vez del mensaje del CA | Media | P3 | CP-INT-052 | Andrés Acero | 30/10/2026 | S8 |
+| DEF-019 | [#40](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/40) | H-08 | seed_data.sql trae en un comentario las contraseñas de 4 usuarios de prueba, incluido el admin | Crítica | P1 | CP-NF-012 | Andrés Acero | 30/10/2026 | S7 (día 1) |
+| DEF-020 | [#41](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/41) | BE-INF-4 | La API de QA (apieyeschool-q) responde 500 en todo lo que consulta la base: bloquea la integración y los E2E | Alta | P1 | Preflight de BE-INF-4 | Mariana Cortés · Andrés Acero | 05/11/2026 | S8 (primero) |
+| DEF-021 | [#42](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/42) | BE-01 | create_admin.py trae la DATABASE_URL con usuario y contraseña embebida, y el commit que está en main (producción) todavía la tiene | Crítica | P1 | CP-NF-012 (B8 de E1) | Andrés Acero | 09/11/2026 | S8 |
+| DEF-022 | [#43](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/43) | — | Con 50 usuarios concurrentes la API falla: 8,05 % de peticiones sin respuesta y p95 de 3,06 s contra la meta de 800 ms | Alta | P2 | CP-NF-001 | Andrés Acero | 09/11/2026 | S9 |
+| DEF-023 | [#44](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/44) | — | Cualquier endpoint con un id fuera del rango de PostgreSQL responde 500 en vez de 404 o 422 | Media | P3 | CP-INT (contrato OpenAPI) | Andrés Acero | 10/11/2026 | S9 |
 
 **DEF-022 · Rendimiento bajo carga (un solo bug, no uno por umbral).** La corrida S1 del
 09/11/2026 incumplió cuatro umbrales a la vez —errores, p95 global, p95 de navegación y p95 de

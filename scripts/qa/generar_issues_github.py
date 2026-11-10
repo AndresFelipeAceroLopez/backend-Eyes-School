@@ -41,6 +41,10 @@ def filas_de_la_tabla() -> list[list[str]]:
         if not linea.startswith("| DEF-"):
             continue
         celdas = [c.strip() for c in linea.strip("|").split("|")]
+        # La tabla tiene una columna «Issue» que se rellena DESPUÉS de crearlos; se descarta aquí
+        # para que el script siga leyendo las mismas nueve columnas de siempre.
+        if len(celdas) >= 10 and celdas[1].startswith("[#"):
+            celdas = [celdas[0]] + celdas[2:]
         if len(celdas) >= 9:
             filas.append(celdas[:9])
     return filas
