@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, func, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -20,7 +20,14 @@ class RolModel(Base):
 
 class UsuarioModel(Base):
     __tablename__ = "usuario"
-    __table_args__ = {"schema": "public"}
+    __table_args__ = (
+        # El correo es único sin distinguir mayúsculas (BE-12); lo crea la migración b7d2e9a41c03.
+        Index(
+            "uq_usuario_correo_lower", func.lower(text("\"correo\"")), unique=True,
+            postgresql_where=text("\"correo\" IS NOT NULL"),
+        ),
+        {"schema": "public"},
+    )
 
     id_usuario: Mapped[int] = mapped_column("idUsuario", Integer, primary_key=True, autoincrement=True)
     tipo_documento: Mapped[str] = mapped_column("tipoDocumento", String(10), nullable=False)
@@ -41,6 +48,13 @@ class UsuarioModel(Base):
     auth_id: Mapped[uuid.UUID | None] = mapped_column("auth_id", UUID(as_uuid=True))
     id_usuario_uuid: Mapped[uuid.UUID] = mapped_column("idUsuario_uuid", UUID(as_uuid=True), default=uuid.uuid4)
     foto_perfil: Mapped[str | None] = mapped_column("fotoPerfil", String(255))
+    # Última vez que cambió la contraseña: sella el enlace de recuperación (un solo uso).
+    password_actualizada: Mapped[datetime | None] = mapped_column("passwordActualizada", DateTime)
+    # Bloqueo de inicio de sesión tras varios fallos seguidos.
+    intentos_fallidos: Mapped[int] = mapped_column(
+        "intentosFallidos", Integer, nullable=False, default=0, server_default="0"
+    )
+    bloqueado_hasta: Mapped[datetime | None] = mapped_column("bloqueadoHasta", DateTime)
 
     rol: Mapped["RolModel"] = relationship(back_populates="usuarios")
     administrador: Mapped["AdministradorModel | None"] = relationship(back_populates="usuario")

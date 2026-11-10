@@ -2,18 +2,15 @@ from typing import Annotated
 
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.exceptions import ForbiddenException, UnauthorizedException
-from app.core.redis import get_redis
 from app.core.security import JWTError, decode_token
 
 security = HTTPBearer()
 
 DbSession = Annotated[AsyncSession, Depends(get_db)]
-RedisClient = Annotated[Redis, Depends(get_redis)]
 
 
 class CurrentUser:

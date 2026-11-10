@@ -12,7 +12,6 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     DATABASE_URL: str = "postgresql+asyncpg://postgres:password@localhost:5432/eyesschool"
-    REDIS_URL: str = "redis://localhost:6379/0"
     SECRET_KEY: str = DEFAULT_SECRET_KEY
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
@@ -29,6 +28,14 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str = ""
     MAIL_FROM: str = "EyeSchool <onboarding@resend.dev>"
     FRONTEND_URL: str = "http://localhost:3000"
+
+    # Credencial de la cuenta de servicio de Firebase (JSON completo) para las notificaciones
+    # push. Vive solo en la configuración de Azure, nunca en el repositorio. Vacía = sin push.
+    FIREBASE_CREDENTIALS_JSON: str = ""
+
+    # Bloqueo de inicio de sesión (BE-16): intentos fallidos y minutos de bloqueo.
+    LOGIN_MAX_INTENTOS: int = 5
+    LOGIN_BLOQUEO_MINUTOS: int = 15
 
     @property
     def cors_origins(self) -> list[str]:
