@@ -64,6 +64,33 @@ class AsignacionRepository(BaseRepository[AsignacionModel]):
         )
         return list(result.scalars().all())
 
+    async def docente_dicta(self, id_profesor: int, id_materia: int, id_curso: int) -> bool:
+        """¿El docente tiene asignada esa materia en ese curso?"""
+        result = await self.session.execute(
+            select(AsignacionModel.id_asignacion)
+            .where(
+                AsignacionModel.id_profesor == id_profesor,
+                AsignacionModel.id_materia == id_materia,
+                AsignacionModel.id_curso == id_curso,
+                AsignacionModel.activo == True,  # noqa: E712
+            )
+            .limit(1)
+        )
+        return result.first() is not None
+
+    async def docente_dicta_curso(self, id_profesor: int, id_curso: int) -> bool:
+        """¿El docente dicta alguna materia en ese curso?"""
+        result = await self.session.execute(
+            select(AsignacionModel.id_asignacion)
+            .where(
+                AsignacionModel.id_profesor == id_profesor,
+                AsignacionModel.id_curso == id_curso,
+                AsignacionModel.activo == True,  # noqa: E712
+            )
+            .limit(1)
+        )
+        return result.first() is not None
+
     async def get_with_filters(
         self,
         id_profesor: int | None = None,

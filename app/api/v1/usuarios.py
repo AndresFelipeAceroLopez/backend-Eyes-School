@@ -44,7 +44,9 @@ async def update_usuario(id_usuario: int, data: UsuarioUpdate, db: DbSession, cu
         if current_user.id_usuario != id_usuario:
             raise ForbiddenException()
         data.id_rol = None
-    return await UsuarioService(db).update(id_usuario, data)
+    return await UsuarioService(db).update(
+        id_usuario, data, exigir_password_actual=current_user.nombre_rol != "admin"
+    )
 
 
 @router.patch("/{id_usuario}/estado", response_model=UsuarioOut, dependencies=[require_roles("admin")])

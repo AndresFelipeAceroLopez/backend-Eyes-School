@@ -15,7 +15,7 @@ async def assert_acceso_estudiante(
 
     - admin / docente: acceso completo (gestión de cualquier estudiante).
     - estudiante: solo a su propio expediente.
-    - padre: solo al estudiante asociado a su cuenta.
+    - padre: solo a los estudiantes asociados a su cuenta.
 
     Cualquier otro caso (incluido un padre/estudiante pidiendo otro id) → 403.
     """
@@ -27,7 +27,7 @@ async def assert_acceso_estudiante(
         if est is not None and est.id_estudiante == id_estudiante:
             return
     elif rol == "padre":
-        padre = await PadreRepository(db).get_by_usuario(current_user.id_usuario)
-        if padre is not None and padre.id_estudiante == id_estudiante:
+        # Un acudiente puede tener varios hijos: se autoriza cualquiera de ellos.
+        if id_estudiante in await PadreRepository(db).ids_estudiantes(current_user.id_usuario):
             return
     raise ForbiddenException("Solo puede consultar la información del estudiante asociado")

@@ -12,12 +12,15 @@ from app.application.asistencia.schemas import (
     AsistenciaQRCreate,
     AsistenciaUpdate,
 )
-from app.core.exceptions import NotFoundException
+from app.core.exceptions import BusinessRuleException, ConflictException, NotFoundException
 from app.infrastructure.repositories.actores_repository import EstudianteRepository
 from app.infrastructure.repositories.asistencia_repository import (
     AsistenciaAulaRepository,
     AsistenciaRepository,
 )
+
+# Tipos que se registran una sola vez por estudiante y día. «clase» puede repetirse.
+TIPOS_UNICOS_POR_DIA = ("entrada", "salida")
 
 
 class AsistenciaService:
@@ -45,11 +48,23 @@ class AsistenciaService:
             raise NotFoundException("Asistencia no encontrada")
         return AsistenciaOut.model_validate(item)
 
-    async def create(self, data: AsistenciaCreate) -> AsistenciaOut:
-        item = await self.repo.create(data.model_dump())
+    async def _validar_registro_del_dia(self, id_estudiante: int, fecha: date, tipo: str | None) -> None:
+        if tipo not in TIPOS_UNICOS_POR_DIA:
+            return
+        if await self.repo.exists_for_day(id_estudiante, fecha, tipo):
+            raise ConflictException(
+                f"Ya existe un registro de {tipo} para este estudiante en esta fecha"
+            )
+        if tipo == "salida" and not await self.repo.exists_for_day(id_estudiante, fecha, "entrada"):
+            raise BusinessRuleException("No hay entrada registrada hoy para este estudiante")
+
+    async def create(self, data: AsistenciaCreate, registrado_por: int) -> AsistenciaOut:
+        """`registrado_por` sale del token del usuario autenticado, nunca del cuerpo."""
+        await self._validar_registro_del_dia(data.id_estudiante, data.fecha, data.tipo)
+        item = await self.repo.create({**data.model_dump(), "registrado_por": registrado_por})
         return AsistenciaOut.model_validate(item)
 
-    async def register_qr(self, data: AsistenciaQRCreate) -> AsistenciaOut:
+    async def register_qr(self, data: AsistenciaQRCreate, registrado_por: int) -> AsistenciaOut:
         from sqlalchemy import select
 
         from app.infrastructure.models.actores import EstudianteModel
@@ -61,11 +76,12 @@ class AsistenciaService:
             raise NotFoundException(f"Estudiante con QR '{data.codigo_qr}' no encontrado")
 
         today = date.today()
+        await self._validar_registro_del_dia(estudiante.id_estudiante, today, data.tipo)
         payload = {
             "id_estudiante": estudiante.id_estudiante,
             "fecha": today,
             "estado": "Presente",
-            "registrado_por": data.registrado_por,
+            "registrado_por": registrado_por,
             "tipo": data.tipo,
             "codigo_qr": data.codigo_qr,
         }
@@ -94,8 +110,8 @@ class AsistenciaService:
             items = await self.aula_repo.get_all(skip=skip, limit=limit)
         return [AsistenciaAulaOut.model_validate(a) for a in items]
 
-    async def create_aula(self, data: AsistenciaAulaCreate) -> AsistenciaAulaOut:
-        item = await self.aula_repo.create(data.model_dump())
+    async def create_aula(self, data: AsistenciaAulaCreate, registrado_por: int) -> AsistenciaAulaOut:
+        item = await self.aula_repo.create({**data.model_dump(), "registrado_por": registrado_por})
         return AsistenciaAulaOut.model_validate(item)
 
     async def delete_aula(self, id_asistencia_aula: int) -> None:

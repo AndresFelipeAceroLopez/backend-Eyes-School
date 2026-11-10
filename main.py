@@ -37,7 +37,9 @@ def create_app() -> FastAPI:
     import os
     os.makedirs("static/avatars", exist_ok=True)
     os.makedirs("static/reportes", exist_ok=True)
-    app.mount("/static", StaticFiles(directory="static"), name="static")
+    # Solo los avatares son públicos. Los reportes se descargan únicamente por
+    # GET /reportes/{id}/archivo, que exige un administrador autenticado.
+    app.mount("/static/avatars", StaticFiles(directory="static/avatars"), name="avatars")
 
     return app
 

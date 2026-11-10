@@ -96,6 +96,14 @@ class EstudianteRepository(BaseRepository[EstudianteModel]):
         result = await self.session.execute(query.offset(skip).limit(limit))
         return list(result.scalars().all())
 
+    async def get_con_usuario(self, id_estudiante: int) -> EstudianteModel | None:
+        result = await self.session.execute(
+            select(EstudianteModel)
+            .options(selectinload(EstudianteModel.usuario))
+            .where(EstudianteModel.id_estudiante == id_estudiante)
+        )
+        return result.scalar_one_or_none()
+
     async def codigo_exists(self, codigo: str, exclude_id: int | None = None) -> bool:
         query = select(EstudianteModel.id_estudiante).where(EstudianteModel.codigo_estudiante == codigo)
         if exclude_id:
@@ -109,10 +117,29 @@ class PadreRepository(BaseRepository[PadreModel]):
         super().__init__(PadreModel, session)
 
     async def get_by_usuario(self, id_usuario: int) -> PadreModel | None:
+        """Primer vínculo del acudiente (un padre puede tener varios hijos)."""
         result = await self.session.execute(
-            select(PadreModel).where(PadreModel.id_usuario == id_usuario)
+            select(PadreModel)
+            .where(PadreModel.id_usuario == id_usuario)
+            .order_by(PadreModel.id_padre)
         )
-        return result.scalar_one_or_none()
+        return result.scalars().first()
+
+    async def list_by_usuario(self, id_usuario: int) -> list[PadreModel]:
+        """Todos los vínculos del acudiente, con el estudiante y su usuario precargados."""
+        result = await self.session.execute(
+            select(PadreModel)
+            .options(selectinload(PadreModel.estudiante).selectinload(EstudianteModel.usuario))
+            .where(PadreModel.id_usuario == id_usuario)
+            .order_by(PadreModel.id_padre)
+        )
+        return list(result.scalars().all())
+
+    async def ids_estudiantes(self, id_usuario: int) -> set[int]:
+        result = await self.session.execute(
+            select(PadreModel.id_estudiante).where(PadreModel.id_usuario == id_usuario)
+        )
+        return set(result.scalars().all())
 
     async def get_by_estudiante(self, id_estudiante: int) -> list[PadreModel]:
         result = await self.session.execute(

@@ -11,17 +11,44 @@ from app.application.dashboard.schemas import (
     EstudianteDashboard,
     PadreDashboard,
 )
-from app.core.exceptions import NotFoundException
+from app.core.exceptions import ForbiddenException, NotFoundException
 from app.infrastructure.models.academico import AsignacionModel, CursoModel
 from app.infrastructure.models.actores import EstudianteModel, ProfesorModel
 from app.infrastructure.models.asistencia import AsistenciaModel
 from app.infrastructure.models.notas import NotaModel
 from app.infrastructure.models.novedades import NovedadModel
+from app.infrastructure.repositories.actores_repository import (
+    EstudianteRepository,
+    PadreRepository,
+)
 
 
 class DashboardService:
     def __init__(self, session: AsyncSession):
         self.session = session
+
+    async def resolver_estudiante(self, current_user, id_estudiante: int | None = None) -> int:
+        """¿De qué estudiante son los datos que pide este usuario?
+
+        - estudiante: el suyo.
+        - padre: `id_estudiante` si es uno de sus hijos (si no, 403); sin indicarlo, el primero.
+        """
+        if current_user.nombre_rol == "padre":
+            repo = PadreRepository(self.session)
+            if id_estudiante is not None:
+                if id_estudiante not in await repo.ids_estudiantes(current_user.id_usuario):
+                    raise ForbiddenException(
+                        "Solo puede consultar la información del estudiante asociado"
+                    )
+                return id_estudiante
+            padre = await repo.get_by_usuario(current_user.id_usuario)
+            if not padre:
+                raise NotFoundException("Perfil padre no encontrado")
+            return padre.id_estudiante
+        est = await EstudianteRepository(self.session).get_by_usuario(current_user.id_usuario)
+        if not est:
+            raise NotFoundException("Perfil estudiante no encontrado")
+        return est.id_estudiante
 
     async def get_admin_dashboard(self) -> AdminDashboard:
         total_est = (await self.session.execute(
@@ -117,31 +144,31 @@ class DashboardService:
             periodo_actual=1,
         )
 
-    async def get_padre_dashboard(self, id_usuario: int) -> PadreDashboard:
-        from app.infrastructure.models.actores import PadreModel
+    async def get_padre_dashboard(
+        self, id_usuario: int, id_estudiante: int | None = None
+    ) -> PadreDashboard:
+        from app.core.dependencies import CurrentUser
         from app.infrastructure.models.usuario import UsuarioModel
-        padre = (await self.session.execute(
-            select(PadreModel).where(PadreModel.id_usuario == id_usuario)
-        )).scalar_one_or_none()
-        if not padre:
-            raise NotFoundException("Perfil de padre no encontrado")
 
-        estudiante = await self.session.get(EstudianteModel, padre.id_estudiante)
+        id_estudiante = await self.resolver_estudiante(
+            CurrentUser(id_usuario, 4, "padre"), id_estudiante
+        )
+        estudiante = await self.session.get(EstudianteModel, id_estudiante)
         usuario = await self.session.get(UsuarioModel, estudiante.id_usuario)
 
         promedio = (await self.session.execute(
-            select(func.avg(NotaModel.nota)).where(NotaModel.id_estudiante == padre.id_estudiante)
+            select(func.avg(NotaModel.nota)).where(NotaModel.id_estudiante == id_estudiante)
         )).scalar_one()
 
-        asistencia_pct = await self._get_porcentaje_asistencia(padre.id_estudiante)
+        asistencia_pct = await self._get_porcentaje_asistencia(id_estudiante)
 
         novedades = (await self.session.execute(
             select(func.count()).select_from(NovedadModel)
-            .where(NovedadModel.id_estudiante == padre.id_estudiante, NovedadModel.estado == "Pendiente")
+            .where(NovedadModel.id_estudiante == id_estudiante, NovedadModel.estado == "Pendiente")
         )).scalar_one()
 
         return PadreDashboard(
-            id_estudiante=padre.id_estudiante,
+            id_estudiante=id_estudiante,
             nombre_estudiante=f"{usuario.primer_nombre} {usuario.primer_apellido}",
             promedio_general=round(float(promedio), 2) if promedio else None,
             porcentaje_asistencia=asistencia_pct,

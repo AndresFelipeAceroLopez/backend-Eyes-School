@@ -1,52 +1,23 @@
-from typing import Literal
-
 from fastapi import APIRouter, Query
-from pydantic import BaseModel
 
+from app.application.padres.schemas import HijoOut, PadreCreate, PadreOut
+from app.application.padres.service import PadreService
 from app.core.dependencies import AuthUser, DbSession, require_roles
+from app.core.exceptions import ForbiddenException, NotFoundException
 from app.infrastructure.repositories.actores_repository import PadreRepository
-
-
-class PadreCreate(BaseModel):
-    id_usuario: int
-    id_estudiante: int
-    parentesco: Literal["Padre", "Madre", "Tutor", "Abuelo", "Otro"]
-    ocupacion: str | None = None
-
-
-class PadreOut(BaseModel):
-    id_padre: int
-    id_usuario: int
-    id_estudiante: int
-    parentesco: str
-    ocupacion: str | None
-    # Datos del estudiante asociado (resueltos en /me para mostrarlos en el perfil
-    # del padre sin que tenga que consultar /usuarios, que es admin-only).
-    nombre_estudiante: str | None = None
-    documento_estudiante: str | None = None
-    model_config = {"from_attributes": True}
-
 
 router = APIRouter(prefix="/padres", tags=["Padres"])
 
 
 @router.get("/me", response_model=PadreOut, dependencies=[require_roles("padre")])
-async def get_mi_padre(current_user: AuthUser, db: DbSession):
-    from app.core.exceptions import NotFoundException
-    from app.infrastructure.models.actores import EstudianteModel
-    from app.infrastructure.models.usuario import UsuarioModel
-    item = await PadreRepository(db).get_by_usuario(current_user.id_usuario)
-    if not item:
-        raise NotFoundException("Perfil padre no encontrado")
-    out = PadreOut.model_validate(item)
-    # Resuelve nombre y documento del estudiante asociado (estudiante → usuario).
-    estudiante = await db.get(EstudianteModel, item.id_estudiante)
-    if estudiante:
-        usuario = await db.get(UsuarioModel, estudiante.id_usuario)
-        if usuario:
-            out.nombre_estudiante = f"{usuario.primer_nombre} {usuario.primer_apellido}"
-            out.documento_estudiante = usuario.numero_documento
-    return out
+async def get_mi_padre(current_user: AuthUser, db: DbSession, id_estudiante: int | None = None):
+    """Vínculo del acudiente con uno de sus hijos (el primero si no se indica `id_estudiante`)."""
+    return await PadreService(db).mi_vinculo(current_user.id_usuario, id_estudiante)
+
+
+@router.get("/me/hijos", response_model=list[HijoOut], dependencies=[require_roles("padre")])
+async def list_mis_hijos(current_user: AuthUser, db: DbSession):
+    return await PadreService(db).hijos(current_user.id_usuario)
 
 
 @router.get("", response_model=list[PadreOut], dependencies=[require_roles("admin")])
@@ -62,17 +33,18 @@ async def create_padre(data: PadreCreate, db: DbSession):
 
 
 @router.get("/{id_padre}", response_model=PadreOut, dependencies=[require_roles("admin", "padre")])
-async def get_padre(id_padre: int, db: DbSession):
-    from app.core.exceptions import NotFoundException
+async def get_padre(id_padre: int, db: DbSession, current_user: AuthUser):
     item = await PadreRepository(db).get_by_id(id_padre)
     if not item:
         raise NotFoundException("Padre no encontrado")
+    # Un acudiente solo puede ver sus propios vínculos, no los de otro acudiente.
+    if current_user.nombre_rol == "padre" and item.id_usuario != current_user.id_usuario:
+        raise ForbiddenException()
     return PadreOut.model_validate(item)
 
 
 @router.put("/{id_padre}", response_model=PadreOut, dependencies=[require_roles("admin")])
 async def update_padre(id_padre: int, data: PadreCreate, db: DbSession):
-    from app.core.exceptions import NotFoundException
     repo = PadreRepository(db)
     item = await repo.get_by_id(id_padre)
     if not item:
@@ -83,7 +55,6 @@ async def update_padre(id_padre: int, data: PadreCreate, db: DbSession):
 
 @router.delete("/{id_padre}", status_code=204, dependencies=[require_roles("admin")])
 async def delete_padre(id_padre: int, db: DbSession):
-    from app.core.exceptions import NotFoundException
     repo = PadreRepository(db)
     item = await repo.get_by_id(id_padre)
     if not item:

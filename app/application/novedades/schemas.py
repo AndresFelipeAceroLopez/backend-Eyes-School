@@ -27,7 +27,6 @@ class NovedadCreate(BaseModel):
     fecha: date
     descripcion: str
     accion_tomada: str | None = None
-    registrado_por: int
 
 
 class NovedadUpdate(BaseModel):

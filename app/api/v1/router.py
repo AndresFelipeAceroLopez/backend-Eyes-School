@@ -7,6 +7,7 @@ from app.api.v1 import (
     auth,
     cursos,
     dashboard,
+    dispositivos,
     especializaciones,
     estudiantes,
     horarios,
@@ -39,3 +40,4 @@ api_router.include_router(notas.router)
 api_router.include_router(novedades.router)
 api_router.include_router(reportes.router)
 api_router.include_router(dashboard.router)
+api_router.include_router(dispositivos.router)
