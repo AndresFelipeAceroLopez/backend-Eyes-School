@@ -13,8 +13,8 @@
 |---|---|---|---|---|---|
 | Unitarias y de componente | PR-04 | `Unitarias/` | **Sí** (U1 y recorrida en U2) | 159/159 · cobertura 72 % | ✅ |
 | Integración con PostgreSQL | PR-05 | `Integracion/` | **Sí** (I1, repetida) | 53/53 contra PostgreSQL 18.6 | ✅ |
-| Integración por HTTP (Newman) | PR-05 | `Integracion/` | No | 70 casos generados, 0 corridos | 🟢 **Listo para correr** |
-| Contrato OpenAPI (schemathesis) | PR-05 | `Integracion/` | No | — | ⏳ Desbloqueado hoy |
+| Integración por HTTP (Newman) | PR-05 | `Integracion/` | **Sí** (I1) | 68 casos · **0 fallos funcionales** · 55 aserciones de tiempo | ✅ |
+| Contrato OpenAPI (schemathesis) | PR-05 | `Integracion/` | No | No está instalado | 🟢 Listo para correr |
 | Análisis estático | PR-03 | `Codigo_Estatico/` | **Sí** (E1 y E2) | 9 de 10 controles ✔, **B8 ya en verde**; B4 sin correr | 🟡 Falta SonarQube |
 | Sistema: carga y estrés (k6) | PR-06 | `Sistema/` | No | k6 instalado, scripts listos | 🟢 **Listo para correr** |
 | Sistema: DAST con OWASP ZAP | PR-06 | `Sistema/` | No | ZAP no instalado | ⏳ Desbloqueado hoy |
@@ -22,7 +22,9 @@
 | Gestión de defectos | PR-07 | `GestionDefectos/` | Parcial | 21 defectos identificados, 0 en Azure Boards | 🔴 Sin registrar |
 | Aceptación (UAT) | PR-08 | `uat/` | No | Sesión en S10 | ⏳ Según cronograma |
 
-**Lectura corta:** todo lo que se puede automatizar y correr sin el entorno de QA está hecho y en verde. Lo que faltaba estaba bloqueado por dos cosas, y **las dos se resolvieron hoy**: la API de QA ya responde y ya se conoce su URL. Lo que queda abierto de verdad es **BE-01** (la contraseña de Render sigue sin rotar) y **el registro de los 21 defectos en Azure Boards**.
+**Lectura corta (actualizada 22:58):** los 68 casos CP-INT de Newman pasaron sin un solo fallo funcional contra QA real. Lo único rojo es el tiempo de respuesta, y es del entorno: QA está en chilecentral con su base en Oregón.
+
+**Lectura original:** todo lo que se puede automatizar y correr sin el entorno de QA está hecho y en verde. Lo que faltaba estaba bloqueado por dos cosas, y **las dos se resolvieron hoy**: la API de QA ya responde y ya se conoce su URL. Lo que queda abierto de verdad es **BE-01** (la contraseña de Render sigue sin rotar) y **el registro de los 21 defectos en Azure Boards**.
 
 ---
 
