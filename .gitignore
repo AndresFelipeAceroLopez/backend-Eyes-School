@@ -92,3 +92,4 @@ junit-*.xml
 htmlcov/
 .coverage
 evidencias/
+.schemathesis/
