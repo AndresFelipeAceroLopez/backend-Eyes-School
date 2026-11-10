@@ -8,7 +8,8 @@
 --  Características:
 --    • Documento, correo y código de estudiante únicos y prefijados ("9..."/
 --      "est.syn..."/"SYN...") para NO colisionar con datos reales.
---    • Contraseña común "Estudiante123*" (hash bcrypt) → pueden iniciar sesión.
+--    • Todos comparten un mismo hash bcrypt. La contraseña NO se documenta aquí (H-08):
+--      en QA se asigna con `python -m scripts.qa_reset_passwords`.
 --    • Idempotente: si ya existen estudiantes sintéticos (codigoEstudiante LIKE
 --      'SYN%') NO vuelve a insertar.
 --
@@ -28,7 +29,7 @@ DECLARE
   v_doc        TEXT;
   v_codigo     TEXT;
   v_correo     TEXT;
-  -- bcrypt de 'Estudiante123*'
+  -- bcrypt de la contraseña común de los sintéticos (no se documenta; ver scripts/qa_reset_passwords.py)
   v_pwd        TEXT := '$2b$12$cGeRdVNDTDPHzw4OWX0YS.MFku2QO0HRHRlMOMV5vCZdXJNVy/gF6';
   nombres      TEXT[]  := ARRAY['Juan','María','Carlos','Laura','Andrés','Valentina','Santiago','Camila','Sebastián','Daniela','Mateo','Sofía','Nicolás','Isabella','Samuel'];
   apellidos    TEXT[]  := ARRAY['García','Rodríguez','Martínez','López','González','Hernández','Pérez','Gómez','Díaz','Torres','Ramírez','Flores','Rojas','Castro','Vargas'];

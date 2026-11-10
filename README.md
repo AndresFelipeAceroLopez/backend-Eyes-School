@@ -1,6 +1,6 @@
 # EyeSchool — API
 
-API REST de EyeSchool en FastAPI. La consumen la app móvil (Flutter) y el panel web (Next.js). Se despliega en Azure App Service con Python 3.11 y usa PostgreSQL y Redis.
+API REST de EyeSchool en FastAPI. La consumen la app móvil (Flutter) y el panel web (Next.js). Se despliega en Azure App Service con Python 3.11 y usa PostgreSQL.
 
 ## Cómo correrla
 
@@ -19,11 +19,11 @@ La documentación interactiva queda en `http://localhost:8000/docs`.
 | Variable | Para qué |
 |---|---|
 | `DATABASE_URL` | Conexión a PostgreSQL (`postgresql+asyncpg://…`). |
-| `REDIS_URL` | Refresh tokens vigentes: cerrar sesión los borra. |
 | `SECRET_KEY` | Firma de los JWT. Use al menos 32 caracteres aleatorios. |
 | `ENVIRONMENT` | Con `production`, la API no arranca si `SECRET_KEY` es la de ejemplo. |
 | `CORS_ORIGINS` | Orígenes del navegador permitidos, separados por coma. `*` acepta cualquiera, sin cookies. |
 | `RESEND_API_KEY`, `MAIL_FROM`, `FRONTEND_URL` | Correo de recuperación de contraseña. |
+| `FIREBASE_CREDENTIALS_JSON` | Cuenta de servicio de Firebase para las notificaciones push al acudiente. Solo en Azure; vacía = no se envían. |
 
 Ningún script lleva credenciales escritas: `create_admin.py` y `run_seed.py` leen la misma configuración.
 
@@ -31,22 +31,25 @@ Ningún script lleva credenciales escritas: `create_admin.py` y `run_seed.py` le
 
 ```bash
 pip install pytest pytest-asyncio pytest-cov ruff pip-audit
-ruff check app main.py tests
-pytest --cov=app
+ruff check app main.py tests scripts
+pytest --cov=app                       # unitarias (no necesitan base de datos)
 pip-audit -r requirements.txt
 ```
 
-Las pruebas no necesitan base de datos ni Redis: `tests/conftest.py` fija direcciones ficticias antes de importar la app, así que nunca tocan datos reales aunque el `.env` apunte a producción.
+Las pruebas unitarias no necesitan base de datos: `tests/conftest.py` fija direcciones ficticias antes de importar la app, así que nunca tocan datos reales aunque el `.env` apunte a producción.
 
-| Prueba | Qué verifica |
-|---|---|
-| `test_authorization.py` | Solo los endpoints públicos declarados aceptan peticiones sin token; los demás responden 401 sin token y 403 con un rol sin permiso. También verifica CORS. |
-| `test_register.py` | El registro crea el perfil de cada rol; docentes y administradores quedan inactivos hasta que un administrador los apruebe. |
-| `test_security.py` | Hash de contraseñas y tokens: tipo, firma, alteración y vencimiento. |
-| `test_config.py` | La configuración rechaza desplegar sin `SECRET_KEY` propia. |
-| `test_app.py` | Todas las rutas se montan y los modelos de SQLAlchemy se relacionan bien. |
+Las pruebas de integración (`pytest -m integration`) usan un PostgreSQL **desechable** indicado en `TEST_DATABASE_URL` (el `DATABASE_URL` del `.env` se ignora a propósito):
 
-El workflow [`ci.yml`](.github/workflows/ci.yml) corre lint, pruebas y auditoría en cada pull request. Es el punto de control QG3 del modelo de calidad (MC-01). El despliegue a Azure está en `main_apieyeschool.yml`.
+```bash
+docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=test -e POSTGRES_DB=eyes_test postgres:18
+TEST_DATABASE_URL=postgresql+asyncpg://postgres:test@localhost:5432/eyes_test pytest -m integration
+```
+
+Sin Docker sirve PostgreSQL 18 nativo: `winget install PostgreSQL.PostgreSQL.18 --custom '--mode unattended --superpassword test --serverport 5432'` y después `createdb -U postgres eyes_test`. **Si `TEST_DATABASE_URL` no está definida las pruebas de integración se omiten en silencio** (`53 skipped`), así que hay que revisar el conteo y no solo que no haya fallos.
+
+La guía completa de pruebas (qué archivo cubre cada corrección, Newman, k6, análisis estático) está en [`tests/README.md`](tests/README.md). Los resultados de cada corrida van en [`docs/test/Resultados/`](docs/test/Resultados/) y las planeaciones de QA en [`docs/test/`](docs/test/).
+
+El workflow [`ci.yml`](.github/workflows/ci.yml) corre lint, pruebas unitarias y de integración (PostgreSQL 18), auditoría de dependencias, SonarQube Cloud y detección de secretos en cada pull request. Es el punto de control QG3 del modelo de calidad (MC-01). El despliegue a Azure está en `main_apieyeschool.yml`.
 
 ## Estructura
 
