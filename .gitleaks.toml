@@ -32,4 +32,18 @@ description = "Archivos de pruebas y documentación"
 paths = [
   '''docs/test/.*''',
   '''\.env\.example$''',
+  # Entorno y colección de Postman: son archivos JSON cuyos objetos tienen la forma
+  # {"key": "<nombre de variable>", "value": "..."}. La regla generic-api-key de
+  # gitleaks lee ese `"key":` como si declarara una clave y reporta el NOMBRE de la
+  # variable (por ejemplo `id_estudiante_ds02_ajeno`) como secreto. Es un falso
+  # positivo: la colección no guarda credenciales. QA_PASSWORD entra en tiempo de
+  # ejecución con `newman --env-var`, nunca escrita en estos archivos (ver
+  # tests/README.md y la planeación de integración, BE-IT-2).
+  '''tests/newman/.*\.json$''',
+  # Carpetas que no se versionan y que solo ensucian `gitleaks dir .` en local: el
+  # entorno virtual trae claves de prueba en los fixtures de sus dependencias y
+  # `evidencias/` son salidas de las corridas. `.env` NO se incluye a propósito:
+  # si alguna vez llega al índice, gitleaks debe reportarlo.
+  '''^\.?venv/''',
+  '''^evidencias/''',
 ]
