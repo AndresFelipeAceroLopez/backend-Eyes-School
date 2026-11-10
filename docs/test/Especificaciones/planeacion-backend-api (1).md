@@ -575,9 +575,22 @@ Son los mismos casos que `tests/password.test.ts` de la web y `validators_test.d
 **Otras variables de `apieyeschool-q`:** `SECRET_KEY` propia de QA y distinta de la de producción; `ENVIRONMENT=qa`; `FRONTEND_URL` con la web de QA; `SCM_DO_BUILD_DURING_DEPLOYMENT=true`. `CORS_ORIGINS` no hace falta (BE-01, punto 4). Startup command: `python -m uvicorn main:app --host 0.0.0.0 --port 8000`.
 
 **Aceptado cuando** el preflight sin credenciales en el código da:
-- `GET /cursos/` sin token → 401 o 403.
-- Login del admin del seed con `QA_PASSWORD` → 200 con `access_token`.
+- `GET /cursos/` sin token → **200** con la lista de cursos.
 - Login con un correo que no existe → 401.
+- Login con un cuerpo inválido → 422.
+- Login del admin del seed con `QA_PASSWORD` → 200 con `access_token`.
+
+> **Corrección del 09/11/2026:** este criterio decía antes «`GET /cursos/` sin token → 401 o 403», y estaba equivocado. `GET /cursos`, `GET /cursos/{id}`, `GET /cursos/{id}/horarios` y `GET /especializaciones` son **públicos a propósito**: son los catálogos que el formulario de registro de acudientes necesita antes de iniciar sesión, y están declarados como tales en `tests/test_authorization.py` (constante `PUBLICOS`), que falla si aparece cualquier otro endpoint sin token. La planeación de pruebas de sistema ya los usaba así en su prueba de humo. Pedir 401 ahí habría hecho fallar un preflight de un entorno sano.
+
+**Estado al 09/11/2026: resuelto.** Con la URL real (`apieyeschool-q-g4hfgrgvepbecacc.chilecentral-01.azurewebsites.net`), el preflight da `/docs` → 200, `/openapi.json` → 200, `GET /cursos/` → 200 con datos, login inexistente → 401 y cuerpo inválido → 422. Es decir, **las consultas a la base funcionan y los 500 desaparecieron**. Falta solo el último punto del criterio, el login del admin del seed, que necesita `QA_PASSWORD` y lo corre quien la tenga:
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" -X POST "$QA_API/auth/login" \
+  -H "Content-Type: application/json" \
+  -d "{\"correo\":\"admin@eyesschool.edu.co\",\"password\":\"$QA_PASSWORD\"}"
+```
+
+El despliegue de `developer` del 09/11/2026 dejó en QA el código con las correcciones: `/openapi.json` ya expone 62 endpoints, entre ellos `/padres/me/hijos` (BE-07) y `/dispositivos` (BE-18).
 
 ---
 
