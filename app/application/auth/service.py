@@ -4,6 +4,7 @@ import os
 import uuid
 from datetime import date, timedelta
 
+import anyio
 from fastapi import UploadFile
 from PIL import Image, UnidentifiedImageError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,6 +16,7 @@ from app.application.auth.schemas import (
     RegisterRequest,
     TokenResponse,
 )
+from app.application.common.archivos import guardar_archivo
 from app.application.usuarios.schemas import UsuarioCreate, UsuarioOut
 from app.application.usuarios.service import UsuarioService
 from app.core.config import settings
@@ -276,9 +278,9 @@ class AuthService:
             raise BusinessRuleException("El archivo debe ser una imagen JPG, PNG o WEBP")
 
         filename = f"{uuid.uuid4()}.{AVATAR_FORMATOS[formato]}"
-        os.makedirs(AVATAR_DIR, exist_ok=True)
-        with open(os.path.join(AVATAR_DIR, filename), "wb") as f:
-            f.write(contenido)
+        await anyio.to_thread.run_sync(
+            guardar_archivo, os.path.join(AVATAR_DIR, filename), contenido, AVATAR_DIR
+        )
 
         url = f"/static/avatars/{filename}"
         await self.repo.update(user, {"foto_perfil": url})

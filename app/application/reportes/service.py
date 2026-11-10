@@ -4,9 +4,11 @@ import os
 import uuid
 from datetime import date
 
+import anyio
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.application.common.archivos import guardar_archivo
 from app.application.reportes.schemas import ReporteCreate, ReporteEstadoUpdate, ReporteOut
 from app.core.exceptions import ConflictException, NotFoundException
 from app.infrastructure.repositories.reportes_repository import ReporteRepository
@@ -72,10 +74,12 @@ class ReporteService:
         if len(content) > MAX_BYTES:
             raise ConflictException("El archivo excede el tamaño máximo de 10 MB")
 
-        os.makedirs(UPLOAD_DIR, exist_ok=True)
         filename = f"{uuid.uuid4()}.{ext}"
-        with open(os.path.join(UPLOAD_DIR, filename), "wb") as f:
-            f.write(content)
+        # En un hilo aparte: escribir hasta 10 MB bloquearía el bucle de eventos y con él
+        # todas las demás peticiones (ver app/application/common/archivos.py).
+        await anyio.to_thread.run_sync(
+            guardar_archivo, os.path.join(UPLOAD_DIR, filename), content, UPLOAD_DIR
+        )
         return f"/static/reportes/{filename}"
 
     async def get_archivo_path(self, id_reporte: int) -> tuple[str, str]:

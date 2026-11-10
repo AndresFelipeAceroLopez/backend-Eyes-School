@@ -11,14 +11,26 @@
 > (Oregón), y la misma consulta tarda 1526 ms en QA frente a 411 ms en producción (westus3). El
 > equipo decidió el 09/11/2026 **no mover la Web App ni la base**, así que esa diferencia se queda.
 >
-> **Consecuencia para el PR-06:** el número de QA no sirve para aceptar o rechazar CP-NF-001 tal
-> como está escrito, porque mide sobre todo la distancia a la base. Se propone al PO una de dos
-> salidas, y la decisión se anota en el informe:
+> **DECISIÓN DEL PO (Sergio Gómez, 10/11/2026): opción A, umbral ajustado para QA.**
 >
-> 1. **Evaluar CP-NF-001 en QA con un umbral ajustado**, documentando que el p95 de producción es
->    aproximadamente una cuarta parte del de QA para la misma operación.
-> 2. **Aceptar el incumplimiento como riesgo documentado** y dejar la medición con el umbral
->    original como línea base, para compararla cuando el entorno se acerque a su base.
+> CP-NF-001 se evalúa en QA con el umbral del MC-01 escalado por la diferencia de entorno medida:
+> 1 526 ms en QA contra 411 ms en producción para la misma consulta, un factor de 3,7.
+>
+> | Criterio | MC-01 (producción) | **Aprobado para QA** |
+> |---|---|---|
+> | p95 de navegación | ≤ 800 ms | **≤ 3 000 ms** |
+> | p95 de `POST /auth/login` | — | ≤ 11 000 ms |
+> | Errores | < 1 % | **< 1 % (sin cambio)** |
+>
+> Los umbrales están aplicados en `tests/carga/carga_50.js`, con la justificación escrita en el
+> propio archivo. Si algún día QA y su base quedan en la misma región, se vuelve a 800 ms.
+>
+> **Ojo con lo que esta decisión NO resuelve:** el umbral ajustado solo cubre el tiempo de
+> respuesta. La corrida S1 también incumplió el criterio de **errores** (8,05 % frente a < 1 %), y
+> ese no se escala: «8 % de peticiones sin respuesta» no se vuelve aceptable por estar lejos de la
+> base. Lo que ocurre es que QA alcanza su techo de throughput (~20 req/s) con 50 usuarios, y a
+> partir de ahí encola hasta agotar el tiempo de espera. **CP-NF-001 sigue sin cumplirse por el
+> criterio de errores**, y eso es lo que queda abierto en DEF-022.
 >
 > El escenario de carga se corrigió el 09/11/2026: antes iniciaba sesión en **cada** iteración, y
 > como el login tarda ~3 s por bcrypt (frente a ~1 s de una consulta normal), la prueba medía sobre

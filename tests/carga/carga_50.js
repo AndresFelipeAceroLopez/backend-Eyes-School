@@ -55,13 +55,23 @@ export const options = {
       maxVUs: 20,
     },
   },
+  // UMBRALES AJUSTADOS PARA QA (decisión del PO del 10/11/2026, opción A del PR-06).
+  //
+  // La meta del MC-01 es p95 ≤ 800 ms, pero está pensada para el entorno donde vive la
+  // aplicación de verdad. QA está en `chilecentral` y su base en Render (Oregón): la misma
+  // consulta tarda 1 526 ms aquí y 411 ms en producción, un factor de 3,7. Medir QA contra
+  // 800 ms es medir la distancia, no la aplicación.
+  //
+  // El PO decidió evaluar CP-NF-001 en QA con el umbral escalado por ese mismo factor:
+  //     800 ms × 3,7 ≈ 3 000 ms
+  // Si algún día QA y su base quedan en la misma región, se vuelve a 800 ms y se borra esta nota.
   thresholds: {
-    http_req_duration: ['p(95)<800'],
+    http_req_duration: ['p(95)<3000'],
     http_req_failed: ['rate<0.01'],
     checks: ['rate>0.99'],
     // Desglose para el PR-06: el login es caro por diseño y se reporta aparte de la navegación.
-    'http_req_duration{name:POST /auth/login}': ['p(95)<4000'],
-    'http_req_duration{escenario:navegacion}': ['p(95)<800'],
+    'http_req_duration{name:POST /auth/login}': ['p(95)<11000'],
+    'http_req_duration{escenario:navegacion}': ['p(95)<3000'],
   },
 };
 
