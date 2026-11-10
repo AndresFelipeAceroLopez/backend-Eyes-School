@@ -1,6 +1,6 @@
 # Planeación del registro y gestión de defectos — Backend (API FastAPI) · Eyes School
 
-> **Tipo de documento:** planeación de QA para el PR-07 (Registro y gestión de defectos). Describe cómo se registran, clasifican, corrigen, verifican y cierran los defectos de este componente en Azure Boards, y lista los defectos que ya se conocen. No contiene resultados de ejecución.
+> **Tipo de documento:** planeación de QA para el PR-07 (Registro y gestión de defectos). Describe cómo se registran, clasifican, corrigen, verifican y cierran los defectos de este componente en GitHub Issues, y lista los defectos que ya se conocen. No contiene resultados de ejecución.
 > **Pensado para:** cualquier integrante del equipo o una IA que no conoce el proyecto. Los defectos conocidos salen de la revisión de código (prueba estática) del 28 al 30/10/2026 y del 02/11/2026, documentada en las planeaciones de correcciones, el PR-02 y el PR-03.
 > **Elaboró:** Mariana Cortés (QA) · **Revisa:** Samuel Sierra (líder de pruebas) · **Aprueba:** Sergio Gómez (PO)
 > **Plazo:** registro de los defectos conocidos en S7 (hasta el 6 nov 2026); gestión continua en S8 a S10; corte del PR-07 el 21 nov (S9) y cierre el 28 nov (S10), según el PR-01.
@@ -11,48 +11,62 @@
 
 > **Corregido el 10/11/2026:** esta planeación daba por hecho que los defectos del backend irían a
 > **Azure Boards**. No es así: el equipo usa Azure DevOps **solo para el componente móvil**. El
-> backend se desarrolla y se revisa en GitHub, así que su registro de defectos vive donde vive el
-> código. Se preparó un CSV para importar los 23 defectos a Azure Boards y **se descartó sin
-> guardarlo** al confirmarse esto.
+> backend se desarrolla, se revisa y se despliega desde GitHub, así que sus defectos se gestionan
+> con **GitHub Issues del mismo repositorio**. Se llegó a preparar el CSV para Azure Boards y se
+> descartó sin guardarlo al confirmarse esto.
 >
-> **El registro oficial de los defectos del backend es la tabla de la sección 4 de este
-> documento**, versionada junto al código. Ventajas para este componente: cada defecto queda
-> enlazado al commit que lo corrige por el historial de git, viaja en los mismos pull requests que
-> el código y no depende de una herramienta que el equipo no usa aquí. El identificador es el
-> `DEF-xxx`; no hay `AB#`.
+> **Por qué GitHub Issues y no la tabla sola:** la tabla de la sección 4 sigue siendo el catálogo
+> de este documento, pero no da estados, ni fechas de cierre, ni métricas de reabiertos, que es lo
+> que el PR-07 necesita. GitHub Issues sí, y además cierra los defectos **solo** cuando el pull
+> request que los corrige dice «Closes #12»: el enlace entre el defecto y su commit deja de
+> depender de que alguien lo anote a mano.
 >
-> Si más adelante se quiere seguimiento de estados con herramienta, lo natural es **GitHub Issues**
-> del mismo repositorio, no Azure Boards. El generador `scripts/qa/generar_csv_azure_boards.py`
-> queda en el repositorio porque el CSV también sirve para GitHub Issues y para el anexo del PR-07.
+> El identificador sigue siendo `DEF-xxx` (va en el título del issue), y el número que asigne
+> GitHub (`#n`) se anota en la tabla de la sección 4 al crearlo.
 
 | Elemento | Valor |
 |---|---|
-| Herramienta | **La tabla de la sección 4 de este documento**, en el repositorio del backend. (Azure Boards es solo para el componente móvil) |
-| Etiquetas | `api` (componente) y el origen: `revision-codigo`, `analisis-estatico`, `pruebas-unitarias`, `pruebas-integracion`, `pruebas-sistema` o `uat` |
-| Enlace con el código | Cada PR de corrección menciona el `DEF-xxx` en el título o la descripción, y el commit de la corrección se anota en la tabla al cerrarlo |
-| Relación con el caso | Campo «Repro Steps» con el ID del caso (CP-INT, CP-SIS, CP-NF o CP-ACE) y la corrección planeada (BE, WEB o APP) |
+| Herramienta | **GitHub Issues** del repositorio `backend-Eyes-School`. (Azure DevOps es solo para el componente móvil) |
+| Etiquetas | `defecto` + severidad (`critica`, `alta`, `media`, `baja`) + origen (`revision-codigo`, `analisis-estatico`, `pruebas-unitarias`, `pruebas-integracion`, `pruebas-sistema`, `uat`) |
+| Enlace con el código | El pull request de la corrección incluye `Closes #<n>`: GitHub cierra el issue al fusionar y deja el enlace al commit automáticamente |
+| Relación con el caso | El cuerpo del issue lleva el ID del caso (CP-INT, CP-SIS, CP-NF o CP-ACE), la corrección planeada (BE, WEB o APP) y el enlace a este documento |
 
-## 2. Ciclo de vida (proceso Scrum de Azure Boards)
+## 2. Ciclo de vida (GitHub Issues)
 
-| Estado | Quién lo mueve | Cuándo |
-|---|---|---|
-| New | QA | Al agregar la fila a la tabla de la sección 4 |
-| Approved | PO (Sergio Gómez) | Al confirmar la prioridad en el refinamiento |
-| Committed | Desarrollador asignado | Al tomarlo en el sprint |
-| Done | QA (Mariana Cortés o Samuel Sierra) | Solo después de verificar la corrección en QA: el caso que lo detectó pasa y la regresión del módulo no rompe nada |
-| Removed | PO | Si es un falso positivo o una decisión de diseño (con la justificación escrita) |
+GitHub Issues solo tiene abierto y cerrado, así que los estados intermedios se llevan con
+etiquetas. Es menos ceremonioso que Azure Boards y suficiente para las métricas del PR-07.
 
-Un bug que falla la verificación vuelve a **Committed** y se cuenta como reabierto (métrica del PR-07).
+| Estado | Cómo se representa | Quién lo mueve | Cuándo |
+|---|---|---|---|
+| New | Issue abierto, sin etiqueta de estado | QA | Al crearlo desde el catálogo de la sección 4 |
+| Approved | Etiqueta `aprobado` | PO (Sergio Gómez) | Al confirmar la prioridad en el refinamiento |
+| Committed | Asignado a alguien **y** metido en el milestone del sprint | Desarrollador | Al tomarlo |
+| Done | Issue **cerrado**, normalmente por el `Closes #n` del pull request | QA | Solo después de verificar la corrección en QA |
+| Removed | Cerrado con la etiqueta `no-procede` y el motivo escrito | PO | Falso positivo o decisión de diseño |
+
+Un defecto que falla la verificación **se reabre** y se le pone la etiqueta `reabierto`. Esa
+etiqueta es la que da la métrica de reabiertos del PR-07: `is:issue label:reabierto`.
+
+**Lo que esto da gratis y la tabla sola no daba:** fecha de apertura y de cierre de cada issue
+(métricas de tiempo de corrección), el commit exacto que lo cerró, y el historial de quién cambió
+qué. Las consultas del corte del PR-07 son búsquedas de GitHub:
+
+```
+is:issue label:defecto                      -> todos
+is:issue is:open label:defecto label:critica -> críticos abiertos
+is:issue is:closed closed:2026-11-01..2026-11-21 label:defecto  -> cerrados en el corte
+is:issue label:reabierto                     -> reabiertos
+```
 
 ## 3. Clasificación
 
-- **Severidad (la define QA)** con los cuatro niveles del PR-07: Crítica, Alta, Media y Baja. En Azure Boards: 1 - Critical, 2 - High, 3 - Medium, 4 - Low.
-- **Prioridad (la define el PO)** de P1 a P4. QA propone: Crítica → P1, Alta → P2, Media → P3, Baja → P4, y el PO la confirma o la cambia.
+- **Severidad (la define QA)** con los cuatro niveles del PR-07: Crítica, Alta, Media y Baja. En GitHub, como etiquetas: `critica`, `alta`, `media`, `baja`.
+- **Prioridad (la define el PO)** de P1 a P4, como etiquetas `P1` a `P4`. QA propone: Crítica → P1, Alta → P2, Media → P3, Baja → P4, y el PO la confirma o la cambia.
 - **Tiempo objetivo de corrección:** Crítica ≤ 24 h; Alta ≤ 3 días; Media dentro del mismo sprint; Baja al backlog. Las críticas conocidas tienen acción el primer día de S7.
 
 ## 4. Defectos ya conocidos de este componente
 
-Se registran en Azure Boards antes del 6 nov con estado New, etiqueta `revision-codigo` y la fecha en que se identificaron como fecha de apertura. El número `AB#` que asigne Azure Boards se anota en el PR-07.
+Se crean como issues de GitHub con la etiqueta `defecto`, la de severidad y la de origen, y la fecha en que se identificaron. El número `#n` que asigne GitHub se anota en la columna correspondiente de esta tabla y en el PR-07.
 
 | ID PR-07 | Corrección | Título | Severidad | Prioridad propuesta | Caso que lo verifica | Asignado | Identificado | Sprint |
 |---|---|---|---|---|---|---|---|---|
@@ -146,18 +160,23 @@ solo 200 y 422 para esas operaciones.
 
 **DEF-021 sale de la corrida E1 del 09/11/2026** (ver [`../Resultados/corrida-2026-11-09.md`](../Resultados/corrida-2026-11-09.md), sección 3.3). Según la regla de la sección 8 de la planeación de análisis estático, un hallazgo que ya tiene corrección planeada se enlaza a esa corrección en vez de abrir otro bug; se registra aparte de DEF-001 porque **amplía el alcance de BE-01 a un archivo y a una rama que ese defecto no cubría** (`create_admin.py` en `main`), y porque su corrección es un cambio de código, no solo la rotación de secretos. Al cerrar DEF-001 **no** queda cerrado DEF-021.
 
-## 5. Ficha del bug en Azure Boards
+## 5. Ficha del defecto en GitHub Issues
 
-| Campo de Azure Boards | Contenido |
+| Parte del issue | Contenido |
 |---|---|
-| Title | Verbo + qué falla + dónde (como los títulos de la sección 4) |
-| Repro Steps | Pasos numerados, resultado esperado, resultado obtenido, ID del caso y corrección planeada |
-| System Info | URL de QA, commit de la API y la petición/respuesta (sin token) |
-| Severity / Priority | Sección 3 |
-| Assigned To | Responsable de la corrección en la planeación |
-| Tags | `api` + origen |
+| Título | `DEF-xxx · ` + verbo + qué falla + dónde (los títulos de la sección 4) |
+| Cuerpo | Pasos numerados, resultado esperado, resultado obtenido, ID del caso que lo verifica y la corrección planeada (BE-xx). Enlace a este documento y a la evidencia |
+| Etiquetas | `defecto` + severidad (`critica`/`alta`/`media`/`baja`) + prioridad (`P1`…`P4`) + origen |
+| Assignee | El responsable de la corrección según la sección 4 |
+| Milestone | El sprint en que se compromete |
+| Al cerrar | Causa raíz (Requisitos, Diseño, Codificación, Datos o Entorno) en un comentario. El commit lo enlaza GitHub solo si el PR dice `Closes #n` |
 | Adjuntos | Captura, video o log **sin tokens ni contraseñas** |
-| Al cerrar | Causa raíz (Requisitos, Diseño, Codificación, Datos o Entorno) y commit de la corrección |
+
+**Los issues no se escriben a mano uno por uno.** `scripts/qa/generar_csv_azure_boards.py` genera
+`evidencias/PR-07/defectos_github_issues.csv` a partir de la tabla de la sección 4, para que el
+documento siga siendo la única fuente de verdad: si cambia la tabla, se regenera. Con la CLI de
+GitHub (`gh`) ese CSV se convierte en issues en un solo paso; el comando está en el README del
+propio script.
 
 ## 6. Verificación y regresión
 
@@ -170,17 +189,19 @@ solo 200 y 422 para esas operaciones.
 
 | Dato | Dónde va |
 |---|---|
-| Cada defecto con su `AB#`, estado y fechas | Tabla 2 (registro consolidado) |
+| Cada defecto con su número de issue (`#n`), estado y fechas | Tabla 2 (registro consolidado) |
 | Conteos por severidad, reabiertos y tiempos | Tabla 3 (métricas) y Figura 2 |
 | Causa raíz al cerrar | Sección 7 (análisis de causa raíz) |
 
-Corte del registro: 21 nov 2026 (fin de S9) y 28 nov 2026 (fin de S10). En cada corte se exporta la consulta de Azure Boards («Bugs del proyecto Eyes School») a CSV y se anexa al PR-07.
+Corte del registro: 21 nov 2026 (fin de S9) y 28 nov 2026 (fin de S10). En cada corte se exporta
+la lista de issues con `gh issue list --label defecto --state all --json number,title,state,createdAt,closedAt,labels`
+y se anexa al PR-07 el resultado.
 
 ## 8. Responsables y calendario
 
 | Actividad | Fecha | Responsable |
 |---|---|---|
-| Mantener al día la tabla de defectos del documento | Continuo | Mariana Cortés |
+| Crear los issues en GitHub desde el CSV y anotar los `#n` en la tabla | 10 nov | Mariana Cortés |
 | Confirmar prioridades | Refinamiento de S7 | Sergio Gómez (PO) |
 | Registrar los defectos nuevos de PR-03 a PR-06 | Durante cada corrida | Quien ejecuta la corrida |
 | Verificar correcciones y cerrar | S8 a S10 | Mariana Cortés · Samuel Sierra |
@@ -188,6 +209,6 @@ Corte del registro: 21 nov 2026 (fin de S9) y 28 nov 2026 (fin de S10). En cada 
 
 ## 9. Definición de terminado
 
-- [ ] Los 23 defectos conocidos de este componente están en la tabla de la sección 4, con su estado al día.
+- [ ] Los 23 defectos conocidos están como issues en GitHub, con su `#n` anotado en la tabla de la sección 4.
 - [ ] Cada bug cerrado tiene la verificación en QA, la causa raíz y el commit.
 - [ ] 0 defectos críticos o altos abiertos al cierre de S10 (criterio de salida del PR-01).
