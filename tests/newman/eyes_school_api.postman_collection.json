@@ -1,0 +1,3492 @@
+{
+  "info": {
+    "name": "Eyes School API · integración (PR-05)",
+    "description": "69 casos CP-INT de la API contra QA. La contraseña entra con --env-var QA_PASSWORD.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "00 Sesiones",
+      "item": [
+        {
+          "name": "00 Sesión admin",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('sufijo', Date.now().toString().slice(-9));",
+                  "pm.collectionVariables.set('hoy', new Date().toISOString().slice(0, 10));",
+                  "['dup','dup2','docente','padre','admin_crea'].forEach((k, i) =>",
+                  "  pm.collectionVariables.set('doc_' + k, '8' + (Date.now() % 100000000 + i)));",
+                  "pm.collectionVariables.set('correo_docente_mayus', (pm.environment.get('correo_docente') || '').toUpperCase());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('00 Sesión admin → 200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('token_admin', pm.response.json().access_token);",
+                  "pm.collectionVariables.set('refresh_admin', pm.response.json().refresh_token);",
+                  "const p = JSON.parse(atob(pm.response.json().access_token.split('.')[1]));",
+                  "pm.collectionVariables.set('id_usuario_admin', p.sub);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "raw": "{\"correo\": \"{{correo_admin}}\", \"password\": \"{{QA_PASSWORD}}\"}"
+            }
+          }
+        },
+        {
+          "name": "00 Sesión docente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('00 Sesión docente → 200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('token_docente', pm.response.json().access_token);",
+                  "pm.collectionVariables.set('refresh_docente', pm.response.json().refresh_token);",
+                  "const p = JSON.parse(atob(pm.response.json().access_token.split('.')[1]));",
+                  "pm.collectionVariables.set('id_usuario_docente', p.sub);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "raw": "{\"correo\": \"{{correo_docente}}\", \"password\": \"{{QA_PASSWORD}}\"}"
+            }
+          }
+        },
+        {
+          "name": "00 Sesión docente2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('00 Sesión docente2 → 200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('token_docente2', pm.response.json().access_token);",
+                  "pm.collectionVariables.set('refresh_docente2', pm.response.json().refresh_token);",
+                  "const p = JSON.parse(atob(pm.response.json().access_token.split('.')[1]));",
+                  "pm.collectionVariables.set('id_usuario_docente2', p.sub);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "raw": "{\"correo\": \"{{correo_docente2}}\", \"password\": \"{{QA_PASSWORD}}\"}"
+            }
+          }
+        },
+        {
+          "name": "00 Sesión estudiante",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('00 Sesión estudiante → 200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('token_estudiante', pm.response.json().access_token);",
+                  "pm.collectionVariables.set('refresh_estudiante', pm.response.json().refresh_token);",
+                  "const p = JSON.parse(atob(pm.response.json().access_token.split('.')[1]));",
+                  "pm.collectionVariables.set('id_usuario_estudiante', p.sub);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "raw": "{\"correo\": \"{{correo_estudiante}}\", \"password\": \"{{QA_PASSWORD}}\"}"
+            }
+          }
+        },
+        {
+          "name": "00 Sesión padre1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('00 Sesión padre1 → 200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('token_padre1', pm.response.json().access_token);",
+                  "pm.collectionVariables.set('refresh_padre1', pm.response.json().refresh_token);",
+                  "const p = JSON.parse(atob(pm.response.json().access_token.split('.')[1]));",
+                  "pm.collectionVariables.set('id_usuario_padre1', p.sub);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "raw": "{\"correo\": \"{{correo_padre1}}\", \"password\": \"{{QA_PASSWORD}}\"}"
+            }
+          }
+        },
+        {
+          "name": "00 Sesión padre2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('00 Sesión padre2 → 200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('token_padre2', pm.response.json().access_token);",
+                  "pm.collectionVariables.set('refresh_padre2', pm.response.json().refresh_token);",
+                  "const p = JSON.parse(atob(pm.response.json().access_token.split('.')[1]));",
+                  "pm.collectionVariables.set('id_usuario_padre2', p.sub);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "raw": "{\"correo\": \"{{correo_padre2}}\", \"password\": \"{{QA_PASSWORD}}\"}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "CP-INT-001 Login docente válido → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-001 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-001 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-001 cuerpo', () => { pm.expect(pm.response.json()).to.have.property('refresh_token'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"correo\": \"{{correo_docente}}\", \"password\": \"{{QA_PASSWORD}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-002 Login con contraseña incorrecta → 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-002 → 401', () => pm.response.to.have.status(401));",
+                  "pm.test('CP-INT-002 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-002 cuerpo', () => { pm.expect(pm.response.json().detail).to.eql('Credenciales inválidas'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"correo\": \"{{correo_docente}}\", \"password\": \"Incorrecta#1\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-003 Login con correo inexistente → 401 genérico",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-003 → 401', () => pm.response.to.have.status(401));",
+                  "pm.test('CP-INT-003 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-003 cuerpo', () => { pm.expect(pm.response.json().detail).to.eql('Credenciales inválidas'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"correo\": \"nadie.{{sufijo}}@example.com\", \"password\": \"{{QA_PASSWORD}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-004 Login con campos vacíos → 422",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-004 → 422', () => pm.response.to.have.status(422));",
+                  "pm.test('CP-INT-004 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-007 Login con el correo en mayúsculas → 200 (BE-12)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-007 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-007 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"correo\": \"{{correo_docente_mayus}}\", \"password\": \"{{QA_PASSWORD}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-008 Refresh con un refresh token válido → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-008 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-008 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-008 cuerpo', () => { pm.expect(pm.response.json()).to.have.property('access_token'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"refresh_token\": \"{{refresh_estudiante}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-011 Recuperar contraseña: respuesta neutra → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-011 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-011 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-011 cuerpo', () => { pm.expect(pm.response.json().message).to.include('Si el correo está registrado'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/forgot-password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "forgot-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"correo\": \"nadie.{{sufijo}}@example.com\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-016 Registro de un docente → 201 e inactivo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-016 → 201', () => pm.response.to.have.status(201));",
+                  "pm.test('CP-INT-016 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-016 cuerpo', () => { pm.expect(pm.response.json().estado).to.eql(false); });",
+                  "if (pm.response.code < 300) pm.collectionVariables.set('usuario_docente_id', pm.response.json().id_usuario);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tipo_documento\": \"CC\", \"numero_documento\": \"{{doc_docente}}\", \"primer_nombre\": \"Qa\", \"primer_apellido\": \"Newman\", \"password\": \"{{QA_PASSWORD}}\", \"correo\": \"docente.{{sufijo}}@example.com\", \"id_rol\": 1}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-005 Login de un docente recién registrado (inactivo) → 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-005 → 401', () => pm.response.to.have.status(401));",
+                  "pm.test('CP-INT-005 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-005 cuerpo', () => { pm.expect(pm.response.json().detail).to.eql('Usuario inactivo'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"correo\": \"docente.{{sufijo}}@example.com\", \"password\": \"{{QA_PASSWORD}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-017 Registro de un padre vinculado a un estudiante → 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-017 → 201', () => pm.response.to.have.status(201));",
+                  "pm.test('CP-INT-017 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "if (pm.response.code < 300) pm.collectionVariables.set('usuario_padre_id', pm.response.json().id_usuario);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tipo_documento\": \"CC\", \"numero_documento\": \"{{doc_padre}}\", \"primer_nombre\": \"Qa\", \"primer_apellido\": \"Newman\", \"password\": \"{{QA_PASSWORD}}\", \"correo\": \"padre.{{sufijo}}@example.com\", \"id_rol\": 4, \"id_estudiante_vinculado\": \"{{id_estudiante_ds01}}\", \"parentesco\": \"Madre\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-018 Registro con el correo repetido en otras mayúsculas → 409 (BE-12)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-018 → 409', () => pm.response.to.have.status(409));",
+                  "pm.test('CP-INT-018 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tipo_documento\": \"CC\", \"numero_documento\": \"{{doc_dup}}\", \"primer_nombre\": \"Qa\", \"primer_apellido\": \"Newman\", \"password\": \"{{QA_PASSWORD}}\", \"correo\": \"PADRE.{{sufijo}}@example.com\", \"id_rol\": 4}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-019 Registro con documento repetido → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-019 → 409', () => pm.response.to.have.status(409));",
+                  "pm.test('CP-INT-019 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tipo_documento\": \"CC\", \"numero_documento\": \"{{doc_padre}}\", \"primer_nombre\": \"Qa\", \"primer_apellido\": \"Newman\", \"password\": \"{{QA_PASSWORD}}\", \"correo\": \"otro.{{sufijo}}@example.com\", \"id_rol\": 4}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-020 Registro con contraseña débil → 422 (BE-09)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-020 → 422', () => pm.response.to.have.status(422));",
+                  "pm.test('CP-INT-020 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tipo_documento\": \"CC\", \"numero_documento\": \"{{doc_dup}}\", \"primer_nombre\": \"Qa\", \"primer_apellido\": \"Newman\", \"password\": \"Colegio2026\", \"correo\": \"debil.{{sufijo}}@example.com\", \"id_rol\": 4}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-021 Registro sin campos obligatorios → 422",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-021 → 422', () => pm.response.to.have.status(422));",
+                  "pm.test('CP-INT-021 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"correo\": \"x.{{sufijo}}@example.com\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-073 GET /auth/me → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-073 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-073 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-073 cuerpo', () => { pm.expect(pm.response.json().nombre_rol).to.eql('estudiante'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_estudiante}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Usuarios",
+      "item": [
+        {
+          "name": "CP-INT-022 Admin crea un usuario → 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-022 → 201', () => pm.response.to.have.status(201));",
+                  "pm.test('CP-INT-022 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "if (pm.response.code < 300) pm.collectionVariables.set('usuario_creado_id', pm.response.json().id_usuario);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/usuarios",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tipo_documento\": \"CC\", \"numero_documento\": \"{{doc_admin_crea}}\", \"primer_nombre\": \"Qa\", \"primer_apellido\": \"Newman\", \"password\": \"{{QA_PASSWORD}}\", \"correo\": \"creado.{{sufijo}}@example.com\", \"id_rol\": 2}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-023 Docente intenta crear un usuario → 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-023 → 403', () => pm.response.to.have.status(403));",
+                  "pm.test('CP-INT-023 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_docente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/usuarios",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tipo_documento\": \"CC\", \"numero_documento\": \"{{doc_admin_crea}}\", \"primer_nombre\": \"Qa\", \"primer_apellido\": \"Newman\", \"password\": \"{{QA_PASSWORD}}\", \"correo\": \"x.{{sufijo}}@example.com\", \"id_rol\": 2}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-024 Admin edita un usuario → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-024 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-024 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-024 cuerpo', () => { pm.expect(pm.response.json().primer_nombre).to.eql('Editado'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/usuarios/{{usuario_creado_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{usuario_creado_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"primer_nombre\": \"Editado\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-025 Admin elimina un usuario → 204",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-025 → 204', () => pm.response.to.have.status(204));",
+                  "pm.test('CP-INT-025 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/usuarios/{{usuario_padre_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{usuario_padre_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-026 Admin lista usuarios → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-026 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-026 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-026 cuerpo', () => { pm.expect(pm.response.json()).to.be.an('array'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/usuarios",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-027 Estudiante intenta listar usuarios → 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-027 → 403', () => pm.response.to.have.status(403));",
+                  "pm.test('CP-INT-027 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_estudiante}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/usuarios",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-028 Cambiar la propia contraseña sin la actual → 400 (BE-09)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-028 → 400', () => pm.response.to.have.status(400));",
+                  "pm.test('CP-INT-028 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_docente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/usuarios/{{id_usuario_docente}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{id_usuario_docente}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"password\": \"Nueva#2026x\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-077 Admin crea un usuario con correo repetido en mayúsculas → 409 (BE-12)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-077 → 409', () => pm.response.to.have.status(409));",
+                  "pm.test('CP-INT-077 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/usuarios",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tipo_documento\": \"CC\", \"numero_documento\": \"{{doc_dup2}}\", \"primer_nombre\": \"Qa\", \"primer_apellido\": \"Newman\", \"password\": \"{{QA_PASSWORD}}\", \"correo\": \"CREADO.{{sufijo}}@example.com\", \"id_rol\": 2}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-078 Admin crea un usuario con documento repetido → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-078 → 409', () => pm.response.to.have.status(409));",
+                  "pm.test('CP-INT-078 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/usuarios",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tipo_documento\": \"CC\", \"numero_documento\": \"{{doc_admin_crea}}\", \"primer_nombre\": \"Qa\", \"primer_apellido\": \"Newman\", \"password\": \"{{QA_PASSWORD}}\", \"correo\": \"otro2.{{sufijo}}@example.com\", \"id_rol\": 2}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-079 Docente edita a otro usuario → 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-079 → 403', () => pm.response.to.have.status(403));",
+                  "pm.test('CP-INT-079 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_docente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/usuarios/{{usuario_creado_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{usuario_creado_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"primer_nombre\": \"X\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Asistencia",
+      "item": [
+        {
+          "name": "CP-INT-030 Primera entrada del día → 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-030 → 201', () => pm.response.to.have.status(201));",
+                  "pm.test('CP-INT-030 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "if (pm.response.code < 300) pm.collectionVariables.set('asistencia_id', pm.response.json().id_asistencia);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_docente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/asistencia",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "asistencia"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id_estudiante\": \"{{id_estudiante_ds03a}}\", \"fecha\": \"{{hoy}}\", \"estado\": \"Presente\", \"tipo\": \"entrada\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-031 Segunda entrada el mismo día → 409 (BE-08)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-031 → 409', () => pm.response.to.have.status(409));",
+                  "pm.test('CP-INT-031 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_docente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/asistencia",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "asistencia"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id_estudiante\": \"{{id_estudiante_ds03a}}\", \"fecha\": \"{{hoy}}\", \"estado\": \"Presente\", \"tipo\": \"entrada\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-032 Salida después de la entrada → 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-032 → 201', () => pm.response.to.have.status(201));",
+                  "pm.test('CP-INT-032 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "if (pm.response.code < 300) pm.collectionVariables.set('asistencia_salida_id', pm.response.json().id_asistencia);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_docente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/asistencia",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "asistencia"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id_estudiante\": \"{{id_estudiante_ds03a}}\", \"fecha\": \"{{hoy}}\", \"estado\": \"Presente\", \"tipo\": \"salida\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-033 Segunda salida el mismo día → 409 (BE-08)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-033 → 409', () => pm.response.to.have.status(409));",
+                  "pm.test('CP-INT-033 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_docente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/asistencia",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "asistencia"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id_estudiante\": \"{{id_estudiante_ds03a}}\", \"fecha\": \"{{hoy}}\", \"estado\": \"Presente\", \"tipo\": \"salida\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-034 Salida sin entrada previa → 400 (BE-08)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-034 → 400', () => pm.response.to.have.status(400));",
+                  "pm.test('CP-INT-034 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-034 cuerpo', () => { pm.expect(pm.response.json().detail).to.eql('No hay entrada registrada hoy para este estudiante'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_docente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/asistencia",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "asistencia"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id_estudiante\": \"{{id_estudiante_ds01}}\", \"fecha\": \"{{hoy}}\", \"estado\": \"Presente\", \"tipo\": \"salida\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-035 registrado_por sale del token, no del cuerpo (BE-10)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-035 → 201', () => pm.response.to.have.status(201));",
+                  "pm.test('CP-INT-035 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-035 cuerpo', () => { pm.expect(pm.response.json().registrado_por).to.eql(parseInt(pm.collectionVariables.get('id_usuario_docente'))); });",
+                  "if (pm.response.code < 300) pm.collectionVariables.set('asistencia_clase_id', pm.response.json().id_asistencia);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_docente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/asistencia",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "asistencia"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id_estudiante\": \"{{id_estudiante_ds03a}}\", \"fecha\": \"{{hoy}}\", \"estado\": \"Presente\", \"tipo\": \"clase\", \"registrado_por\": 999999}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-036 Padre pide la asistencia de un estudiante ajeno → 403 (BE-04)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-036 → 403', () => pm.response.to.have.status(403));",
+                  "pm.test('CP-INT-036 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_padre1}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/asistencia?id_estudiante={{id_estudiante_ds03a}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "asistencia"
+              ],
+              "query": [
+                {
+                  "key": "id_estudiante",
+                  "value": "{{id_estudiante_ds03a}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-037 Padre pide asistencia sin filtro → 400 (BE-04)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-037 → 400', () => pm.response.to.have.status(400));",
+                  "pm.test('CP-INT-037 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_padre1}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/asistencia",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "asistencia"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-038 Padre pide el detalle de una asistencia ajena → 403 (BE-04)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-038 → 403', () => pm.response.to.have.status(403));",
+                  "pm.test('CP-INT-038 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_padre1}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/asistencia/{{asistencia_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "asistencia",
+                "{{asistencia_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-039 Padre lee la asistencia de su hijo → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-039 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-039 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_padre1}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/estudiantes/{{id_estudiante_ds01}}/asistencia",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "estudiantes",
+                "{{id_estudiante_ds01}}",
+                "asistencia"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-040 Admin anula un registro de asistencia → 204",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-040 → 204', () => pm.response.to.have.status(204));",
+                  "pm.test('CP-INT-040 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/asistencia/{{asistencia_clase_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "asistencia",
+                "{{asistencia_clase_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-081 Admin lista la asistencia de hoy → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-081 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-081 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/asistencia?fecha={{hoy}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "asistencia"
+              ],
+              "query": [
+                {
+                  "key": "fecha",
+                  "value": "{{hoy}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notas",
+      "item": [
+        {
+          "name": "CP-INT-041 Docente con asignación crea una nota → 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-041 → 201', () => pm.response.to.have.status(201));",
+                  "pm.test('CP-INT-041 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "if (pm.response.code < 300) pm.collectionVariables.set('nota_id', pm.response.json().id_nota);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_docente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id_estudiante\": \"{{id_estudiante_ds03a}}\", \"id_materia\": \"{{id_materia_docente}}\", \"id_periodo\": 4, \"nota\": 4.0}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-042 Crear una nota sin autenticar → 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-042 → 401', () => pm.response.to.have.status(401));",
+                  "pm.test('CP-INT-042 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id_estudiante\": \"{{id_estudiante_ds03a}}\", \"id_materia\": \"{{id_materia_docente}}\", \"id_periodo\": 4, \"nota\": 4.0}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-043 Nota de 5.1 → 422 (BE-06)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-043 → 422', () => pm.response.to.have.status(422));",
+                  "pm.test('CP-INT-043 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_docente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id_estudiante\": \"{{id_estudiante_ds03a}}\", \"id_materia\": \"{{id_materia_docente}}\", \"id_periodo\": 3, \"nota\": 5.1}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-044 Un padre intenta calificar → 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-044 → 403', () => pm.response.to.have.status(403));",
+                  "pm.test('CP-INT-044 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_padre1}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id_estudiante\": \"{{id_estudiante_ds03a}}\", \"id_materia\": \"{{id_materia_docente}}\", \"id_periodo\": 4, \"nota\": 4.0}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-045 Nota repetida (estudiante, materia, periodo) → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-045 → 409', () => pm.response.to.have.status(409));",
+                  "pm.test('CP-INT-045 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_docente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id_estudiante\": \"{{id_estudiante_ds03a}}\", \"id_materia\": \"{{id_materia_docente}}\", \"id_periodo\": 4, \"nota\": 4.0}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-046 Editar una nota a 5.1 → 422 (BE-06)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-046 → 422', () => pm.response.to.have.status(422));",
+                  "pm.test('CP-INT-046 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_docente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notas/{{nota_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notas",
+                "{{nota_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nota\": 5.1}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-047 Docente sin asignación califica la materia → 403 (BE-11)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-047 → 403', () => pm.response.to.have.status(403));",
+                  "pm.test('CP-INT-047 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_docente2}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id_estudiante\": \"{{id_estudiante_ds03a}}\", \"id_materia\": \"{{id_materia_docente}}\", \"id_periodo\": 3, \"nota\": 4.0}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-048 El docente solo lista notas de los cursos que dicta (BE-11)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-048 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-048 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-048 cuerpo', () => { pm.expect(pm.response.json().every(x => x.id_estudiante != parseInt(pm.collectionVariables.get('id_estudiante_ds03a')) || pm.collectionVariables.get('docente2_dicta_curso_ds03a') === 'true')).to.be.true; });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_docente2}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notas?limit=500",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notas"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "500"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-050 Estudiante lee sus notas → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-050 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-050 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_estudiante}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/estudiantes/{{id_estudiante_ds01}}/notas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "estudiantes",
+                "{{id_estudiante_ds01}}",
+                "notas"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-051 Boletín PDF del estudiante → 200 application/pdf",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-051 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-051 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-051 cuerpo', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/pdf'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_estudiante}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notas/estudiantes/{{id_estudiante_ds01}}/boletin/pdf",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notas",
+                "estudiantes",
+                "{{id_estudiante_ds01}}",
+                "boletin",
+                "pdf"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-052 Boletín de un estudiante sin notas → 404 con el mensaje (BE-19)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get('id_estudiante_sin_notas')) pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-052 → 404', () => pm.response.to.have.status(404));",
+                  "pm.test('CP-INT-052 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-052 cuerpo', () => { pm.expect(pm.response.json().detail).to.eql('No hay datos disponibles para generar el boletín.'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notas/estudiantes/{{id_estudiante_sin_notas}}/boletin/pdf",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notas",
+                "estudiantes",
+                "{{id_estudiante_sin_notas}}",
+                "boletin",
+                "pdf"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-053 Padre pide el boletín de un estudiante ajeno → 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-053 → 403', () => pm.response.to.have.status(403));",
+                  "pm.test('CP-INT-053 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_padre1}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notas/estudiantes/{{id_estudiante_ds03a}}/boletin/pdf",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notas",
+                "estudiantes",
+                "{{id_estudiante_ds03a}}",
+                "boletin",
+                "pdf"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-080 Periodo fuera de 1 a 4 → 422",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-080 → 422', () => pm.response.to.have.status(422));",
+                  "pm.test('CP-INT-080 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_docente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notas"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id_estudiante\": \"{{id_estudiante_ds03a}}\", \"id_materia\": \"{{id_materia_docente}}\", \"id_periodo\": 5, \"nota\": 4.0}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-082 Estudiante lee sus propias notas → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-082 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-082 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_estudiante}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/estudiantes/{{id_estudiante_ds01}}/notas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "estudiantes",
+                "{{id_estudiante_ds01}}",
+                "notas"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Novedades",
+      "item": [
+        {
+          "name": "CP-INT-054 Docente registra una novedad → 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-054 → 201', () => pm.response.to.have.status(201));",
+                  "pm.test('CP-INT-054 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "if (pm.response.code < 300) pm.collectionVariables.set('novedad_id', pm.response.json().id_novedad);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_docente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/novedades",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "novedades"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id_estudiante\": \"{{id_estudiante_ds01}}\", \"id_tipo_novedad\": 1, \"fecha\": \"{{hoy}}\", \"descripcion\": \"Novedad de prueba Newman\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-055 Estudiante intenta registrar una novedad → 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-055 → 403', () => pm.response.to.have.status(403));",
+                  "pm.test('CP-INT-055 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_estudiante}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/novedades",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "novedades"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id_estudiante\": \"{{id_estudiante_ds01}}\", \"id_tipo_novedad\": 1, \"fecha\": \"{{hoy}}\", \"descripcion\": \"Novedad de prueba Newman\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-056 Otro docente edita la novedad ajena → 403 (BE-11)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-056 → 403', () => pm.response.to.have.status(403));",
+                  "pm.test('CP-INT-056 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_docente2}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/novedades/{{novedad_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "novedades",
+                "{{novedad_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"descripcion\": \"Modificada\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-059 Padre lee las novedades de su hijo → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-059 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-059 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_padre1}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/estudiantes/{{id_estudiante_ds01}}/novedades",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "estudiantes",
+                "{{id_estudiante_ds01}}",
+                "novedades"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-083 Admin lista las novedades → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-083 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-083 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/novedades",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "novedades"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Padres y dashboard",
+      "item": [
+        {
+          "name": "CP-INT-060 Inicio del estudiante → 200, no 500 (BE-03)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-060 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-060 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_estudiante}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/estudiante",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "estudiante"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-061 Inicio del padre → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-061 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-061 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_padre1}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/padre",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "padre"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-062 Padre con dos hijos lista a los dos (BE-07)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-062 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-062 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-062 cuerpo', () => { pm.expect(pm.response.json()).to.have.lengthOf(2); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_padre2}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/padres/me/hijos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "padres",
+                "me",
+                "hijos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-063 GET /padres/me con dos hijos → 200, no 500 (BE-07)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-063 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-063 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_padre2}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/padres/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "padres",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-064 Dashboard de un estudiante que no es su hijo → 403 (BE-07)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-064 → 403', () => pm.response.to.have.status(403));",
+                  "pm.test('CP-INT-064 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_padre2}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dashboard/padre?id_estudiante={{id_estudiante_ds02_ajeno}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dashboard",
+                "padre"
+              ],
+              "query": [
+                {
+                  "key": "id_estudiante",
+                  "value": "{{id_estudiante_ds02_ajeno}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-065 Padre lee el vínculo de otro padre → 403 (BE-05)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-065 → 403', () => pm.response.to.have.status(403));",
+                  "pm.test('CP-INT-065 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_padre1}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/padres/{{id_padre_ajeno}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "padres",
+                "{{id_padre_ajeno}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-074 GET /estudiantes/me → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-074 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-074 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_estudiante}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/estudiantes/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "estudiantes",
+                "me"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Horarios y asignaciones",
+      "item": [
+        {
+          "name": "CP-INT-066 Horario de un curso → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-066 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-066 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_docente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/horarios?id_curso={{id_curso_ds01}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "horarios"
+              ],
+              "query": [
+                {
+                  "key": "id_curso",
+                  "value": "{{id_curso_ds01}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-067 Asignaciones del docente → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-067 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-067 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_docente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/asignaciones?id_profesor={{id_profesor_docente}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "asignaciones"
+              ],
+              "query": [
+                {
+                  "key": "id_profesor",
+                  "value": "{{id_profesor_docente}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reportes y archivos",
+      "item": [
+        {
+          "name": "CP-INT-068 Admin lista los reportes → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-068 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-068 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reportes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reportes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-069 Subir el archivo de un reporte → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-069 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-069 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "if (pm.response.code < 300) pm.collectionVariables.set('reporte_archivo', pm.response.text().replace(/\"/g, ''));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reportes/archivo",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reportes",
+                "archivo"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "datos/reporte.pdf"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-069 Crear el reporte con el archivo subido → 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-069 → 201', () => pm.response.to.have.status(201));",
+                  "pm.test('CP-INT-069 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "if (pm.response.code < 300) pm.collectionVariables.set('reporte_id', pm.response.json().id_reporte);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reportes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reportes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nombre_reporte\": \"Reporte Newman {{sufijo}}\", \"tipo_reporte\": \"Asistencia\", \"fecha_inicio\": \"2026-01-01\", \"fecha_fin\": \"2026-01-31\", \"id_administrador\": \"{{id_administrador}}\", \"archivo_generado\": \"{{reporte_archivo}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-070 Admin descarga el archivo del reporte → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-070 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-070 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reportes/{{reporte_id}}/archivo",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reportes",
+                "{{reporte_id}}",
+                "archivo"
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-071 Reporte por /static sin token → 404 (BE-15)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-071 → 404', () => pm.response.to.have.status(404));",
+                  "pm.test('CP-INT-071 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_host}}{{reporte_archivo}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "99 Limpieza",
+      "item": [
+        {
+          "name": "Borrar novedad de prueba",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('novedad_id')) pm.execution.skipRequest();"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_docente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/novedades/{{novedad_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "novedades",
+                "{{novedad_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Borrar nota de prueba",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('nota_id')) pm.execution.skipRequest();"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_docente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notas/{{nota_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notas",
+                "{{nota_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Anular entrada de prueba",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('asistencia_id')) pm.execution.skipRequest();"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/asistencia/{{asistencia_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "asistencia",
+                "{{asistencia_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Anular salida de prueba",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('asistencia_salida_id')) pm.execution.skipRequest();"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/asistencia/{{asistencia_salida_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "asistencia",
+                "{{asistencia_salida_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Borrar usuario creado por el admin",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('usuario_creado_id')) pm.execution.skipRequest();"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/usuarios/{{usuario_creado_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{usuario_creado_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Borrar docente registrado",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('usuario_docente_id')) pm.execution.skipRequest();"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/usuarios/{{usuario_docente_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{usuario_docente_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Borrar padre registrado",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('usuario_padre_id')) pm.execution.skipRequest();"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/usuarios/{{usuario_padre_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{usuario_padre_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Borrar reporte de prueba",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('reporte_id')) pm.execution.skipRequest();"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reportes/{{reporte_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reportes",
+                "{{reporte_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": []
+}
