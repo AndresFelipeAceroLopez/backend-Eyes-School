@@ -19,7 +19,7 @@
 | Sistema: carga y estrés (k6) | PR-06 | `Sistema/` | **Sí** (S1 carga y estrés) | **CP-NF-001 no se cumple** (8,05 % errores, p95 3,06 s). **CP-NF-002 sí se cumple**: degrada y se recupera sin reiniciar | 🟡 |
 | Sistema: DAST con OWASP ZAP | PR-06 | `Sistema/` | No | ZAP no instalado | ⏳ Desbloqueado hoy |
 | Sistema: OWASP Top 10 | PR-06 | `Sistema/` | Parcial | Lo cubierto por unitarias e integración | 🟡 Falta la tabla |
-| Gestión de defectos | PR-07 | `GestionDefectos/` | Parcial | 21 defectos identificados, 0 en Azure Boards | 🔴 Sin registrar |
+| Gestión de defectos | PR-07 | `GestionDefectos/` | **Sí** | **23 defectos** registrados en la tabla del documento (Azure Boards es solo para móvil) | ✅ |
 | Aceptación (UAT) | PR-08 | `uat/` | No | Sesión en S10 | ⏳ Según cronograma |
 
 **Lectura corta (actualizada 22:58):** los 68 casos CP-INT de Newman pasaron sin un solo fallo funcional contra QA real. Lo único rojo es el tiempo de respuesta, y es del entorno: QA está en chilecentral con su base en Oregón.
@@ -204,7 +204,7 @@ La API no tiene pantallas: el PO la acepta a través de la web y de la app. La s
 | 2 | **Avisar al equipo que reclone**; pedir a GitHub Support la purga de `refs/pull/*` | Mariana | Que nadie reintroduzca los commits con el secreto |
 | 3 | **Abrir el PR del hotfix a `main`** (BE-03 + `create_admin.py` + retiro del workflow) | Andrés | El inicio del estudiante sigue roto en producción |
 | 4 | **Fijar `QA_PASSWORD`** con `qa_reset_passwords.py` | Samuel | Newman, schemathesis, k6 y los E2E de la web |
-| 5 | **Registrar los 21 defectos en Azure Boards** con su `AB#` | Mariana | PR-07 y la definición de terminado de cada corrección |
+| 5 | ~~Registrar los defectos en Azure Boards~~ · **Hecho de otra forma**: el registro vive en la tabla del documento, porque Azure DevOps es solo para móvil | Mariana | — |
 | 6 | **Correr el CI sobre `developer`** y guardar las capturas de SonarQube | Samuel | B4 del PR-03 |
 | 7 | **Configurar `FIREBASE_CREDENTIALS_JSON`** en QA | Andrés | BE-18 en el PR-06 y en la UAT |
 | 8 | **Anotar las dos URLs de Azure en el PR-01** | Mariana | Varias planeaciones dicen «pendiente de definir» |

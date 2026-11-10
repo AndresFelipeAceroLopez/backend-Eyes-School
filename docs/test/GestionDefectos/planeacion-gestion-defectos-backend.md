@@ -9,18 +9,34 @@
 
 ## 1. Dónde viven los defectos
 
+> **Corregido el 10/11/2026:** esta planeación daba por hecho que los defectos del backend irían a
+> **Azure Boards**. No es así: el equipo usa Azure DevOps **solo para el componente móvil**. El
+> backend se desarrolla y se revisa en GitHub, así que su registro de defectos vive donde vive el
+> código. Se preparó un CSV para importar los 23 defectos a Azure Boards y **se descartó sin
+> guardarlo** al confirmarse esto.
+>
+> **El registro oficial de los defectos del backend es la tabla de la sección 4 de este
+> documento**, versionada junto al código. Ventajas para este componente: cada defecto queda
+> enlazado al commit que lo corrige por el historial de git, viaja en los mismos pull requests que
+> el código y no depende de una herramienta que el equipo no usa aquí. El identificador es el
+> `DEF-xxx`; no hay `AB#`.
+>
+> Si más adelante se quiere seguimiento de estados con herramienta, lo natural es **GitHub Issues**
+> del mismo repositorio, no Azure Boards. El generador `scripts/qa/generar_csv_azure_boards.py`
+> queda en el repositorio porque el CSV también sirve para GitHub Issues y para el anexo del PR-07.
+
 | Elemento | Valor |
 |---|---|
-| Herramienta | Azure Boards del proyecto (proceso Scrum), tipo de elemento **Bug** |
+| Herramienta | **La tabla de la sección 4 de este documento**, en el repositorio del backend. (Azure Boards es solo para el componente móvil) |
 | Etiquetas | `api` (componente) y el origen: `revision-codigo`, `analisis-estatico`, `pruebas-unitarias`, `pruebas-integracion`, `pruebas-sistema` o `uat` |
-| Enlace con el código | Cada PR de corrección en `backend-Eyes-School` lleva `AB#<id>` en el título o la descripción. Requiere la app Azure Boards instalada en la organización de GitHub (una sola vez) |
+| Enlace con el código | Cada PR de corrección menciona el `DEF-xxx` en el título o la descripción, y el commit de la corrección se anota en la tabla al cerrarlo |
 | Relación con el caso | Campo «Repro Steps» con el ID del caso (CP-INT, CP-SIS, CP-NF o CP-ACE) y la corrección planeada (BE, WEB o APP) |
 
 ## 2. Ciclo de vida (proceso Scrum de Azure Boards)
 
 | Estado | Quién lo mueve | Cuándo |
 |---|---|---|
-| New | QA | Al registrar el bug con la ficha de la sección 4 del PR-07 |
+| New | QA | Al agregar la fila a la tabla de la sección 4 |
 | Approved | PO (Sergio Gómez) | Al confirmar la prioridad en el refinamiento |
 | Committed | Desarrollador asignado | Al tomarlo en el sprint |
 | Done | QA (Mariana Cortés o Samuel Sierra) | Solo después de verificar la corrección en QA: el caso que lo detectó pasa y la regresión del módulo no rompe nada |
@@ -164,7 +180,7 @@ Corte del registro: 21 nov 2026 (fin de S9) y 28 nov 2026 (fin de S10). En cada 
 
 | Actividad | Fecha | Responsable |
 |---|---|---|
-| Registrar los 23 defectos conocidos en Azure Boards | 3 – 6 nov | Mariana Cortés |
+| Mantener al día la tabla de defectos del documento | Continuo | Mariana Cortés |
 | Confirmar prioridades | Refinamiento de S7 | Sergio Gómez (PO) |
 | Registrar los defectos nuevos de PR-03 a PR-06 | Durante cada corrida | Quien ejecuta la corrida |
 | Verificar correcciones y cerrar | S8 a S10 | Mariana Cortés · Samuel Sierra |
@@ -172,6 +188,6 @@ Corte del registro: 21 nov 2026 (fin de S9) y 28 nov 2026 (fin de S10). En cada 
 
 ## 9. Definición de terminado
 
-- [ ] Los 23 defectos conocidos de este componente están en Azure Boards con su `AB#` anotado en el PR-07.
+- [ ] Los 23 defectos conocidos de este componente están en la tabla de la sección 4, con su estado al día.
 - [ ] Cada bug cerrado tiene la verificación en QA, la causa raíz y el commit.
 - [ ] 0 defectos críticos o altos abiertos al cierre de S10 (criterio de salida del PR-01).
