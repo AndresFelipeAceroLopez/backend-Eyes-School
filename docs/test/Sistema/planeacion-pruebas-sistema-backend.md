@@ -4,7 +4,28 @@
 > **Pensado para:** cualquier integrante del equipo o una IA que no conoce el proyecto. Los casos y sus ID son los del PR-02 v0.2.
 > **Elaboró:** Mariana Cortés (QA) · **Revisa:** Samuel Sierra (líder de pruebas) · **Aprueba:** Sergio Gómez (PO)
 > **Plazo:** preparación en S8 (hasta el 14 nov 2026) y ejecución en S9 (15 – 21 nov 2026), según el PR-01. Regresión en S10.
-> **Actualizado el 09/11/2026:** `k6 v2.3.0` ya está instalado (`winget install k6`) y los scripts `tests/carga/carga_50.js` y `tests/carga/estres.js` existen. La ejecución sigue **bloqueada por BE-INF-4 (DEF-020/DEF-WEB-01)**: la API de QA responde 500 en todo lo que consulta la base, y las pruebas de carga **no se corren contra producción** (regla 1.4 de la planeación de correcciones). Si BE-INF-4 no se cierra antes del 15 nov, la carga y el estrés se corren contra la API local sobre la base de PostgreSQL de pruebas y se anota en el PR-06 que los números no representan al servidor de Azure.
+> **Actualizado el 09/11/2026 (montaje terminado y corrida de humo hecha):** `usuarios_ds02.json`
+> generado con 50 cuentas y escenarios verificados contra QA. **Una corrida de humo con 10 VUs ya
+> da p95 = 4,32 s contra la meta de 800 ms, con 0 % de errores.** La meta de CP-NF-001 no se va a
+> cumplir, y la causa principal **no es el código**: QA está en `chilecentral` y su base en Render
+> (Oregón), y la misma consulta tarda 1526 ms en QA frente a 411 ms en producción (westus3). El
+> equipo decidió el 09/11/2026 **no mover la Web App ni la base**, así que esa diferencia se queda.
+>
+> **Consecuencia para el PR-06:** el número de QA no sirve para aceptar o rechazar CP-NF-001 tal
+> como está escrito, porque mide sobre todo la distancia a la base. Se propone al PO una de dos
+> salidas, y la decisión se anota en el informe:
+>
+> 1. **Evaluar CP-NF-001 en QA con un umbral ajustado**, documentando que el p95 de producción es
+>    aproximadamente una cuarta parte del de QA para la misma operación.
+> 2. **Aceptar el incumplimiento como riesgo documentado** y dejar la medición con el umbral
+>    original como línea base, para compararla cuando el entorno se acerque a su base.
+>
+> El escenario de carga se corrigió el 09/11/2026: antes iniciaba sesión en **cada** iteración, y
+> como el login tarda ~3 s por bcrypt (frente a ~1 s de una consulta normal), la prueba medía sobre
+> todo el costo de hashear. Ahora cada usuario virtual inicia sesión una vez y reutiliza el token,
+> como hacen la web y la app, y el login se mide en su propio escenario a 6 por minuto.
+>
+> **Anterior:** `k6 v2.3.0` ya está instalado (`winget install k6`) y los scripts `tests/carga/carga_50.js` y `tests/carga/estres.js` existen. La ejecución sigue **bloqueada por BE-INF-4 (DEF-020/DEF-WEB-01)**: la API de QA responde 500 en todo lo que consulta la base, y las pruebas de carga **no se corren contra producción** (regla 1.4 de la planeación de correcciones). Si BE-INF-4 no se cierra antes del 15 nov, la carga y el estrés se corren contra la API local sobre la base de PostgreSQL de pruebas y se anota en el PR-06 que los números no representan al servidor de Azure.
 
 ---
 
