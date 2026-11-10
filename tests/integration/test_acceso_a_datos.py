@@ -183,3 +183,36 @@ async def test_un_padre_no_lee_el_vinculo_de_otro_padre(api):
     # padres.id 1 es de Rosa (usuario 4) en el seed
     assert (await api.get("/api/v1/padres/1", headers=roberto)).status_code == 403
     assert (await api.get("/api/v1/padres/1", headers=rosa)).status_code == 200
+
+
+# --- DEF-023: un id fuera del rango de PostgreSQL responde 422, no 500 ---
+
+
+async def test_un_id_fuera_de_rango_responde_422_contra_la_base_real(api):
+    """Prueba de verdad del manejador: la base rechaza el valor y la API traduce a 422.
+
+    Las unitarias de `tests/test_id_fuera_de_rango.py` simulan el error; esta lo provoca de
+    verdad con PostgreSQL, que es donde se descubrió (schemathesis contra QA).
+    """
+    from tests.integration.conftest import ADMIN, encabezado
+
+    h = await encabezado(api, ADMIN)
+    fuera_de_rango = 9223372036854775808
+
+    for ruta in (
+        f"/api/v1/estudiantes/{fuera_de_rango}",
+        f"/api/v1/cursos/{fuera_de_rango}",
+        f"/api/v1/cursos/{fuera_de_rango}/horarios",
+    ):
+        r = await api.get(ruta, headers=h)
+        assert r.status_code == 422, f"{ruta} respondió {r.status_code}"
+        assert r.json()["detail"] == "Valor fuera del rango permitido."
+
+
+async def test_un_id_valido_sigue_funcionando(api):
+    """Red de seguridad: el manejador no puede afectar a las peticiones normales."""
+    from tests.integration.conftest import ADMIN, encabezado
+
+    h = await encabezado(api, ADMIN)
+    assert (await api.get("/api/v1/cursos/1", headers=h)).status_code == 200
+    assert (await api.get("/api/v1/cursos/999999", headers=h)).status_code == 404

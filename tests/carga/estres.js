@@ -30,16 +30,25 @@ export const options = {
   },
 };
 
+// Cada usuario virtual inicia sesión una vez y reutiliza el token, igual que la web y la app
+// (ver la nota de carga_50.js): si se iniciara sesión en cada iteración, la prueba mediría sobre
+// todo el costo de bcrypt y no el punto en el que la API se degrada.
+let sesion = null;
+
 export default function () {
   const u = USUARIOS[(__VU - 1) % USUARIOS.length];
-  const login = http.post(`${BASE}/auth/login`, JSON.stringify({ correo: u.correo, password: PASSWORD }),
-                          { headers: JSON_HEADERS, tags: { name: 'POST /auth/login' } });
-  check(login, { 'login 200': (r) => r.status === 200 });
-  if (login.status !== 200) { sleep(1); return; }
+  if (sesion === null) {
+    const login = http.post(`${BASE}/auth/login`, JSON.stringify({ correo: u.correo, password: PASSWORD }),
+                            { headers: JSON_HEADERS, tags: { name: 'POST /auth/login' } });
+    check(login, { 'login 200': (r) => r.status === 200 });
+    if (login.status !== 200) { sleep(1); return; }
+    sesion = { headers: { Authorization: `Bearer ${login.json('access_token')}` } };
+  }
 
-  const auth = { headers: { Authorization: `Bearer ${login.json('access_token')}` } };
   const notas = http.get(`${BASE}/estudiantes/${u.id_estudiante}/notas`,
-                         { ...auth, tags: { name: 'GET /estudiantes/{id}/notas' } });
+                         { ...sesion, tags: { name: 'GET /estudiantes/{id}/notas' } });
   check(notas, { 'notas 200': (r) => r.status === 200 });
+  // Un 401 bajo estrés significa que el token dejó de servir: se fuerza un nuevo inicio de sesión.
+  if (notas.status === 401) sesion = null;
   sleep(1);
 }

@@ -62,13 +62,6 @@ jobs:
             coverage.xml
             junit-unitarias.xml
 
-      # Sin SONAR_TOKEN (por ejemplo en pull requests desde un fork) el paso se omite.
-      - name: SonarQube Cloud
-        if: env.SONAR_TOKEN != ''
-        uses: SonarSource/sonarqube-scan-action@v5
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
   integracion:
     name: Pruebas de integracion (PostgreSQL 18)
     runs-on: ubuntu-latest
@@ -105,14 +98,17 @@ jobs:
       - name: Tests de integracion
         env:
           TEST_DATABASE_URL: postgresql+asyncpg://postgres:test@localhost:5432/eyes_test
-        run: pytest -m integration -v --junitxml=junit-integracion.xml
+        run: |
+          pytest -m integration -v --junitxml=junit-integracion.xml             --cov=app --cov-branch --cov-report=xml:coverage-integracion.xml
 
-      - name: Upload junit
+      - name: Upload junit y cobertura de integracion
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: junit-integracion
-          path: junit-integracion.xml
+          path: |
+            junit-integracion.xml
+            coverage-integracion.xml
 
   secretos:
     name: Deteccion de secretos (gitleaks)
@@ -127,3 +123,38 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  sonarqube:
+    name: SonarQube Cloud (Quality Gate)
+    runs-on: ubuntu-latest
+    # Espera a los dos jobs de pruebas para analizar con la cobertura COMPLETA: las unitarias
+    # no tocan los repositorios y las de integracion si, asi que con una sola de las dos el
+    # porcentaje que ve SonarQube es mas bajo que el real.
+    needs: [lint_test_audit, integracion]
+    if: always()
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # SonarQube necesita el historial para atribuir los cambios
+
+      - name: Descargar cobertura de las unitarias
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: coverage-xml
+
+      - name: Descargar cobertura de las de integracion
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: junit-integracion
+
+      # Sin SONAR_TOKEN (por ejemplo en pull requests desde un fork) el paso se omite.
+      - name: SonarQube Cloud
+        if: env.SONAR_TOKEN != ''
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
