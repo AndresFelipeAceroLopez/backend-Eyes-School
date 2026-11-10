@@ -1,6 +1,6 @@
 from datetime import date, datetime
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, func
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infrastructure.models.base import Base
@@ -79,7 +79,6 @@ class PadreModel(Base):
     estudiante: Mapped["EstudianteModel"] = relationship(back_populates="padres")
 
 
-from app.infrastructure.models.usuario import UsuarioModel  # noqa: E402
 from app.infrastructure.models.academico import (  # noqa: E402
     AsignacionModel,
     CursoModel,
@@ -90,3 +89,4 @@ from app.infrastructure.models.asistencia import AsistenciaAulaModel, Asistencia
 from app.infrastructure.models.notas import NotaModel  # noqa: E402
 from app.infrastructure.models.novedades import NovedadModel  # noqa: E402
 from app.infrastructure.models.reportes import EstudianteIPSModel, ReporteModel  # noqa: E402
+from app.infrastructure.models.usuario import UsuarioModel  # noqa: E402

@@ -6,14 +6,14 @@
 
 | Componente        | Tecnología                    | Versión   |
 |-------------------|-------------------------------|-----------|
-| Lenguaje          | Python                        | 3.12      |
+| Lenguaje          | Python                        | 3.11      |
 | Framework HTTP    | FastAPI                       | 0.115+    |
 | ORM               | SQLAlchemy (Async)            | 2.x       |
 | Migraciones       | Alembic                       | 1.14+     |
 | Validación        | Pydantic v2                   | 2.x       |
 | Base de datos     | PostgreSQL                    | 15+       |
-| Caché / Sesiones  | Redis                         | 7+        |
-| Autenticación     | JWT (python-jose + bcrypt)    | —         |
+| Sesiones          | PostgreSQL (`sesiones_refresco`) | 18     |
+| Autenticación     | JWT (PyJWT + bcrypt)          | —         |
 | Servidor ASGI     | Uvicorn                       | —         |
 
 ---
@@ -31,14 +31,14 @@
 │  Domain Layer (Entities + Repository Interfaces)   │  ← Business rules
 │  app/domain/                                        │
 ├─────────────────────────────────────────────────────┤
-│  Infrastructure Layer (SQLAlchemy + Redis)          │  ← I/O
+│  Infrastructure Layer (SQLAlchemy)                   │  ← I/O
 │  app/infrastructure/                               │
 └─────────────────────────────────────────────────────┘
 ```
 
 ### Regla de dependencias
 - API → Application → Domain ← Infrastructure
-- Domain NO conoce FastAPI, SQLAlchemy ni Redis
+- Domain NO conoce FastAPI, SQLAlchemy ni a ningún servicio externo
 - Infrastructure implementa interfaces del Domain
 
 ---
@@ -50,7 +50,6 @@ app/
 ├── core/
 │   ├── config.py           # Settings (pydantic-settings)
 │   ├── database.py         # AsyncEngine + AsyncSession factory
-│   ├── redis.py            # Redis async client
 │   ├── security.py         # JWT encode/decode, bcrypt hash/verify
 │   ├── exceptions.py       # Excepciones de dominio personalizadas
 │   └── dependencies.py     # FastAPI DI: get_db, get_current_user, etc.
@@ -293,8 +292,8 @@ app/
 
 ### JWT
 - **Access token**: TTL 30 min, payload: `{sub: idUsuario, rol: nombreRol, idRol: int}`
-- **Refresh token**: TTL 7 días, almacenado en Redis (key: `refresh:{token_jti}`)
-- En logout: el JTI del refresh token se elimina de Redis
+- **Refresh token**: TTL 7 días, registrado en la tabla `sesiones_refresco` (por `jti`)
+- En logout: la sesión se marca como revocada; al desactivar un usuario se revocan todas sus sesiones
 
 ### Validación de permisos
 ```python
@@ -305,7 +304,7 @@ require_roles(["admin", "docente"]) → valida rol del usuario actual
 
 ---
 
-## 6. Estrategia de caché (Redis)
+## 6. Estrategia de caché (sin caché externa)
 
 | Clave                          | TTL     | Contenido                        |
 |--------------------------------|---------|----------------------------------|
@@ -336,7 +335,6 @@ require_roles(["admin", "docente"]) → valida rol del usuario actual
 
 ```
 DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/eyesschool
-REDIS_URL=redis://localhost:6379/0
 SECRET_KEY=<clave secreta JWT>
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30

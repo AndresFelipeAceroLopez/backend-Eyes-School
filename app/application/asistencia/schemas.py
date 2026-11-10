@@ -9,14 +9,12 @@ class AsistenciaCreate(BaseModel):
     fecha: date
     estado: Literal["Presente", "Ausente", "Tarde", "Excusa", "Suspensión"]
     observacion: str | None = None
-    registrado_por: int
     tipo: Literal["entrada", "salida", "clase"] | None = None
 
 
 class AsistenciaQRCreate(BaseModel):
     codigo_qr: str
     tipo: Literal["entrada", "salida", "clase"] = "entrada"
-    registrado_por: int
 
 
 class AsistenciaUpdate(BaseModel):
@@ -44,7 +42,6 @@ class AsistenciaAulaCreate(BaseModel):
     fecha: date
     estado: Literal["Presente", "Ausente", "Tarde", "Excusa", "Suspensión"]
     observacion: str
-    registrado_por: int
 
 
 class AsistenciaAulaOut(BaseModel):

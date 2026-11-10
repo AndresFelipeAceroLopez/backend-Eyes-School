@@ -1,50 +1,82 @@
-from datetime import datetime, timezone
-
-from jose import JWTError
-from fastapi import UploadFile
-from redis.asyncio import Redis
-from sqlalchemy.ext.asyncio import AsyncSession
+import io
+import logging
 import os
 import uuid
+from datetime import date, timedelta
 
-from app.application.auth.schemas import AccessTokenResponse, LoginRequest, MeResponse, TokenResponse
+from fastapi import UploadFile
+from PIL import Image, UnidentifiedImageError
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.application.auth.schemas import (
+    AccessTokenResponse,
+    LoginRequest,
+    MeResponse,
+    RegisterRequest,
+    TokenResponse,
+)
+from app.application.usuarios.schemas import UsuarioCreate, UsuarioOut
+from app.application.usuarios.service import UsuarioService
 from app.core.config import settings
 from app.core.email import build_reset_email_html, send_email
-from app.core.exceptions import BusinessRuleException, UnauthorizedException
+from app.core.exceptions import (
+    BusinessRuleException,
+    TooManyRequestsException,
+    UnauthorizedException,
+)
+from app.core.reloj import Reloj, ahora_utc
 from app.core.security import (
+    JWTError,
     create_access_token,
     create_password_reset_token,
     create_refresh_token,
     decode_token,
     hash_password,
+    sello_password,
     verify_password,
 )
-import logging
-from app.infrastructure.repositories.usuario_repository import UsuarioRepository
-from app.application.usuarios.service import UsuarioService
-from app.application.usuarios.schemas import UsuarioCreate, UsuarioOut
-from app.application.auth.schemas import RegisterRequest
-from app.infrastructure.repositories.actores_repository import AdministradorRepository, EstudianteRepository, PadreRepository, ProfesorRepository
 from app.infrastructure.repositories.academico_repository import ProfesorEspecializacionRepository
+from app.infrastructure.repositories.actores_repository import (
+    AdministradorRepository,
+    EstudianteRepository,
+    PadreRepository,
+    ProfesorRepository,
+)
+from app.infrastructure.repositories.sesion_repository import SesionRepository
+from app.infrastructure.repositories.usuario_repository import UsuarioRepository
 
-REFRESH_PREFIX = "refresh:"
+logger = logging.getLogger(__name__)
+
+# Avatares (BE-14): carpeta pública, formatos reales permitidos y tamaño máximo.
+AVATAR_DIR = "static/avatars"
+AVATAR_MAX_BYTES = 2 * 1024 * 1024
+AVATAR_FORMATOS = {"JPEG": "jpg", "PNG": "png", "WEBP": "webp"}
+
+# id_rol de la tabla roles (ver seed_data.sql).
+ROL_DOCENTE = 1
+ROL_ESTUDIANTE = 2
+ROL_ADMIN = 3
+ROL_PADRE = 4
 
 
 class AuthService:
-    def __init__(self, session: AsyncSession, redis: Redis | None = None):
+    def __init__(self, session: AsyncSession, reloj: Reloj = ahora_utc):
         self.repo = UsuarioRepository(session)
+        self.sesiones = SesionRepository(session)
         self.session = session
-        self.redis = redis
+        self.reloj = reloj
 
     async def register(self, data: RegisterRequest) -> UsuarioOut:
         user_service = UsuarioService(self.session)
         user_data = UsuarioCreate.model_validate(data.model_dump())
         user_out = await user_service.create(user_data)
-        
-        rol_nombre = user_out.rol.nombre_rol.lower() if user_out.rol else ""
-        from datetime import date
-        
-        if rol_nombre == "estudiante":
+
+        # El perfil se elige por id_rol, igual que la regla de activación de
+        # abajo: en la BD los roles se llaman 'docente'/'admin', así que comparar
+        # por nombre contra 'profesor'/'administrador' nunca creaba esos perfiles.
+        id_rol = user_out.id_rol
+
+        if id_rol == ROL_ESTUDIANTE:
             est_repo = EstudianteRepository(self.session)
             await est_repo.create({
                 "id_usuario": user_out.id_usuario,
@@ -52,7 +84,7 @@ class AuthService:
                 "fecha_ingreso": date.today(),
                 "id_curso_actual": data.id_curso_actual
             })
-        elif rol_nombre == "profesor":
+        elif id_rol == ROL_DOCENTE:
             prof_repo = ProfesorRepository(self.session)
             prof = await prof_repo.create({
                 "id_usuario": user_out.id_usuario,
@@ -68,7 +100,7 @@ class AuthService:
                     "id_especializacion": data.id_especializacion,
                     "institucion": data.institucion
                 })
-        elif rol_nombre == "padre":
+        elif id_rol == ROL_PADRE:
             if data.id_estudiante_vinculado and data.parentesco:
                 padre_repo = PadreRepository(self.session)
                 await padre_repo.create({
@@ -77,7 +109,7 @@ class AuthService:
                     "parentesco": data.parentesco,
                     "ocupacion": None
                 })
-        elif rol_nombre == "administrador":
+        elif id_rol == ROL_ADMIN:
             admin_repo = AdministradorRepository(self.session)
             await admin_repo.create({
                 "id_usuario": user_out.id_usuario,
@@ -92,7 +124,7 @@ class AuthService:
         # Estudiante (2) y Padre (4) siguen activos por defecto.
         # Se compara por id_rol (estable) y no por nombre: en la BD los roles se
         # llaman 'docente'/'admin', no 'profesor'/'administrador'.
-        if user_out.id_rol in (1, 3):
+        if id_rol in (ROL_DOCENTE, ROL_ADMIN):
             user_model = await self.repo.get_by_id(user_out.id_usuario)
             if user_model:
                 user_model.estado = False
@@ -102,62 +134,69 @@ class AuthService:
         return user_out
 
     async def login(self, data: LoginRequest) -> TokenResponse:
+        ahora = self.reloj()
         user = await self.repo.get_by_correo(data.correo)
-        if not user or not user.password:
-            raise UnauthorizedException("Credenciales inválidas")
-        if not verify_password(data.password, user.password):
+        if user and user.bloqueado_hasta and user.bloqueado_hasta > ahora:
+            # Aunque la contraseña sea correcta: el bloqueo corre hasta que venza.
+            raise TooManyRequestsException(
+                f"Demasiados intentos, espera {settings.LOGIN_BLOQUEO_MINUTOS} minutos"
+            )
+        if not user or not user.password or not verify_password(data.password, user.password):
+            if user:
+                await self._registrar_fallo(user.id_usuario, ahora)
             raise UnauthorizedException("Credenciales inválidas")
         if not user.estado:
             raise UnauthorizedException("Usuario inactivo")
 
+        await self.repo.reiniciar_fallos(user.id_usuario)
+
         payload = {"sub": str(user.id_usuario), "idRol": user.id_rol, "rol": user.rol.nombre_rol}
         access_token = create_access_token(payload)
         refresh_token, jti = create_refresh_token(payload)
+        expira = ahora + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+        await self.sesiones.crear(jti, user.id_usuario, expira)
+        await self.sesiones.limpiar_vencidas()
 
-        try:
-            from app.core.config import settings
-            ttl = settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400
-            await self.redis.setex(f"{REFRESH_PREFIX}{jti}", ttl, str(user.id_usuario))
-        except Exception:
-            pass  # Redis unavailable — refresh token revocation disabled
-
-        user.ultimo_acceso = datetime.now(timezone.utc).replace(tzinfo=None)
+        user.ultimo_acceso = ahora
         await self.session.flush()
 
         return TokenResponse(access_token=access_token, refresh_token=refresh_token)
 
+    async def _registrar_fallo(self, id_usuario: int, ahora) -> None:
+        intentos = await self.repo.registrar_fallo(id_usuario)
+        if intentos >= settings.LOGIN_MAX_INTENTOS:
+            hasta = ahora + timedelta(minutes=settings.LOGIN_BLOQUEO_MINUTOS)
+            await self.repo.bloquear(id_usuario, hasta)
+            logger.warning("Usuario %s bloqueado hasta %s por intentos fallidos", id_usuario, hasta)
+        # El fallo debe quedar guardado aunque la petición termine en 401.
+        await self.session.commit()
+
     async def refresh(self, refresh_token: str) -> AccessTokenResponse:
         try:
             payload = decode_token(refresh_token)
-            if payload.get("type") != "refresh":
-                raise UnauthorizedException("Token inválido")
-            jti = payload.get("jti")
-            try:
-                stored = await self.redis.get(f"{REFRESH_PREFIX}{jti}")
-                if not stored:
-                    raise UnauthorizedException("Token expirado o revocado")
-            except UnauthorizedException:
-                raise
-            except Exception:
-                pass  # Redis unavailable — skip revocation check
-        except (JWTError, KeyError):
+        except JWTError:
+            raise UnauthorizedException("Token inválido")
+        if payload.get("type") != "refresh" or not payload.get("jti"):
             raise UnauthorizedException("Token inválido")
 
+        # La sesión debe existir, no estar revocada ni vencida...
+        if not await self.sesiones.obtener_activa(payload["jti"]):
+            raise UnauthorizedException("Token expirado o revocado")
+        # ...y la cuenta debe seguir activa.
+        user = await self.repo.get_by_id(int(payload["sub"]))
+        if not user or not user.estado:
+            raise UnauthorizedException("Usuario inactivo")
+
         new_payload = {"sub": payload["sub"], "idRol": payload["idRol"], "rol": payload["rol"]}
-        access_token = create_access_token(new_payload)
-        return AccessTokenResponse(access_token=access_token)
+        return AccessTokenResponse(access_token=create_access_token(new_payload))
 
     async def logout(self, refresh_token: str) -> None:
         try:
             payload = decode_token(refresh_token)
-            jti = payload.get("jti")
-            if jti:
-                try:
-                    await self.redis.delete(f"{REFRESH_PREFIX}{jti}")
-                except Exception:
-                    pass  # Redis unavailable
         except JWTError:
-            pass
+            return
+        if payload.get("jti"):
+            await self.sesiones.revocar(payload["jti"])
 
     async def forgot_password(self, correo: str) -> None:
         """Genera un token de reseteo y envía el enlace por correo.
@@ -170,15 +209,14 @@ class AuthService:
         if not user or not user.estado:
             return
 
-        token = create_password_reset_token(user.id_usuario)
+        sello = sello_password(user.password_actualizada)
+        token = create_password_reset_token(user.id_usuario, sello)
         reset_url = f"{settings.FRONTEND_URL.rstrip('/')}/reset-password?token={token}"
         html = build_reset_email_html(user.primer_nombre or "", reset_url)
         sent = await send_email(user.correo, "Restablece tu contraseña - EyeSchool", html)
 
         if not sent and settings.ENVIRONMENT == "development":
-            logging.getLogger(__name__).warning(
-                "[DEV] Enlace de recuperación para %s: %s", correo, reset_url
-            )
+            logger.warning("[DEV] Enlace de recuperación para %s: %s", correo, reset_url)
 
     async def reset_password(self, token: str, new_password: str) -> None:
         try:
@@ -189,14 +227,18 @@ class AuthService:
         if payload.get("type") != "reset":
             raise UnauthorizedException("Token inválido")
 
-        if len(new_password) < 8:
-            raise BusinessRuleException("La contraseña debe tener al menos 8 caracteres")
-
         user = await self.repo.get_by_id(int(payload["sub"]))
         if not user:
             raise UnauthorizedException("Usuario no encontrado")
+        # Enlace de un solo uso: si la contraseña ya cambió, la marca no coincide.
+        if payload.get("pwd_ts", 0) != sello_password(user.password_actualizada):
+            raise UnauthorizedException("El enlace de recuperación ya fue usado")
 
-        await self.repo.update(user, {"password": hash_password(new_password)})
+        await self.repo.update(
+            user, {"password": hash_password(new_password), "password_actualizada": self.reloj()}
+        )
+        await self.repo.reiniciar_fallos(user.id_usuario)
+        await self.sesiones.revocar_todas(user.id_usuario)
         await self.session.commit()
 
     async def get_me(self, id_usuario: int) -> MeResponse:
@@ -217,17 +259,27 @@ class AuthService:
         user = await self.repo.get_by_id_with_rol(id_usuario)
         if not user:
             raise UnauthorizedException("Usuario no encontrado")
-            
-        if not file.content_type.startswith("image/"):
-            from app.core.exceptions import ConflictException
-            raise ConflictException("El archivo debe ser una imagen")
-            
-        ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
-        filename = f"{uuid.uuid4()}.{ext}"
-        filepath = os.path.join("static/avatars", filename)
-        
-        with open(filepath, "wb") as f:
-            f.write(await file.read())
-            
-        await self.repo.update(user, {"foto_perfil": f"/static/avatars/{filename}"})
-        return f"/static/avatars/{filename}"
+
+        # Se lee un byte de más para saber si se pasó del máximo sin cargar archivos enormes.
+        contenido = await file.read(AVATAR_MAX_BYTES + 1)
+        if len(contenido) > AVATAR_MAX_BYTES:
+            raise BusinessRuleException("La imagen no puede superar los 2 MB")
+
+        # Ni el content-type ni el nombre los controla el servidor: se abre el contenido real.
+        try:
+            with Image.open(io.BytesIO(contenido)) as imagen:
+                imagen.verify()
+                formato = imagen.format
+        except (UnidentifiedImageError, OSError, ValueError, SyntaxError):
+            raise BusinessRuleException("El archivo debe ser una imagen JPG, PNG o WEBP")
+        if formato not in AVATAR_FORMATOS:
+            raise BusinessRuleException("El archivo debe ser una imagen JPG, PNG o WEBP")
+
+        filename = f"{uuid.uuid4()}.{AVATAR_FORMATOS[formato]}"
+        os.makedirs(AVATAR_DIR, exist_ok=True)
+        with open(os.path.join(AVATAR_DIR, filename), "wb") as f:
+            f.write(contenido)
+
+        url = f"/static/avatars/{filename}"
+        await self.repo.update(user, {"foto_perfil": url})
+        return url

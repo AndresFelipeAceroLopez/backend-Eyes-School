@@ -20,6 +20,8 @@ import app.infrastructure.models.asistencia  # noqa: F401
 import app.infrastructure.models.notas  # noqa: F401
 import app.infrastructure.models.novedades  # noqa: F401
 import app.infrastructure.models.reportes  # noqa: F401
+import app.infrastructure.models.sesiones  # noqa: F401
+import app.infrastructure.models.dispositivos  # noqa: F401
 
 target_metadata = Base.metadata
 

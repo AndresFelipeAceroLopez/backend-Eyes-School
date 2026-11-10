@@ -12,7 +12,7 @@ from app.application.auth.schemas import (
 )
 from app.application.auth.service import AuthService
 from app.application.usuarios.schemas import UsuarioOut
-from app.core.dependencies import AuthUser, DbSession, RedisClient
+from app.core.dependencies import AuthUser, DbSession
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -26,18 +26,18 @@ async def register(data: RegisterRequest, db: DbSession):
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(data: LoginRequest, db: DbSession, redis: RedisClient):
-    return await AuthService(db, redis).login(data)
+async def login(data: LoginRequest, db: DbSession):
+    return await AuthService(db).login(data)
 
 
 @router.post("/refresh", response_model=AccessTokenResponse)
-async def refresh(data: RefreshRequest, db: DbSession, redis: RedisClient):
-    return await AuthService(db, redis).refresh(data.refresh_token)
+async def refresh(data: RefreshRequest, db: DbSession):
+    return await AuthService(db).refresh(data.refresh_token)
 
 
 @router.post("/logout", status_code=204)
-async def logout(data: RefreshRequest, db: DbSession, redis: RedisClient):
-    await AuthService(db, redis).logout(data.refresh_token)
+async def logout(data: RefreshRequest, db: DbSession):
+    await AuthService(db).logout(data.refresh_token)
 
 
 @router.post("/forgot-password")
@@ -55,8 +55,9 @@ async def reset_password(data: ResetPasswordRequest, db: DbSession):
 
 
 @router.get("/me", response_model=MeResponse)
-async def me(current_user: AuthUser, db: DbSession, redis: RedisClient):
-    return await AuthService(db, redis).get_me(current_user.id_usuario)
+async def me(current_user: AuthUser, db: DbSession):
+    return await AuthService(db).get_me(current_user.id_usuario)
+
 
 @router.post("/me/avatar", response_model=str)
 async def upload_avatar(current_user: AuthUser, db: DbSession, file: UploadFile = File(...)):

@@ -1,8 +1,11 @@
-from pydantic import BaseModel, EmailStr, field_validator
-from app.application.usuarios.schemas import UsuarioCreate
+from pydantic import BaseModel, field_validator
+
+from app.application.usuarios.schemas import CorreoNormalizado, UsuarioCreate
+from app.core.password_policy import exigir_password_valida
+
 
 class LoginRequest(BaseModel):
-    correo: str
+    correo: CorreoNormalizado
     password: str
 
 
@@ -17,12 +20,17 @@ class RefreshRequest(BaseModel):
 
 
 class ForgotPasswordRequest(BaseModel):
-    correo: str
+    correo: CorreoNormalizado
 
 
 class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def _cumple_la_politica(cls, v: str) -> str:
+        return exigir_password_valida(v)
 
 
 class AccessTokenResponse(BaseModel):
@@ -43,14 +51,14 @@ class MeResponse(BaseModel):
 class RegisterRequest(UsuarioCreate):
     # Campos para Administrador
     cargo: str | None = None
-    
+
     # Campos para Estudiante
     id_curso_actual: int | None = None
-    
+
     # Campos para Padre
     id_estudiante_vinculado: int | None = None
     parentesco: str | None = None
-    
+
     # Campos para Profesor
     titulo: str | None = None
     nivel_estudios: str | None = None

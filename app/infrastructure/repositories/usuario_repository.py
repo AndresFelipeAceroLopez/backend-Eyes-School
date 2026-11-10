@@ -1,4 +1,6 @@
-from sqlalchemy import delete, select
+from datetime import datetime
+
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -29,7 +31,7 @@ class UsuarioRepository(BaseRepository[UsuarioModel]):
         result = await self.session.execute(
             select(UsuarioModel)
             .options(selectinload(UsuarioModel.rol))
-            .where(UsuarioModel.correo == correo)
+            .where(func.lower(UsuarioModel.correo) == correo.strip().lower())
         )
         return result.scalar_one_or_none()
 
@@ -65,7 +67,9 @@ class UsuarioRepository(BaseRepository[UsuarioModel]):
         return list(result.scalars().all())
 
     async def correo_exists(self, correo: str, exclude_id: int | None = None) -> bool:
-        query = select(UsuarioModel.id_usuario).where(UsuarioModel.correo == correo)
+        query = select(UsuarioModel.id_usuario).where(
+            func.lower(UsuarioModel.correo) == correo.strip().lower()
+        )
         if exclude_id:
             query = query.where(UsuarioModel.id_usuario != exclude_id)
         result = await self.session.execute(query)
@@ -80,6 +84,34 @@ class UsuarioRepository(BaseRepository[UsuarioModel]):
             query = query.where(UsuarioModel.id_usuario != exclude_id)
         result = await self.session.execute(query)
         return result.scalar_one_or_none() is not None
+
+    async def registrar_fallo(self, id_usuario: int) -> int:
+        """Suma un intento de inicio de sesión fallido y devuelve el total acumulado."""
+        result = await self.session.execute(
+            update(UsuarioModel)
+            .where(UsuarioModel.id_usuario == id_usuario)
+            .values(intentos_fallidos=UsuarioModel.intentos_fallidos + 1)
+            .returning(UsuarioModel.intentos_fallidos)
+            .execution_options(synchronize_session=False)
+        )
+        return result.scalar_one()
+
+    async def bloquear(self, id_usuario: int, hasta: datetime) -> None:
+        """Bloquea el inicio de sesión hasta `hasta` y reinicia el contador."""
+        await self.session.execute(
+            update(UsuarioModel)
+            .where(UsuarioModel.id_usuario == id_usuario)
+            .values(bloqueado_hasta=hasta, intentos_fallidos=0)
+            .execution_options(synchronize_session=False)
+        )
+
+    async def reiniciar_fallos(self, id_usuario: int) -> None:
+        await self.session.execute(
+            update(UsuarioModel)
+            .where(UsuarioModel.id_usuario == id_usuario)
+            .values(intentos_fallidos=0, bloqueado_hasta=None)
+            .execution_options(synchronize_session=False)
+        )
 
     async def delete_cascade(self, id_usuario: int) -> None:
         """Elimina el usuario y TODO lo que lo referencia por FK, en orden de

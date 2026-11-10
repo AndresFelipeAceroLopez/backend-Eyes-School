@@ -26,11 +26,9 @@ RESTART IDENTITY CASCADE;
 
 -- ============================================================
 -- SEED DATA - Eyes School Backend
--- Credenciales de prueba:
---   admin@eyesschool.edu.co          -> Admin2026*
---   carlos.jimenez@eyes.edu.co       -> Profe2026*
---   sofia.rodriguez@student.eyes.co  -> Estu2026*
---   rosa.perez@gmail.com             -> Padre2026*
+-- Las contraseñas de estos usuarios NO se documentan aquí (hallazgo H-08).
+-- En QA se asignan con `python -m scripts.qa_reset_passwords` (variable QA_PASSWORD);
+-- las pruebas de integración fijan la suya en tests/integration/conftest.py.
 -- ============================================================
 
 INSERT INTO public.roles ("nombreRol") VALUES

@@ -1,9 +1,9 @@
 from fastapi import APIRouter
+from pydantic import BaseModel
 
 from app.application.profesores.schemas import EspecializacionOut
 from app.core.dependencies import DbSession, require_roles
 from app.infrastructure.repositories.academico_repository import EspecializacionRepository
-from pydantic import BaseModel
 
 
 class EspecializacionCreate(BaseModel):

@@ -15,10 +15,11 @@ dependencies = [
     "alembic>=1.14.0",
     "pydantic>=2.10.0",
     "pydantic-settings>=2.6.0",
-    "python-jose[cryptography]>=3.3.0",
+    "PyJWT>=2.10.0",
     "bcrypt>=4.2.0",
     "passlib[bcrypt]>=1.7.4",
-    "redis[hiredis]>=5.2.0",
+    "email-validator>=2.2.0",
+    "pillow>=10.0.0",
     "python-multipart>=0.0.12",
     "python-dotenv>=1.0.1",
     "httpx>=0.28.0",
@@ -31,18 +32,30 @@ dev = [
     "pytest-cov>=6.0.0",
     "httpx>=0.28.0",
     "ruff>=0.8.0",
+    "pip-audit>=2.7.0",
 ]
 
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+# Azure App Service y el CI corren Python 3.11.
+target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W"]
+# 164 líneas largas heredadas. Se reactiva cuando se aplique `ruff format`
+# en un PR propio, para no mezclar ese diff con cambios de lógica.
+extend-ignore = ["E501"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
+# Las pruebas de integración necesitan PostgreSQL (BE-INF-1): `pytest -m integration`.
+# Por defecto se excluyen: `pytest` corre solo las unitarias.
+addopts = "-m 'not integration'"
+markers = [
+    "integration: prueba contra PostgreSQL real (necesita DATABASE_URL de pruebas)",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["app"]

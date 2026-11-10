@@ -1,5 +1,8 @@
-from fastapi import APIRouter, Query
+from typing import Annotated
 
+from fastapi import APIRouter, Depends, Query
+
+from app.application.common.notificador import Notificador
 from app.application.novedades.schemas import (
     NovedadCreate,
     NovedadOut,
@@ -8,9 +11,12 @@ from app.application.novedades.schemas import (
     TipoNovedadOut,
 )
 from app.application.novedades.service import NovedadService
-from app.core.dependencies import DbSession, require_roles
+from app.core.dependencies import AuthUser, DbSession, require_roles
+from app.infrastructure.notificador_firebase import get_notificador
 
 router = APIRouter(tags=["Novedades"])
+
+NotificadorDep = Annotated[Notificador, Depends(get_notificador)]
 
 
 @router.get("/tipos-novedad", response_model=list[TipoNovedadOut], dependencies=[require_roles("admin", "docente", "estudiante", "padre")])
@@ -49,8 +55,10 @@ async def list_novedades(
 
 
 @router.post("/novedades", response_model=NovedadOut, status_code=201, dependencies=[require_roles("admin", "docente")])
-async def create_novedad(data: NovedadCreate, db: DbSession):
-    return await NovedadService(db).create(data)
+async def create_novedad(
+    data: NovedadCreate, db: DbSession, current_user: AuthUser, notificador: NotificadorDep
+):
+    return await NovedadService(db, notificador).create(data, current_user.id_usuario)
 
 
 @router.get("/novedades/{id_novedad}", response_model=NovedadOut, dependencies=[require_roles("admin", "docente")])
@@ -59,12 +67,14 @@ async def get_novedad(id_novedad: int, db: DbSession):
 
 
 @router.put("/novedades/{id_novedad}", response_model=NovedadOut, dependencies=[require_roles("admin", "docente")])
-async def update_novedad(id_novedad: int, data: NovedadUpdate, db: DbSession):
-    return await NovedadService(db).update(id_novedad, data)
+async def update_novedad(
+    id_novedad: int, data: NovedadUpdate, db: DbSession, current_user: AuthUser
+):
+    return await NovedadService(db).update(id_novedad, data, current_user)
 
 
 # CRUD completo de novedades = profesor y admin. El borrado que hace el admin
 # al eliminar un usuario va además por la cascada de DELETE /usuarios/{id}.
 @router.delete("/novedades/{id_novedad}", status_code=204, dependencies=[require_roles("admin", "docente")])
-async def delete_novedad(id_novedad: int, db: DbSession):
-    await NovedadService(db).delete(id_novedad)
+async def delete_novedad(id_novedad: int, db: DbSession, current_user: AuthUser):
+    await NovedadService(db).delete(id_novedad, current_user)
