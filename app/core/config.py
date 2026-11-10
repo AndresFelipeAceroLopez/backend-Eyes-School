@@ -34,6 +34,19 @@ class Settings(BaseSettings):
     FIREBASE_CREDENTIALS_JSON: str = ""
 
     # Bloqueo de inicio de sesión (BE-16): intentos fallidos y minutos de bloqueo.
+    # Pool de conexiones a PostgreSQL (DEF-022). Configurables para poder ajustarlos sin tocar
+    # el código: el techo de peticiones por segundo de la API es, en la práctica,
+    # (DB_POOL_SIZE + DB_MAX_OVERFLOW) dividido por lo que tarde cada consulta. Subirlos solo
+    # ayuda si el plan de PostgreSQL admite esas conexiones; si no, las rechaza y empeora.
+    DB_POOL_SIZE: int = 20
+    DB_MAX_OVERFLOW: int = 30
+    # `pool_pre_ping` hace un «SELECT 1» antes de entregar cada conexión. Con la base en otro
+    # continente eso cuesta un viaje de ida y vuelta (~200 ms) en CADA petición. Se desactiva y
+    # se reciclan las conexiones antes de que el servidor las cierre por inactividad. Si
+    # aparecen errores de «connection closed», vuelva a ponerlo en true.
+    DB_POOL_PRE_PING: bool = False
+    DB_POOL_RECYCLE: int = 300
+
     LOGIN_MAX_INTENTOS: int = 5
     LOGIN_BLOQUEO_MINUTOS: int = 15
 
