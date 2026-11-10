@@ -69,6 +69,27 @@ def create_app() -> FastAPI:
             content={"detail": "Valor fuera del rango permitido."},
         )
 
+    @app.middleware("http")
+    async def cabeceras_de_seguridad(request: Request, call_next):
+        """CP-NF-003: las dos cabeceras que marcó OWASP ZAP en el escaneo del 10/11/2026.
+
+        - `X-Content-Type-Options: nosniff` importa más de lo que parece en esta API: los
+          avatares se sirven públicos desde `/static/avatars` (BE-14). Sin esta cabecera, un
+          navegador puede ignorar el `Content-Type` y ejecutar como HTML un archivo subido por
+          un usuario. La validación de BE-14 ya impide subir algo que no sea imagen; esto es la
+          segunda barrera.
+        - `Strict-Transport-Security` obliga al navegador a usar HTTPS en las siguientes
+          visitas, así que un enlace `http://` no llega a salir en claro con el token dentro.
+          Solo se envía sobre HTTPS, como manda la especificación: en local no estorba.
+        """
+        respuesta = await call_next(request)
+        respuesta.headers.setdefault("X-Content-Type-Options", "nosniff")
+        if request.url.scheme == "https":
+            respuesta.headers.setdefault(
+                "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
+            )
+        return respuesta
+
     app.include_router(api_router, prefix="/api/v1")
 
     import os

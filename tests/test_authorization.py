@@ -222,3 +222,26 @@ async def test_el_admin_pide_el_registro_de_cualquier_padre(client, padres):
     response = await client.get("/api/v1/padres/1", headers=bearer("admin", 3, id_usuario=1))
 
     assert response.status_code == 200
+
+
+# --- CP-NF-003: cabeceras de seguridad que marcó OWASP ZAP ---
+
+
+async def test_todas_las_respuestas_llevan_nosniff(client):
+    """Segunda barrera para BE-14: los avatares se sirven públicos desde /static/avatars.
+
+    Sin `nosniff`, un navegador puede ignorar el Content-Type y ejecutar como HTML un archivo
+    subido por un usuario.
+    """
+    # `/openapi.json` no consulta la base: así la prueba comprueba la cabecera y nada más.
+    r = await client.get("/openapi.json")
+
+    assert r.status_code == 200
+    assert r.headers.get("X-Content-Type-Options") == "nosniff"
+
+
+async def test_hsts_solo_sobre_https(client):
+    """La especificación dice que HSTS no se envía sobre HTTP, y el cliente de pruebas es http."""
+    r = await client.get("/openapi.json")
+
+    assert "Strict-Transport-Security" not in r.headers
