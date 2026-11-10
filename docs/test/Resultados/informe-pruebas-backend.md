@@ -1,7 +1,7 @@
 # Informe de pruebas — Backend (API FastAPI) · Eyes School
 
 > **Tipo de documento:** informe de estado. Dice, para cada tipo de prueba, qué pedía su planeación, qué se ejecutó, qué resultó y **qué falta** para poder cerrar su entregable (PR-03 a PR-08).
-> **Corte:** 09/11/2026, 21:10. **Rama:** `developer` · commit `06bf07f`.
+> **Corte:** 09/11/2026, 22:30. **Rama:** `developer` · commit `c8bdb87`.
 > **Elaboró:** Mariana Cortés (QA) · **Revisa:** Samuel Sierra (líder de pruebas) · **Aprueba:** Sergio Gómez (PO)
 > Los resultados numéricos detallados están en [`corrida-2026-11-09.md`](corrida-2026-11-09.md). Este documento es el resumen por tipo de prueba y la lista de pendientes.
 
@@ -11,11 +11,11 @@
 
 | Tipo de prueba | Entregable | Planeación | Ejecutado | Resultado | Estado |
 |---|---|---|---|---|---|
-| Unitarias y de componente | PR-04 | `Unitarias/` | **Sí** (U1) | 154/154 · cobertura 68 % | ✅ Listo para U2 |
-| Integración con PostgreSQL | PR-05 | `Integracion/` | **Sí** (I1 local) | 53/53 contra PostgreSQL 18.6 | ✅ Listo para I2 |
+| Unitarias y de componente | PR-04 | `Unitarias/` | **Sí** (U1 y recorrida en U2) | 159/159 · cobertura 72 % | ✅ |
+| Integración con PostgreSQL | PR-05 | `Integracion/` | **Sí** (I1, repetida) | 53/53 contra PostgreSQL 18.6 | ✅ |
 | Integración por HTTP (Newman) | PR-05 | `Integracion/` | No | 70 casos generados, 0 corridos | ⏳ Desbloqueado hoy |
 | Contrato OpenAPI (schemathesis) | PR-05 | `Integracion/` | No | — | ⏳ Desbloqueado hoy |
-| Análisis estático | PR-03 | `Codigo_Estatico/` | **Sí** (E1) | 9 de 10 controles; B4 sin correr | 🟡 Falta SonarQube |
+| Análisis estático | PR-03 | `Codigo_Estatico/` | **Sí** (E1 y E2) | 9 de 10 controles ✔, **B8 ya en verde**; B4 sin correr | 🟡 Falta SonarQube |
 | Sistema: carga y estrés (k6) | PR-06 | `Sistema/` | No | k6 instalado, scripts listos | ⏳ Desbloqueado hoy |
 | Sistema: DAST con OWASP ZAP | PR-06 | `Sistema/` | No | ZAP no instalado | ⏳ Desbloqueado hoy |
 | Sistema: OWASP Top 10 | PR-06 | `Sistema/` | Parcial | Lo cubierto por unitarias e integración | 🟡 Falta la tabla |
