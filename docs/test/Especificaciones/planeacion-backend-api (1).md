@@ -582,7 +582,20 @@ Son los mismos casos que `tests/password.test.ts` de la web y `validators_test.d
 
 > **Corrección del 09/11/2026:** este criterio decía antes «`GET /cursos/` sin token → 401 o 403», y estaba equivocado. `GET /cursos`, `GET /cursos/{id}`, `GET /cursos/{id}/horarios` y `GET /especializaciones` son **públicos a propósito**: son los catálogos que el formulario de registro de acudientes necesita antes de iniciar sesión, y están declarados como tales en `tests/test_authorization.py` (constante `PUBLICOS`), que falla si aparece cualquier otro endpoint sin token. La planeación de pruebas de sistema ya los usaba así en su prueba de humo. Pedir 401 ahí habría hecho fallar un preflight de un entorno sano.
 
-**Estado al 09/11/2026: resuelto.** Con la URL real (`apieyeschool-q-g4hfgrgvepbecacc.chilecentral-01.azurewebsites.net`), el preflight da `/docs` → 200, `/openapi.json` → 200, `GET /cursos/` → 200 con datos, login inexistente → 401 y cuerpo inválido → 422. Es decir, **las consultas a la base funcionan y los 500 desaparecieron**. Falta solo el último punto del criterio, el login del admin del seed, que necesita `QA_PASSWORD` y lo corre quien la tenga:
+**Estado al 09/11/2026: CERRADO.** El criterio de aceptación se cumple completo:
+
+| Comprobación | Resultado |
+|---|---|
+| `GET /cursos/` sin token | 200 con la lista de cursos |
+| Login con un correo que no existe | 401 |
+| Login con cuerpo inválido | 422 |
+| **Login del admin del seed con `QA_PASSWORD`** | **200 con `access_token`** |
+
+**Faltaba una causa que este documento no contemplaba: la base de QA no tenía aplicada la migración `b7d2e9a41c03`.** Estaba en `a1b2c3d4e5f6`, sin las tablas `sesiones_refresco` ni `dispositivos`, mientras el código desplegado desde `developer` ya las necesitaba. Los 500 que se veían el 05/11/2026 encajan con eso. Se aplicó el 09/11/2026 desde la consola SSH de `apieyeschool-q` (`python -m alembic upgrade head`), y el login real empezó a funcionar enseguida.
+
+> **Para la próxima vez:** el diagnóstico de esta sección empieza por la contraseña y el formato de `DATABASE_URL`, y no menciona la revisión de Alembic. Agréguese como **paso 0**: `python -m alembic current` en la consola de la Web App. Un entorno cuyo código va por delante de su base da exactamente estos síntomas —`/docs` y las validaciones responden, y todo lo que consulta la base falla— y es lo que efectivamente pasó, tanto en QA como en producción.
+
+**Detalle anterior del diagnóstico (se conserva por si vuelve a fallar):** Con la URL real (`apieyeschool-q-g4hfgrgvepbecacc.chilecentral-01.azurewebsites.net`), el preflight da `/docs` → 200, `/openapi.json` → 200, `GET /cursos/` → 200 con datos, login inexistente → 401 y cuerpo inválido → 422. Es decir, **las consultas a la base funcionan y los 500 desaparecieron**. Falta solo el último punto del criterio, el login del admin del seed, que necesita `QA_PASSWORD` y lo corre quien la tenga:
 
 ```bash
 curl -s -o /dev/null -w "%{http_code}\n" -X POST "$QA_API/auth/login" \

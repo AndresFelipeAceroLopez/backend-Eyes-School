@@ -62,6 +62,8 @@ Se registran en Azure Boards antes del 6 nov con estado New, etiqueta `revision-
 | DEF-020 | BE-INF-4 | La API de QA (apieyeschool-q) responde 500 en todo lo que consulta la base: bloquea la integración y los E2E | Alta | P1 | Preflight de BE-INF-4 | Mariana Cortés · Andrés Acero | 05/11/2026 | S8 (primero) |
 | DEF-021 | BE-01 | create_admin.py trae la DATABASE_URL con usuario y contraseña embebida, y el commit que está en main (producción) todavía la tiene | Crítica | P1 | CP-NF-012 (B8 de E1) | Andrés Acero | 09/11/2026 | S8 |
 
+**DEF-020 quedó resuelto el 09/11/2026.** Causa raíz: **Entorno** — la base de QA estaba en la revisión `a1b2c3d4e5f6` mientras el código desplegado desde `developer` ya necesitaba `b7d2e9a41c03` (tablas `sesiones_refresco` y `dispositivos`). Se aplicó la migración desde la consola SSH de `apieyeschool-q`. Verificación: login del admin con `QA_PASSWORD` → 200. La misma falta se encontró en producción y se corrigió igual, antes de desplegar `v1.1.0`.
+
 **DEF-020** es el mismo DEF-WEB-01 del repositorio de la web; se registra también aquí porque la causa y la corrección son del backend. No se duplica: se enlaza al bug de la web.
 
 **DEF-021 sale de la corrida E1 del 09/11/2026** (ver [`../Resultados/corrida-2026-11-09.md`](../Resultados/corrida-2026-11-09.md), sección 3.3). Según la regla de la sección 8 de la planeación de análisis estático, un hallazgo que ya tiene corrección planeada se enlaza a esa corrección en vez de abrir otro bug; se registra aparte de DEF-001 porque **amplía el alcance de BE-01 a un archivo y a una rama que ese defecto no cubría** (`create_admin.py` en `main`), y porque su corrección es un cambio de código, no solo la rotación de secretos. Al cerrar DEF-001 **no** queda cerrado DEF-021.

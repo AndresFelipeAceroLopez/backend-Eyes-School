@@ -13,10 +13,10 @@
 |---|---|---|---|---|---|
 | Unitarias y de componente | PR-04 | `Unitarias/` | **Sí** (U1 y recorrida en U2) | 159/159 · cobertura 72 % | ✅ |
 | Integración con PostgreSQL | PR-05 | `Integracion/` | **Sí** (I1, repetida) | 53/53 contra PostgreSQL 18.6 | ✅ |
-| Integración por HTTP (Newman) | PR-05 | `Integracion/` | No | 70 casos generados, 0 corridos | ⏳ Desbloqueado hoy |
+| Integración por HTTP (Newman) | PR-05 | `Integracion/` | No | 70 casos generados, 0 corridos | 🟢 **Listo para correr** |
 | Contrato OpenAPI (schemathesis) | PR-05 | `Integracion/` | No | — | ⏳ Desbloqueado hoy |
 | Análisis estático | PR-03 | `Codigo_Estatico/` | **Sí** (E1 y E2) | 9 de 10 controles ✔, **B8 ya en verde**; B4 sin correr | 🟡 Falta SonarQube |
-| Sistema: carga y estrés (k6) | PR-06 | `Sistema/` | No | k6 instalado, scripts listos | ⏳ Desbloqueado hoy |
+| Sistema: carga y estrés (k6) | PR-06 | `Sistema/` | No | k6 instalado, scripts listos | 🟢 **Listo para correr** |
 | Sistema: DAST con OWASP ZAP | PR-06 | `Sistema/` | No | ZAP no instalado | ⏳ Desbloqueado hoy |
 | Sistema: OWASP Top 10 | PR-06 | `Sistema/` | Parcial | Lo cubierto por unitarias e integración | 🟡 Falta la tabla |
 | Gestión de defectos | PR-07 | `GestionDefectos/` | Parcial | 21 defectos identificados, 0 en Azure Boards | 🔴 Sin registrar |
@@ -159,7 +159,7 @@ La Web App `ApiEyeSchool` quedó sin uso y su workflow `main_apieyeschool.yml` s
 |---|---|
 | DEF-002 a DEF-018 (BE-03 a BE-19) | **Corregidos y probados** en `developer`. Falta verificarlos en QA y moverlos a Done |
 | DEF-019 (H-08, contraseñas en el seed) | **Corregido**: los comentarios ya no están |
-| DEF-020 (BE-INF-4, QA en 500) | **Resuelto hoy**; se cierra con el preflight como evidencia |
+| DEF-020 (BE-INF-4, QA en 500) | **Cerrado.** Causa raíz: la base de QA no tenía la migración `b7d2e9a41c03`. Aplicada el 09/11/2026; login del admin → 200 |
 | DEF-001 y DEF-021 (BE-01) | **Abiertos.** Ver abajo |
 
 ### BE-01: qué se hizo y qué sigue abierto
