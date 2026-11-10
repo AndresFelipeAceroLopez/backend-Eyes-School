@@ -16,7 +16,7 @@
 | Integración por HTTP (Newman) | PR-05 | `Integracion/` | **Sí** (I1) | 68 casos · **0 fallos funcionales** · 55 aserciones de tiempo | ✅ |
 | Contrato OpenAPI (schemathesis) | PR-05 | `Integracion/` | No | No está instalado | 🟢 Listo para correr |
 | Análisis estático | PR-03 | `Codigo_Estatico/` | **Sí** (E1 y E2) | 9 de 10 controles ✔, **B8 ya en verde**; B4 sin correr | 🟡 Falta SonarQube |
-| Sistema: carga y estrés (k6) | PR-06 | `Sistema/` | No | k6 instalado, scripts listos | 🟢 **Listo para correr** |
+| Sistema: carga y estrés (k6) | PR-06 | `Sistema/` | **Sí** (S1 carga) | **CP-NF-001 no se cumple**: 8,05 % de errores y p95 3,06 s con 50 usuarios | 🔴 Hallazgo |
 | Sistema: DAST con OWASP ZAP | PR-06 | `Sistema/` | No | ZAP no instalado | ⏳ Desbloqueado hoy |
 | Sistema: OWASP Top 10 | PR-06 | `Sistema/` | Parcial | Lo cubierto por unitarias e integración | 🟡 Falta la tabla |
 | Gestión de defectos | PR-07 | `GestionDefectos/` | Parcial | 21 defectos identificados, 0 en Azure Boards | 🔴 Sin registrar |
