@@ -38,14 +38,20 @@ class Settings(BaseSettings):
     # el código: el techo de peticiones por segundo de la API es, en la práctica,
     # (DB_POOL_SIZE + DB_MAX_OVERFLOW) dividido por lo que tarde cada consulta. Subirlos solo
     # ayuda si el plan de PostgreSQL admite esas conexiones; si no, las rechaza y empeora.
-    DB_POOL_SIZE: int = 20
-    DB_MAX_OVERFLOW: int = 30
+    # Medido dentro del contenedor de QA el 10/11/2026: abrir una conexión cuesta 1 233 ms
+    # (TCP + TLS + autenticación a otro continente) y una consulta sobre una conexión ya abierta,
+    # 164 ms. Siete veces más. Por eso el pool se dimensiona al revés de lo habitual: muchas
+    # conexiones FIJAS, que se abren una vez y duran, y poco desbordamiento, porque cada conexión
+    # de desbordamiento se abre durante el pico y le cobra 1,2 s a la petición que la provocó.
+    DB_POOL_SIZE: int = 30
+    DB_MAX_OVERFLOW: int = 10
     # `pool_pre_ping` hace un «SELECT 1» antes de entregar cada conexión. Con la base en otro
     # continente eso cuesta un viaje de ida y vuelta (~200 ms) en CADA petición. Se desactiva y
     # se reciclan las conexiones antes de que el servidor las cierre por inactividad. Si
     # aparecen errores de «connection closed», vuelva a ponerlo en true.
     DB_POOL_PRE_PING: bool = False
-    DB_POOL_RECYCLE: int = 300
+    # Reciclar también cuesta 1 233 ms, así que se hace cada media hora y no cada cinco minutos.
+    DB_POOL_RECYCLE: int = 1800
 
     LOGIN_MAX_INTENTOS: int = 5
     LOGIN_BLOQUEO_MINUTOS: int = 15
