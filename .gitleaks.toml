@@ -1,0 +1,35 @@
+# Configuración de gitleaks (BE-SA-2).
+# Extiende las reglas por defecto y agrega una para URLs de conexión con usuario y contraseña,
+# que es justo lo que se filtró en el incidente BE-01 (DATABASE_URL de Render en un .env).
+title = "Eyes School"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "url-conexion-con-credenciales"
+description = "URL de conexión a base de datos con usuario y contraseña"
+regex = '''(?i)(postgres(?:ql)?(?:\+\w+)?|mysql|mongodb(?:\+srv)?|redis|amqp)://[^\s:/@'"]+:[^\s@'"/]{3,}@[^\s'"]+'''
+keywords = ["postgres", "mysql", "mongodb", "redis", "amqp"]
+
+  # Valores de ejemplo y de las pruebas, que no son secretos reales.
+  [rules.allowlist]
+  description = "Ejemplos del repositorio y bases desechables de pruebas"
+  regexTarget = "match"
+  regexes = [
+    '''://(postgres|test):(password|test)@(localhost|127\.0\.0\.1)''',
+    '''://user:pass(word)?@''',
+  ]
+
+[[rules]]
+id = "secret-key-en-env"
+description = "SECRET_KEY asignada con un valor real en un archivo .env"
+regex = '''(?im)^\s*SECRET_KEY\s*=\s*['"]?[A-Za-z0-9_\-\.=+/]{32,}['"]?\s*$'''
+keywords = ["secret_key"]
+
+[allowlist]
+description = "Archivos de pruebas y documentación"
+paths = [
+  '''docs/test/.*''',
+  '''\.env\.example$''',
+]

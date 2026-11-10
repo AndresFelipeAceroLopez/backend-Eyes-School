@@ -82,3 +82,12 @@ coverage.xml
 *.pid
 *.seed
 .env
+# Archivos subidos en ejecución (avatares y reportes), generados por la API y por las pruebas
+static/reportes/*
+!static/reportes/.gitkeep
+tmp/
+coverage.xml
+junit-*.xml
+htmlcov/
+.coverage
+evidencias/
