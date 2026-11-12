@@ -2327,7 +2327,23 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "if (!pm.environment.get('id_estudiante_sin_notas')) pm.execution.skipRequest();"
+                  "if (!pm.environment.get('id_estudiante_sin_notas')) {",
+                  "  const base = pm.environment.get('base_url');",
+                  "  const auth = [{ key: 'Authorization', value: 'Bearer ' + pm.collectionVariables.get('token_admin') }];",
+                  "  pm.sendRequest({ url: base + '/estudiantes?limit=500', header: auth }, (err, res) => {",
+                  "    if (err || res.code !== 200) return;",
+                  "    const ids = res.json().map(e => e.id_estudiante).sort((a, b) => b - a).slice(0, 30);",
+                  "    const probar = (i) => {",
+                  "      if (i >= ids.length) return;",
+                  "      pm.sendRequest({ url: base + '/estudiantes/' + ids[i] + '/notas', header: auth }, (e2, r2) => {",
+                  "        if (!e2 && r2.code === 200 && r2.json().length === 0) {",
+                  "          pm.environment.set('id_estudiante_sin_notas', String(ids[i]));",
+                  "        } else { probar(i + 1); }",
+                  "      });",
+                  "    };",
+                  "    probar(0);",
+                  "  });",
+                  "}"
                 ]
               }
             },
@@ -2338,6 +2354,7 @@
                 "exec": [
                   "pm.test('CP-INT-052 → 404', () => pm.response.to.have.status(404));",
                   "pm.test('CP-INT-052 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-052 cuerpo', () => { pm.expect(pm.environment.get('id_estudiante_sin_notas'), 'no se encontró ningún estudiante sin notas en este entorno').to.be.ok; });",
                   "pm.test('CP-INT-052 cuerpo', () => { pm.expect(pm.response.json().detail).to.eql('No hay datos disponibles para generar el boletín.'); });"
                 ]
               }

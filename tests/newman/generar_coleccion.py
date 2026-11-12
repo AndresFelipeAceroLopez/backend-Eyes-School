@@ -103,7 +103,7 @@ caso(47, "Docente sin asignación califica la materia → 403 (BE-11)", "POST", 
 caso(48, "El docente solo lista notas de los cursos que dicta (BE-11)", "GET", "/notas", rol="docente2", query={"limit": 500}, checks=["pm.expect(pm.response.json().every(x => x.id_estudiante != parseInt(pm.collectionVariables.get('id_estudiante_ds03a')) || pm.collectionVariables.get('docente2_dicta_curso_ds03a') === 'true')).to.be.true"], carpeta=n)
 caso(50, "Estudiante lee sus notas → 200", "GET", "/estudiantes/{{id_estudiante_ds01}}/notas", rol="estudiante", carpeta=n)
 caso(51, "Boletín PDF del estudiante → 200 application/pdf", "GET", "/notas/estudiantes/{{id_estudiante_ds01}}/boletin/pdf", rol="estudiante", checks=["pm.expect(pm.response.headers.get('Content-Type')).to.include('application/pdf')"], carpeta=n)
-caso(52, "Boletín de un estudiante sin notas → 404 con el mensaje (BE-19)", "GET", "/notas/estudiantes/{{id_estudiante_sin_notas}}/boletin/pdf", rol="admin", status=404, checks=["pm.expect(pm.response.json().detail).to.eql('No hay datos disponibles para generar el boletín.')"], carpeta=n)
+caso(52, "Boletín de un estudiante sin notas → 404 con el mensaje (BE-19)", "GET", "/notas/estudiantes/{{id_estudiante_sin_notas}}/boletin/pdf", rol="admin", status=404, checks=["pm.expect(pm.environment.get('id_estudiante_sin_notas'), 'no se encontró ningún estudiante sin notas en este entorno').to.be.ok", "pm.expect(pm.response.json().detail).to.eql('No hay datos disponibles para generar el boletín.')"], carpeta=n)
 caso(53, "Padre pide el boletín de un estudiante ajeno → 403", "GET", "/notas/estudiantes/{{id_estudiante_ds03a}}/boletin/pdf", rol="padre1", status=403, carpeta=n)
 caso(80, "Periodo fuera de 1 a 4 → 422", "POST", "/notas", rol="docente", body={**NOTA, "id_periodo": 5}, status=422, carpeta=n)
 caso(82, "Estudiante lee sus propias notas → 200", "GET", "/estudiantes/{{id_estudiante_ds01}}/notas", rol="estudiante", carpeta=n)
@@ -187,12 +187,37 @@ def _peticion(c):
     return req
 
 
+# CP-INT-052 necesita un estudiante SIN notas, y su id cambia de un entorno a otro. Antes se
+# fijaba a mano en `id_estudiante_sin_notas` y, como nadie lo hacía, el caso se omitía siempre.
+# Ahora, si la variable está vacía, el caso lo busca él mismo con el token de admin: lista los
+# estudiantes y, empezando por los más nuevos (los menos probables de tener notas), se queda con
+# el primero cuyo `GET /estudiantes/{id}/notas` devuelve `[]`, que es la misma condición con la
+# que el boletín responde 404. Solo lee: no crea ni borra nada. Si se fija la variable, se respeta.
+BUSCAR_ESTUDIANTE_SIN_NOTAS = [
+    "if (!pm.environment.get('id_estudiante_sin_notas')) {",
+    "  const base = pm.environment.get('base_url');",
+    "  const auth = [{ key: 'Authorization', value: 'Bearer ' + pm.collectionVariables.get('token_admin') }];",
+    "  pm.sendRequest({ url: base + '/estudiantes?limit=500', header: auth }, (err, res) => {",
+    "    if (err || res.code !== 200) return;",
+    "    const ids = res.json().map(e => e.id_estudiante).sort((a, b) => b - a).slice(0, 30);",
+    "    const probar = (i) => {",
+    "      if (i >= ids.length) return;",
+    "      pm.sendRequest({ url: base + '/estudiantes/' + ids[i] + '/notas', header: auth }, (e2, r2) => {",
+    "        if (!e2 && r2.code === 200 && r2.json().length === 0) {",
+    "          pm.environment.set('id_estudiante_sin_notas', String(ids[i]));",
+    "        } else { probar(i + 1); }",
+    "      });",
+    "    };",
+    "    probar(0);",
+    "  });",
+    "}",
+]
+
+
 def _item(c):
     eventos = [{"listen": "test", "script": _script(_pruebas(c))}]
     if c["id"] == 52:
-        # Necesita el id de un estudiante sin notas de ESE entorno (variable id_estudiante_sin_notas).
-        eventos.insert(0, {"listen": "prerequest", "script": _script(
-            ["if (!pm.environment.get('id_estudiante_sin_notas')) pm.execution.skipRequest();"])})
+        eventos.insert(0, {"listen": "prerequest", "script": _script(BUSCAR_ESTUDIANTE_SIN_NOTAS)})
     return {"name": f"CP-INT-{c['id']:03d} {c['nombre']}", "event": eventos, "request": _peticion(c)}
 
 
