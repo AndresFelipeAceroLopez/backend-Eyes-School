@@ -179,22 +179,22 @@ INSERT INTO public.estudiantes ("idUsuario","codigoEstudiante","fechaIngreso","e
 (7, 'EST003', '2026-01-20', 'Activo', 2, NOW());
 
 INSERT INTO public."Asistencia" ("idEstudiante","fecha","estado","observacion","registradoPor","fechaRegistro","tipo","codigo_qr","activo") VALUES
-(1, '2026-06-16', 'Presente',  NULL,                    2, NOW(), 'Manual', NULL,                    true),
-(1, '2026-06-17', 'Ausente',   'Sin justificación',     2, NOW(), 'Manual', NULL,                    true),
-(1, '2026-06-18', 'Presente',  NULL,                    2, NOW(), 'QR',    'QR-EST001-20260618',     true),
-(2, '2026-06-16', 'Presente',  NULL,                    2, NOW(), 'QR',    'QR-EST002-20260616',     true),
-(2, '2026-06-17', 'Tardanza',  'Llegó 15 min tarde',    2, NOW(), 'Manual', NULL,                    true),
-(2, '2026-06-18', 'Presente',  NULL,                    2, NOW(), 'Manual', NULL,                    true),
-(3, '2026-06-16', 'Ausente',   'Permiso médico',        2, NOW(), 'Manual', NULL,                    true),
-(3, '2026-06-17', 'Presente',  NULL,                    2, NOW(), 'QR',    'QR-EST003-20260617',     true),
-(3, '2026-06-18', 'Presente',  NULL,                    2, NOW(), 'Manual', NULL,                    true),
-(1, '2026-06-19', 'Presente',  NULL,                    2, NOW(), 'QR',    'QR-EST001-20260619',     true);
+(1, '2026-06-16', 'Presente',  NULL,                    2, NOW(), NULL,     NULL,                    true),
+(1, '2026-06-17', 'Ausente',   'Sin justificación',     2, NOW(), NULL,     NULL,                    true),
+(1, '2026-06-18', 'Presente',  NULL,                    2, NOW(), NULL,     'QR-EST001-20260618',     true),
+(2, '2026-06-16', 'Presente',  NULL,                    2, NOW(), NULL,     'QR-EST002-20260616',     true),
+(2, '2026-06-17', 'Tarde',     'Llegó 15 min tarde',    2, NOW(), NULL,     NULL,                    true),
+(2, '2026-06-18', 'Presente',  NULL,                    2, NOW(), NULL,     NULL,                    true),
+(3, '2026-06-16', 'Ausente',   'Permiso médico',        2, NOW(), NULL,     NULL,                    true),
+(3, '2026-06-17', 'Presente',  NULL,                    2, NOW(), NULL,     'QR-EST003-20260617',     true),
+(3, '2026-06-18', 'Presente',  NULL,                    2, NOW(), NULL,     NULL,                    true),
+(1, '2026-06-19', 'Presente',  NULL,                    2, NOW(), NULL,     'QR-EST001-20260619',     true);
 
 
 INSERT INTO public."Asistencia_Aula" ("idEstudiante","idHorario","fecha","estado","observacion","registradoPor","fechaRegistro") VALUES
 (1, 1, '2026-06-16', 'Presente', 'Sin novedad',   2, NOW()),
 (1, 2, '2026-06-16', 'Presente', 'Sin novedad',   2, NOW()),
-(2, 1, '2026-06-16', 'Tardanza', 'Llegó tarde',   2, NOW()),
+(2, 1, '2026-06-16', 'Tarde',    'Llegó tarde',   2, NOW()),
 (2, 4, '2026-06-17', 'Presente', 'Sin novedad',   2, NOW()),
 (3, 4, '2026-06-17', 'Ausente',  'No asistió',    2, NOW()),
 (1, 3, '2026-06-17', 'Presente', 'Sin novedad',   2, NOW()),

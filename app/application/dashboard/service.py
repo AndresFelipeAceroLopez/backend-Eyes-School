@@ -176,25 +176,38 @@ class DashboardService:
         )
 
     async def _get_porcentaje_asistencia(self, id_estudiante: int) -> float | None:
-        total = (await self.session.execute(
-            select(func.count()).select_from(AsistenciaModel)
-            .where(AsistenciaModel.id_estudiante == id_estudiante, AsistenciaModel.activo == True)  # noqa: E712
-        )).scalar_one()
-        if not total:
-            return None
-        presentes = (await self.session.execute(
-            select(func.count()).select_from(AsistenciaModel)
-            .where(AsistenciaModel.id_estudiante == id_estudiante, AsistenciaModel.estado == "Presente")
-        )).scalar_one()
-        return round((presentes / total) * 100, 2)
+        return await self._porcentaje_asistencia_de(
+            AsistenciaModel.id_estudiante == id_estudiante
+        )
 
     async def _get_porcentaje_asistencia_global(self) -> float | None:
-        total = (await self.session.execute(
-            select(func.count()).select_from(AsistenciaModel).where(AsistenciaModel.activo == True)  # noqa: E712
-        )).scalar_one()
-        if not total:
-            return None
-        presentes = (await self.session.execute(
-            select(func.count()).select_from(AsistenciaModel).where(AsistenciaModel.estado == "Presente")
-        )).scalar_one()
-        return round((presentes / total) * 100, 2)
+        return await self._porcentaje_asistencia_de()
+
+    async def _porcentaje_asistencia_de(self, *condiciones) -> float | None:
+        """Una sola consulta sobre los registros activos (N-04): antes el total contaba solo
+        los activos y los «Presente» contaban también los borrados (borrado lógico), así que
+        el porcentaje podía pasar de 100."""
+        filas = (await self.session.execute(
+            select(AsistenciaModel.estado, func.count())
+            .where(AsistenciaModel.activo == True, *condiciones)  # noqa: E712
+            .group_by(AsistenciaModel.estado)
+        )).all()
+        return porcentaje_asistencia({estado: cantidad for estado, cantidad in filas})
+
+
+# Estados que cuentan como asistencia: una llegada tarde es asistencia (mismo criterio que la
+# app móvil y el panel web, N-20).
+ESTADOS_QUE_ASISTEN = frozenset({"Presente", "Tarde"})
+
+
+def porcentaje_asistencia(conteos: dict[str, int]) -> float | None:
+    """Porcentaje de asistencia a partir de los registros activos agrupados por estado.
+
+    Devuelve `None` sin registros. Nunca pasa de 100: numerador y denominador salen del
+    mismo conjunto.
+    """
+    total = sum(conteos.values())
+    if not total:
+        return None
+    asistio = sum(c for estado, c in conteos.items() if estado in ESTADOS_QUE_ASISTEN)
+    return round(asistio / total * 100, 2)
