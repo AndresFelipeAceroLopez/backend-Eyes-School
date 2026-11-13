@@ -1,7 +1,8 @@
-from datetime import datetime
 from typing import Annotated
 
 from pydantic import BaseModel, Field
+
+from app.application.common.tipos import FechaHoraUTC
 
 # Escala de notas del colegio: de 0.0 a 5.0 (igual que la web y la app).
 NOTA_MIN = 0.0
@@ -28,6 +29,6 @@ class NotaOut(BaseModel):
     id_periodo: int
     nota: float
     observacion: str | None
-    fecha_registro: datetime
+    fecha_registro: FechaHoraUTC
     registrado_por: int
     model_config = {"from_attributes": True}

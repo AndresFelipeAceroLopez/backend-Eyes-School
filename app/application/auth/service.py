@@ -33,9 +33,9 @@ from app.core.security import (
     create_password_reset_token,
     create_refresh_token,
     decode_token,
-    hash_password,
+    hash_password_async,
     sello_password,
-    verify_password,
+    verify_password_async,
 )
 from app.infrastructure.repositories.academico_repository import ProfesorEspecializacionRepository
 from app.infrastructure.repositories.actores_repository import (
@@ -143,9 +143,13 @@ class AuthService:
             raise TooManyRequestsException(
                 f"Demasiados intentos, espera {settings.LOGIN_BLOQUEO_MINUTOS} minutos"
             )
-        if not user or not user.password or not verify_password(data.password, user.password):
+        if not user or not user.password or not await verify_password_async(
+            data.password, user.password
+        ):
             if user:
                 await self._registrar_fallo(user.id_usuario, ahora)
+            else:
+                logger.warning("Inicio de sesión fallido: correo no registrado")
             raise UnauthorizedException("Credenciales inválidas")
         if not user.estado:
             raise UnauthorizedException("Usuario inactivo")
@@ -166,6 +170,8 @@ class AuthService:
 
     async def _registrar_fallo(self, id_usuario: int, ahora) -> None:
         intentos = await self.repo.registrar_fallo(id_usuario)
+        # A09: queda el id y el número de intento; nunca el correo escrito ni la contraseña.
+        logger.warning("Inicio de sesión fallido: usuario %s, intento %s", id_usuario, intentos)
         if intentos >= settings.LOGIN_MAX_INTENTOS:
             hasta = ahora + timedelta(minutes=settings.LOGIN_BLOQUEO_MINUTOS)
             await self.repo.bloquear(id_usuario, hasta)
@@ -237,7 +243,7 @@ class AuthService:
             raise UnauthorizedException("El enlace de recuperación ya fue usado")
 
         await self.repo.update(
-            user, {"password": hash_password(new_password), "password_actualizada": self.reloj()}
+            user, {"password": await hash_password_async(new_password), "password_actualizada": self.reloj()}
         )
         await self.repo.reiniciar_fallos(user.id_usuario)
         await self.sesiones.revocar_todas(user.id_usuario)

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Query
 
+from app.application.common.tipos import ENTERO32_MAX, Entero32
 from app.application.padres.schemas import HijoOut, PadreCreate, PadreOut
 from app.application.padres.service import PadreService
 from app.core.dependencies import AuthUser, DbSession, require_roles
@@ -10,7 +11,7 @@ router = APIRouter(prefix="/padres", tags=["Padres"])
 
 
 @router.get("/me", response_model=PadreOut, dependencies=[require_roles("padre")])
-async def get_mi_padre(current_user: AuthUser, db: DbSession, id_estudiante: int | None = None):
+async def get_mi_padre(current_user: AuthUser, db: DbSession, id_estudiante: Entero32 | None = None):
     """Vínculo del acudiente con uno de sus hijos (el primero si no se indica `id_estudiante`)."""
     return await PadreService(db).mi_vinculo(current_user.id_usuario, id_estudiante)
 
@@ -21,7 +22,7 @@ async def list_mis_hijos(current_user: AuthUser, db: DbSession):
 
 
 @router.get("", response_model=list[PadreOut], dependencies=[require_roles("admin")])
-async def list_padres(db: DbSession, skip: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=500)):
+async def list_padres(db: DbSession, skip: int = Query(0, ge=0, le=ENTERO32_MAX), limit: int = Query(100, ge=1, le=500)):
     items = await PadreRepository(db).get_all(skip=skip, limit=limit)
     return [PadreOut.model_validate(p) for p in items]
 
@@ -33,7 +34,7 @@ async def create_padre(data: PadreCreate, db: DbSession):
 
 
 @router.get("/{id_padre}", response_model=PadreOut, dependencies=[require_roles("admin", "padre")])
-async def get_padre(id_padre: int, db: DbSession, current_user: AuthUser):
+async def get_padre(id_padre: Entero32, db: DbSession, current_user: AuthUser):
     item = await PadreRepository(db).get_by_id(id_padre)
     if not item:
         raise NotFoundException("Padre no encontrado")
@@ -43,8 +44,8 @@ async def get_padre(id_padre: int, db: DbSession, current_user: AuthUser):
     return PadreOut.model_validate(item)
 
 
-@router.put("/{id_padre}", response_model=PadreOut, dependencies=[require_roles("admin")])
-async def update_padre(id_padre: int, data: PadreCreate, db: DbSession):
+@router.put("/{id_padre:int}", response_model=PadreOut, dependencies=[require_roles("admin")])
+async def update_padre(id_padre: Entero32, data: PadreCreate, db: DbSession):
     repo = PadreRepository(db)
     item = await repo.get_by_id(id_padre)
     if not item:
@@ -53,8 +54,8 @@ async def update_padre(id_padre: int, data: PadreCreate, db: DbSession):
     return PadreOut.model_validate(updated)
 
 
-@router.delete("/{id_padre}", status_code=204, dependencies=[require_roles("admin")])
-async def delete_padre(id_padre: int, db: DbSession):
+@router.delete("/{id_padre:int}", status_code=204, dependencies=[require_roles("admin")])
+async def delete_padre(id_padre: Entero32, db: DbSession):
     repo = PadreRepository(db)
     item = await repo.get_by_id(id_padre)
     if not item:

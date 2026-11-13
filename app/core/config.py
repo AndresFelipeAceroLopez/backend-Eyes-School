@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     RESET_TOKEN_EXPIRE_MINUTES: int = 30
+    # Cuántos hash de bcrypt pueden correr a la vez (login, registro, cambio de contraseña).
+    # Ver app/core/security.py: más allá de esto esperan turno sin bloquear el resto de la API.
+    BCRYPT_CONCURRENCIA: int = 2
     ENVIRONMENT: str = "development"
 
     # Orígenes del navegador que pueden llamar a la API, separados por coma.

@@ -1,7 +1,9 @@
-from datetime import date, datetime
+from datetime import date
 from typing import Literal
 
 from pydantic import BaseModel
+
+from app.application.common.tipos import FechaHoraUTC
 
 
 class EstudianteCreate(BaseModel):
@@ -28,7 +30,7 @@ class EstudianteOut(BaseModel):
     fecha_egreso: date | None
     estado: str
     id_curso_actual: int | None
-    fecha_registro: datetime
+    fecha_registro: FechaHoraUTC
     # Nombre embebido (join con usuario) para que docente/admin puedan ver al
     # estudiante SIN leer /usuarios (recurso solo-admin). Son opcionales: solo se
     # llenan en los listados, donde el repositorio precarga la relación usuario.

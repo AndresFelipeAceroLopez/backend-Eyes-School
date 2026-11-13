@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 
 from app.application.common.notificador import Notificador
+from app.application.common.tipos import ENTERO32_MAX, Entero32
 from app.application.novedades.schemas import (
     NovedadCreate,
     NovedadOut,
@@ -30,12 +31,12 @@ async def create_tipo(data: TipoNovedadCreate, db: DbSession):
 
 
 @router.put("/tipos-novedad/{id_tipo}", response_model=TipoNovedadOut, dependencies=[require_roles("admin")])
-async def update_tipo(id_tipo: int, data: TipoNovedadCreate, db: DbSession):
+async def update_tipo(id_tipo: Entero32, data: TipoNovedadCreate, db: DbSession):
     return await NovedadService(db).update_tipo(id_tipo, data)
 
 
 @router.delete("/tipos-novedad/{id_tipo}", status_code=204, dependencies=[require_roles("admin")])
-async def delete_tipo(id_tipo: int, db: DbSession):
+async def delete_tipo(id_tipo: Entero32, db: DbSession):
     await NovedadService(db).delete_tipo(id_tipo)
 
 
@@ -45,10 +46,10 @@ async def delete_tipo(id_tipo: int, db: DbSession):
 @router.get("/novedades", response_model=list[NovedadOut], dependencies=[require_roles("admin", "docente")])
 async def list_novedades(
     db: DbSession,
-    id_estudiante: int | None = None,
-    id_tipo: int | None = None,
+    id_estudiante: Entero32 | None = None,
+    id_tipo: Entero32 | None = None,
     estado: str | None = None,
-    skip: int = Query(0, ge=0),
+    skip: int = Query(0, ge=0, le=ENTERO32_MAX),
     limit: int = Query(100, ge=1, le=500),
 ):
     return await NovedadService(db).list(id_estudiante=id_estudiante, id_tipo=id_tipo, estado=estado, skip=skip, limit=limit)
@@ -62,13 +63,13 @@ async def create_novedad(
 
 
 @router.get("/novedades/{id_novedad}", response_model=NovedadOut, dependencies=[require_roles("admin", "docente")])
-async def get_novedad(id_novedad: int, db: DbSession):
+async def get_novedad(id_novedad: Entero32, db: DbSession):
     return await NovedadService(db).get(id_novedad)
 
 
 @router.put("/novedades/{id_novedad}", response_model=NovedadOut, dependencies=[require_roles("admin", "docente")])
 async def update_novedad(
-    id_novedad: int, data: NovedadUpdate, db: DbSession, current_user: AuthUser
+    id_novedad: Entero32, data: NovedadUpdate, db: DbSession, current_user: AuthUser
 ):
     return await NovedadService(db).update(id_novedad, data, current_user)
 
@@ -76,5 +77,5 @@ async def update_novedad(
 # CRUD completo de novedades = profesor y admin. El borrado que hace el admin
 # al eliminar un usuario va además por la cascada de DELETE /usuarios/{id}.
 @router.delete("/novedades/{id_novedad}", status_code=204, dependencies=[require_roles("admin", "docente")])
-async def delete_novedad(id_novedad: int, db: DbSession, current_user: AuthUser):
+async def delete_novedad(id_novedad: Entero32, db: DbSession, current_user: AuthUser):
     await NovedadService(db).delete(id_novedad, current_user)

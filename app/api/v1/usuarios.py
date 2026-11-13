@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Query
 
+from app.application.common.tipos import ENTERO32_MAX, Entero32
 from app.application.usuarios.schemas import UsuarioCreate, UsuarioOut, UsuarioUpdate
 from app.application.usuarios.service import UsuarioService
 from app.core.dependencies import AuthUser, DbSession, require_roles
@@ -13,9 +14,9 @@ router = APIRouter(prefix="/usuarios", tags=["Usuarios"])
 @router.get("", response_model=list[UsuarioOut], dependencies=[require_roles("admin")])
 async def list_usuarios(
     db: DbSession,
-    skip: int = Query(0, ge=0),
+    skip: int = Query(0, ge=0, le=ENTERO32_MAX),
     limit: int = Query(100, ge=1, le=500),
-    id_rol: int | None = None,
+    id_rol: Entero32 | None = None,
     estado: bool | None = None,
     search: str | None = None,
 ):
@@ -30,7 +31,7 @@ async def create_usuario(data: UsuarioCreate, db: DbSession):
 # El admin consulta cualquier usuario; los demás roles SOLO su propio perfil
 # (lo usa la página de Perfil de docente/estudiante/padre).
 @router.get("/{id_usuario}", response_model=UsuarioOut)
-async def get_usuario(id_usuario: int, db: DbSession, current_user: AuthUser):
+async def get_usuario(id_usuario: Entero32, db: DbSession, current_user: AuthUser):
     if current_user.nombre_rol != "admin" and current_user.id_usuario != id_usuario:
         raise ForbiddenException()
     return await UsuarioService(db).get(id_usuario)
@@ -39,7 +40,7 @@ async def get_usuario(id_usuario: int, db: DbSession, current_user: AuthUser):
 # El admin edita cualquier usuario; los demás roles SOLO su propio perfil. Un
 # no-admin NO puede cambiar su propio rol (se ignora id_rol para evitar escalada).
 @router.put("/{id_usuario}", response_model=UsuarioOut)
-async def update_usuario(id_usuario: int, data: UsuarioUpdate, db: DbSession, current_user: AuthUser):
+async def update_usuario(id_usuario: Entero32, data: UsuarioUpdate, db: DbSession, current_user: AuthUser):
     if current_user.nombre_rol != "admin":
         if current_user.id_usuario != id_usuario:
             raise ForbiddenException()
@@ -50,10 +51,10 @@ async def update_usuario(id_usuario: int, data: UsuarioUpdate, db: DbSession, cu
 
 
 @router.patch("/{id_usuario}/estado", response_model=UsuarioOut, dependencies=[require_roles("admin")])
-async def toggle_estado(id_usuario: int, estado: bool, db: DbSession):
+async def toggle_estado(id_usuario: Entero32, estado: bool, db: DbSession):
     return await UsuarioService(db).toggle_estado(id_usuario, estado)
 
 
 @router.delete("/{id_usuario}", status_code=204, dependencies=[require_roles("admin")])
-async def delete_usuario(id_usuario: int, db: DbSession):
+async def delete_usuario(id_usuario: Entero32, db: DbSession):
     await UsuarioService(db).delete(id_usuario)

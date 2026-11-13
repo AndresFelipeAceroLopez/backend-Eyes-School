@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.application.common.tipos import Entero32
 from app.application.materias import schemas as s
 from app.core.dependencies import DbSession, require_roles
 from app.infrastructure.repositories.academico_repository import MateriaRepository
@@ -22,7 +23,7 @@ async def create_materia(data: s.MateriaCreate, db: DbSession):
 
 
 @router.get("/{id_materia}", response_model=s.MateriaOut, dependencies=[require_roles("admin", "docente", "estudiante", "padre")])
-async def get_materia(id_materia: int, db: DbSession):
+async def get_materia(id_materia: Entero32, db: DbSession):
     from app.core.exceptions import NotFoundException
     repo = MateriaRepository(db)
     item = await repo.get_by_id(id_materia)
@@ -32,7 +33,7 @@ async def get_materia(id_materia: int, db: DbSession):
 
 
 @router.put("/{id_materia}", response_model=s.MateriaOut, dependencies=[require_roles("admin")])
-async def update_materia(id_materia: int, data: s.MateriaUpdate, db: DbSession):
+async def update_materia(id_materia: Entero32, data: s.MateriaUpdate, db: DbSession):
     from app.core.exceptions import NotFoundException
     repo = MateriaRepository(db)
     item = await repo.get_by_id(id_materia)
@@ -43,7 +44,7 @@ async def update_materia(id_materia: int, data: s.MateriaUpdate, db: DbSession):
 
 
 @router.delete("/{id_materia}", status_code=204, dependencies=[require_roles("admin")])
-async def delete_materia(id_materia: int, db: DbSession):
+async def delete_materia(id_materia: Entero32, db: DbSession):
     from app.core.exceptions import NotFoundException
     repo = MateriaRepository(db)
     item = await repo.get_by_id(id_materia)
