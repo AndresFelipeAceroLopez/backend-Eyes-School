@@ -23,6 +23,7 @@ from app.core.config import settings
 from app.core.email import build_reset_email_html, send_email
 from app.core.exceptions import (
     BusinessRuleException,
+    ForbiddenException,
     TooManyRequestsException,
     UnauthorizedException,
 )
@@ -53,6 +54,10 @@ logger = logging.getLogger(__name__)
 AVATAR_DIR = "static/avatars"
 AVATAR_MAX_BYTES = 2 * 1024 * 1024
 AVATAR_FORMATOS = {"JPEG": "jpg", "PNG": "png", "WEBP": "webp"}
+
+# N-31: el login distingue por qué una cuenta no está activa. Lo muestran la web y la app tal cual.
+MENSAJE_CUENTA_PENDIENTE = "Cuenta pendiente de validación. Un administrador debe aprobarla."
+MENSAJE_CUENTA_DESACTIVADA = "Cuenta desactivada. Comunícate con el administrador del colegio."
 
 # id_rol de la tabla roles (ver seed_data.sql).
 ROL_DOCENTE = 1
@@ -130,6 +135,7 @@ class AuthService:
             user_model = await self.repo.get_by_id(user_out.id_usuario)
             if user_model:
                 user_model.estado = False
+                user_model.pendiente_validacion = True
                 user_out.estado = False
 
         await self.session.commit()
@@ -152,7 +158,10 @@ class AuthService:
                 logger.warning("Inicio de sesión fallido: correo no registrado")
             raise UnauthorizedException("Credenciales inválidas")
         if not user.estado:
-            raise UnauthorizedException("Usuario inactivo")
+            # N-31. Va después de comprobar la contraseña: sin ella no se revela el estado.
+            if user.pendiente_validacion:
+                raise ForbiddenException(MENSAJE_CUENTA_PENDIENTE)
+            raise ForbiddenException(MENSAJE_CUENTA_DESACTIVADA)
 
         await self.repo.reiniciar_fallos(user.id_usuario)
 

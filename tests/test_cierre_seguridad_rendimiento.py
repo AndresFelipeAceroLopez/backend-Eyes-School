@@ -168,8 +168,11 @@ async def test_el_contrato_declara_los_errores_reales(client):
 
     assert {"401", "403", "404"} <= set(rutas["/api/v1/notas/{id_nota}"]["get"]["responses"])
     assert {"400", "409"} <= set(rutas["/api/v1/notas"]["post"]["responses"])
-    # El login es público: declara 401 y 429, no 403 ni los de escritura.
-    assert set(rutas["/api/v1/auth/login"]["post"]["responses"]) == {"200", "401", "422", "429"}
+    # El login es público: 401 (credenciales), 403 (cuenta no activa, N-31) y 429 (bloqueo);
+    # no los de escritura.
+    assert set(rutas["/api/v1/auth/login"]["post"]["responses"]) == {
+        "200", "401", "403", "422", "429",
+    }
     error = rutas["/api/v1/notas/{id_nota}"]["get"]["responses"]["404"]
     assert error["content"]["application/json"]["schema"] == {"$ref": "#/components/schemas/ErrorOut"}
 

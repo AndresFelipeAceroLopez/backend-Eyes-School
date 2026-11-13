@@ -10,6 +10,7 @@ Todo con repositorios dobles: estas pruebas no tocan la base de datos.
 """
 
 from datetime import date, datetime
+from types import SimpleNamespace
 
 import pytest
 
@@ -347,8 +348,24 @@ class _ArchivoFalso:
         self.filename = filename
         self._contenido = contenido
 
-    async def read(self):
-        return self._contenido
+    async def read(self, tamano=-1):
+        return self._contenido if tamano < 0 else self._contenido[:tamano]
+
+
+class _RepoArchivos:
+    """El repositorio de `reporte_archivos` (N-23), en memoria."""
+
+    def __init__(self, guardados=None):
+        self.guardados = dict(guardados or {})
+
+    async def guardar(self, ruta, contenido, tipo):
+        self.guardados[ruta] = SimpleNamespace(contenido=contenido, tipo=tipo)
+
+    async def obtener(self, ruta):
+        return self.guardados.get(ruta)
+
+    async def eliminar(self, ruta):
+        self.guardados.pop(ruta, None)
 
 
 @pytest.mark.parametrize("nombre", ["informe.exe", "script.sh", "pagina.html", "sin_extension"])
@@ -371,18 +388,21 @@ async def test_subir_un_reporte_de_mas_de_10_mb_da_409():
         await servicio.upload_archivo(_ArchivoFalso("informe.pdf", b"x" * (MAX_BYTES + 1)))
 
 
-async def test_subir_un_pdf_valido_lo_guarda_y_devuelve_su_ruta(tmp_path, monkeypatch):
+async def test_subir_un_pdf_lo_guarda_en_la_base_y_no_en_el_disco(tmp_path, monkeypatch):
+    """N-23: el disco del App Service se recrea en cada despliegue; la base no."""
     from app.application.reportes import service as modulo
 
-    monkeypatch.setattr(modulo, "UPLOAD_DIR", str(tmp_path / "reportes"))
+    monkeypatch.chdir(tmp_path)
     servicio = modulo.ReporteService.__new__(modulo.ReporteService)
+    servicio.archivos = _RepoArchivos()
 
     ruta = await servicio.upload_archivo(_ArchivoFalso("informe.PDF", b"%PDF-1.4 contenido"))
 
     assert ruta.startswith("/static/reportes/")
     assert ruta.endswith(".pdf"), "la extensión se normaliza a minúsculas"
-    guardados = list((tmp_path / "reportes").iterdir())
-    assert len(guardados) == 1 and guardados[0].read_bytes() == b"%PDF-1.4 contenido"
+    assert servicio.archivos.guardados[ruta].contenido == b"%PDF-1.4 contenido"
+    assert servicio.archivos.guardados[ruta].tipo == "application/pdf"
+    assert not (tmp_path / "static").exists(), "ya no se escribe nada en el disco"
 
 
 class _RepoReportes:
@@ -413,8 +433,8 @@ async def test_borrar_un_reporte_que_no_existe_da_404():
         await servicio.delete(99)
 
 
-async def test_borrar_un_reporte_tambien_borra_su_archivo_del_disco(tmp_path, monkeypatch):
-    """Si no, los PDF se acumulan en el disco efímero de Azure (BE-15)."""
+async def test_borrar_un_reporte_borra_su_archivo_de_la_base_y_del_disco(tmp_path, monkeypatch):
+    """Si no, los archivos se acumulan (BE-15). El disco solo tiene los anteriores a N-23."""
     from app.application.reportes.service import ReporteService
 
     monkeypatch.chdir(tmp_path)
@@ -426,8 +446,51 @@ async def test_borrar_un_reporte_tambien_borra_su_archivo_del_disco(tmp_path, mo
     fila = _Fila(id_reporte=1, id_administrador=1, archivo_generado="/static/reportes/abc.pdf")
     servicio = ReporteService.__new__(ReporteService)
     servicio.repo = _RepoReportes([fila])
+    servicio.archivos = _RepoArchivos({"/static/reportes/abc.pdf": SimpleNamespace(contenido=b"pdf", tipo="application/pdf")})
 
     await servicio.delete(1)
 
     assert not archivo.exists(), "el archivo debe desaparecer del disco"
+    assert not servicio.archivos.guardados, "y de la base"
     assert servicio.repo.borrado is fila
+
+
+def _servicio_con(fila, guardados=None):
+    from app.application.reportes.service import ReporteService
+
+    servicio = ReporteService.__new__(ReporteService)
+    servicio.repo = _RepoReportes([fila])
+    servicio.archivos = _RepoArchivos(guardados)
+    return servicio
+
+
+async def test_descargar_un_reporte_lo_lee_de_la_base():
+    fila = _Fila(id_reporte=1, id_administrador=1, nombre_reporte="Asistencia junio",
+                 archivo_generado="/static/reportes/x.pdf")
+    servicio = _servicio_con(fila, {"/static/reportes/x.pdf": SimpleNamespace(contenido=b"%PDF", tipo="application/pdf")})
+
+    archivo = await servicio.get_archivo(1)
+
+    assert archivo.contenido == b"%PDF" and archivo.tipo == "application/pdf"
+    assert archivo.nombre == "Asistencia junio.pdf"
+
+
+async def test_un_archivo_anterior_a_n23_se_sigue_leyendo_del_disco(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "static" / "reportes").mkdir(parents=True)
+    (tmp_path / "static" / "reportes" / "viejo.pdf").write_bytes(b"pdf")
+    fila = _Fila(id_reporte=1, id_administrador=1, nombre_reporte="Viejo",
+                 archivo_generado="/static/reportes/viejo.pdf")
+
+    archivo = await _servicio_con(fila).get_archivo(1)
+
+    assert archivo.ruta_en_disco == "static/reportes/viejo.pdf" and archivo.contenido is None
+
+
+async def test_si_el_archivo_no_esta_ni_en_la_base_ni_en_el_disco_da_404(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    fila = _Fila(id_reporte=1, id_administrador=1, nombre_reporte="Perdido",
+                 archivo_generado="/static/reportes/perdido.pdf")
+
+    with pytest.raises(NotFoundException):
+        await _servicio_con(fila).get_archivo(1)

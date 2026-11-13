@@ -76,7 +76,9 @@ class UsuarioService:
         user = await self.repo.get_by_id_with_rol(id_usuario)
         if not user:
             raise NotFoundException("Usuario no encontrado")
-        updated = await self.repo.update(user, {"estado": estado})
+        # Sea para activarla o para desactivarla, el admin ya la revisó: deja de estar pendiente
+        # (N-31). Así una cuenta desactivada después no se confunde con una por validar.
+        updated = await self.repo.update(user, {"estado": estado, "pendiente_validacion": False})
         if not estado:
             # Una cuenta desactivada pierde sus sesiones de refresco de inmediato.
             await self.sesiones.revocar_todas(id_usuario)

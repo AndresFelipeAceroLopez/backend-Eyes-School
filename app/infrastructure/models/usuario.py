@@ -55,6 +55,11 @@ class UsuarioModel(Base):
         "intentosFallidos", Integer, nullable=False, default=0, server_default="0"
     )
     bloqueado_hasta: Mapped[datetime | None] = mapped_column("bloqueadoHasta", DateTime)
+    # N-31: `estado=False` lo tienen tanto una cuenta autorregistrada que espera validación
+    # como una que el admin desactivó. Esta marca dice cuál de las dos es (migración c4e1f7a9d2b8).
+    pendiente_validacion: Mapped[bool] = mapped_column(
+        "pendienteValidacion", Boolean, nullable=False, default=False, server_default=text("false")
+    )
 
     rol: Mapped["RolModel"] = relationship(back_populates="usuarios")
     administrador: Mapped["AdministradorModel | None"] = relationship(back_populates="usuario")
