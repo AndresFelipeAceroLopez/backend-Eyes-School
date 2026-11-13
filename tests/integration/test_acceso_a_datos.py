@@ -185,7 +185,7 @@ async def test_un_padre_no_lee_el_vinculo_de_otro_padre(api):
     assert (await api.get("/api/v1/padres/1", headers=rosa)).status_code == 200
 
 
-# --- DEF-023: un id fuera del rango de PostgreSQL responde 422, no 500 ---
+# --- DEF-039: un id fuera del rango de PostgreSQL responde 422, no 500 ---
 
 
 async def test_un_id_fuera_de_rango_responde_422_contra_la_base_real(api):

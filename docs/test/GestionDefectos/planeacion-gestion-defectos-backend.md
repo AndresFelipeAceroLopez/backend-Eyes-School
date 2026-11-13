@@ -66,6 +66,8 @@ is:issue label:reabierto                     -> reabiertos
 
 ## 4. Defectos ya conocidos de este componente
 
+> **Renumeración del 13/11/2026 (BC-11).** Los cuatro defectos encontrados en la campaña se habían registrado como DEF-020 a DEF-023, números que en el PR-07 ya usaba la web. Pasan a **DEF-036 a DEF-039**; los issues #41 a #44 conservan su número y solo cambia el título. Cada issue cerrado tiene ahora un comentario con su causa raíz, el commit de la corrección y las fechas.
+
 Se crean como issues de GitHub con la etiqueta `defecto`, la de severidad y la de origen, y la fecha en que se identificaron. El número `#n` que asigne GitHub se anota en la columna correspondiente de esta tabla y en el PR-07.
 
 | ID PR-07 | Issue | Corrección | Título | Severidad | Prioridad propuesta | Caso que lo verifica | Asignado | Identificado | Sprint |
@@ -89,12 +91,12 @@ Se crean como issues de GitHub con la etiqueta `defecto`, la de severidad y la d
 | DEF-017 | [#38](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/38) | BE-18 | Las notificaciones push al acudiente no se envían: no existe el emisor | Alta | P2 | CP-INT-057, 058 | Andrés Acero | 30/10/2026 | S8 |
 | DEF-018 | [#39](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/39) | BE-19 | El boletín de un estudiante sin notas sale como PDF vacío en vez del mensaje del CA | Media | P3 | CP-INT-052 | Andrés Acero | 30/10/2026 | S8 |
 | DEF-019 | [#40](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/40) | H-08 | seed_data.sql trae en un comentario las contraseñas de 4 usuarios de prueba, incluido el admin | Crítica | P1 | CP-NF-012 | Andrés Acero | 30/10/2026 | S7 (día 1) |
-| DEF-020 | [#41](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/41) | BE-INF-4 | La API de QA (apieyeschool-q) responde 500 en todo lo que consulta la base: bloquea la integración y los E2E | Alta | P1 | Preflight de BE-INF-4 | Mariana Cortés · Andrés Acero | 05/11/2026 | S8 (primero) |
-| DEF-021 | [#42](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/42) | BE-01 | create_admin.py trae la DATABASE_URL con usuario y contraseña embebida, y el commit que está en main (producción) todavía la tiene | Crítica | P1 | CP-NF-012 (B8 de E1) | Andrés Acero | 09/11/2026 | S8 |
-| DEF-022 | [#43](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/43) | — | Con 50 usuarios concurrentes la API falla: 8,05 % de peticiones sin respuesta y p95 de 3,06 s contra la meta de 800 ms | Alta | P2 | CP-NF-001 | Andrés Acero | 09/11/2026 | S9 |
-| DEF-023 | [#44](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/44) | — | Cualquier endpoint con un id fuera del rango de PostgreSQL responde 500 en vez de 404 o 422 | Media | P3 | CP-INT (contrato OpenAPI) | Andrés Acero | 10/11/2026 | S9 |
+| DEF-036 | [#41](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/41) | BE-INF-4 | La API de QA (apieyeschool-q) responde 500 en todo lo que consulta la base: bloquea la integración y los E2E | Alta | P1 | Preflight de BE-INF-4 | Mariana Cortés · Andrés Acero | 05/11/2026 | S8 (primero) |
+| DEF-037 | [#42](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/42) | BE-01 | create_admin.py trae la DATABASE_URL con usuario y contraseña embebida, y el commit que está en main (producción) todavía la tiene | Crítica | P1 | CP-NF-012 (B8 de E1) | Andrés Acero | 09/11/2026 | S8 |
+| DEF-038 | [#43](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/43) | — | Con 50 usuarios concurrentes la API falla: 8,05 % de peticiones sin respuesta y p95 de 3,06 s contra la meta de 800 ms | Alta | P2 | CP-NF-001 | Andrés Acero | 09/11/2026 | S9 |
+| DEF-039 | [#44](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/44) | — | Cualquier endpoint con un id fuera del rango de PostgreSQL responde 500 en vez de 404 o 422 | Media | P3 | CP-INT (contrato OpenAPI) | Andrés Acero | 10/11/2026 | S9 |
 
-**DEF-022 · Rendimiento bajo carga (un solo bug, no uno por umbral).** La corrida S1 del
+**DEF-038 · Rendimiento bajo carga (un solo bug, no uno por umbral).** La corrida S1 del
 09/11/2026 incumplió cuatro umbrales a la vez —errores, p95 global, p95 de navegación y p95 de
 login—, pero son síntomas de una misma saturación, así que se registra **un** defecto y no cuatro.
 Esto sigue la regla de la sección 8 de la planeación de análisis estático: un hallazgo con una
@@ -120,9 +122,9 @@ causa común no se duplica.
    petición. Entra al plan de remediación del PR-03, no a este bug.
 
 **No se registran** como defectos aparte las 55 aserciones de tiempo que falló Newman (I1): son el
-mismo fenómeno medido sin carga y quedan enlazadas a DEF-022.
+mismo fenómeno medido sin carga y quedan enlazadas a DEF-038.
 
-**DEF-023 · Un id fuera de rango produce 500.** Lo encontró `schemathesis` contra el contrato
+**DEF-039 · Un id fuera de rango produce 500.** Lo encontró `schemathesis` contra el contrato
 publicado en `/openapi.json` y se verificó a mano con el entorno en reposo, para descartar que
 fuera una secuela de la prueba de carga:
 
@@ -154,11 +156,11 @@ inputs» y «nunca exponer stack traces en producción».
 provocarlo. Se registra porque es un 500 no controlado y porque el contrato de OpenAPI declara
 solo 200 y 422 para esas operaciones.
 
-**DEF-020 quedó resuelto el 09/11/2026.** Causa raíz: **Entorno** — la base de QA estaba en la revisión `a1b2c3d4e5f6` mientras el código desplegado desde `developer` ya necesitaba `b7d2e9a41c03` (tablas `sesiones_refresco` y `dispositivos`). Se aplicó la migración desde la consola SSH de `apieyeschool-q`. Verificación: login del admin con `QA_PASSWORD` → 200. La misma falta se encontró en producción y se corrigió igual, antes de desplegar `v1.1.0`.
+**DEF-036 quedó resuelto el 09/11/2026.** Causa raíz: **Entorno** — la base de QA estaba en la revisión `a1b2c3d4e5f6` mientras el código desplegado desde `developer` ya necesitaba `b7d2e9a41c03` (tablas `sesiones_refresco` y `dispositivos`). Se aplicó la migración desde la consola SSH de `apieyeschool-q`. Verificación: login del admin con `QA_PASSWORD` → 200. La misma falta se encontró en producción y se corrigió igual, antes de desplegar `v1.1.0`.
 
-**DEF-020** es el mismo DEF-WEB-01 del repositorio de la web; se registra también aquí porque la causa y la corrección son del backend. No se duplica: se enlaza al bug de la web.
+**DEF-036** es el mismo DEF-WEB-01 del repositorio de la web; se registra también aquí porque la causa y la corrección son del backend. No se duplica: se enlaza al bug de la web.
 
-**DEF-021 sale de la corrida E1 del 09/11/2026** (ver [`../Resultados/corrida-2026-11-09.md`](../Resultados/corrida-2026-11-09.md), sección 3.3). Según la regla de la sección 8 de la planeación de análisis estático, un hallazgo que ya tiene corrección planeada se enlaza a esa corrección en vez de abrir otro bug; se registra aparte de DEF-001 porque **amplía el alcance de BE-01 a un archivo y a una rama que ese defecto no cubría** (`create_admin.py` en `main`), y porque su corrección es un cambio de código, no solo la rotación de secretos. Al cerrar DEF-001 **no** queda cerrado DEF-021.
+**DEF-037 sale de la corrida E1 del 09/11/2026** (ver [`../Resultados/corrida-2026-11-09.md`](../Resultados/corrida-2026-11-09.md), sección 3.3). Según la regla de la sección 8 de la planeación de análisis estático, un hallazgo que ya tiene corrección planeada se enlaza a esa corrección en vez de abrir otro bug; se registra aparte de DEF-001 porque **amplía el alcance de BE-01 a un archivo y a una rama que ese defecto no cubría** (`create_admin.py` en `main`), y porque su corrección es un cambio de código, no solo la rotación de secretos. Al cerrar DEF-001 **no** queda cerrado DEF-037.
 
 ## 5. Ficha del defecto en GitHub Issues
 

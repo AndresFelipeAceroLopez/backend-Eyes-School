@@ -135,7 +135,7 @@
 
 ## 6. Datos y entorno de QA (BE-INF-2 y BE-INF-4)
 
-**BE-INF-4 quedó resuelto hoy.** El preflight contra la URL real da `/docs` → 200, `GET /cursos/` → 200 con datos, login inexistente → 401 y cuerpo inválido → 422: las consultas a la base funcionan y los 500 de DEF-020 desaparecieron. El despliegue de `developer` dejó allí el código con las correcciones.
+**BE-INF-4 quedó resuelto hoy.** El preflight contra la URL real da `/docs` → 200, `GET /cursos/` → 200 con datos, login inexistente → 401 y cuerpo inválido → 422: las consultas a la base funcionan y los 500 de DEF-036 desaparecieron. El despliegue de `developer` dejó allí el código con las correcciones.
 
 | Entorno | URL |
 |---|---|
@@ -161,8 +161,8 @@ La Web App `ApiEyeSchool` quedó sin uso y su workflow `main_apieyeschool.yml` s
 |---|---|
 | DEF-002 a DEF-018 (BE-03 a BE-19) | **Corregidos y probados** en `developer`. Falta verificarlos en QA y moverlos a Done |
 | DEF-019 (H-08, contraseñas en el seed) | **Corregido**: los comentarios ya no están |
-| DEF-020 (BE-INF-4, QA en 500) | **Cerrado.** Causa raíz: la base de QA no tenía la migración `b7d2e9a41c03`. Aplicada el 09/11/2026; login del admin → 200 |
-| DEF-001 y DEF-021 (BE-01) | **Abiertos.** Ver abajo |
+| DEF-036 (BE-INF-4, QA en 500) | **Cerrado.** Causa raíz: la base de QA no tenía la migración `b7d2e9a41c03`. Aplicada el 09/11/2026; login del admin → 200 |
+| DEF-001 y DEF-037 (BE-01) | **Abiertos.** Ver abajo |
 
 ### BE-01: qué se hizo y qué sigue abierto
 
@@ -200,7 +200,7 @@ La API no tiene pantallas: el PO la acepta a través de la web y de la app. La s
 
 | # | Qué | Quién | Bloquea |
 |---|---|---|---|
-| 1 | **Rotar la contraseña de la base en Render** y actualizar `DATABASE_URL` en las dos Web Apps | Andrés | Cierre de BE-01 / DEF-001 y DEF-021. Es un riesgo vivo sobre datos de menores |
+| 1 | **Rotar la contraseña de la base en Render** y actualizar `DATABASE_URL` en las dos Web Apps | Andrés | Cierre de BE-01 / DEF-001 y DEF-037. Es un riesgo vivo sobre datos de menores |
 | 2 | **Avisar al equipo que reclone**; pedir a GitHub Support la purga de `refs/pull/*` | Mariana | Que nadie reintroduzca los commits con el secreto |
 | 3 | **Abrir el PR del hotfix a `main`** (BE-03 + `create_admin.py` + retiro del workflow) | Andrés | El inicio del estudiante sigue roto en producción |
 | 4 | **Fijar `QA_PASSWORD`** con `qa_reset_passwords.py` | Samuel | Newman, schemathesis, k6 y los E2E de la web |

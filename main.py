@@ -54,7 +54,7 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(DBAPIError)
     async def error_de_dato(request: Request, exc: DBAPIError):
-        """DEF-023: un id fuera del rango de PostgreSQL devolvía 500 en todos los endpoints.
+        """DEF-039: un id fuera del rango de PostgreSQL devolvía 500 en todos los endpoints.
 
         FastAPI valida que el parámetro sea un entero, pero no su magnitud, así que el valor
         llegaba a la consulta y la base lo rechazaba. El error subía sin capturar y la API

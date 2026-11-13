@@ -1,4 +1,4 @@
-"""DEF-023: un id fuera del rango de PostgreSQL debe responder 422, no 500.
+"""DEF-039: un id fuera del rango de PostgreSQL debe responder 422, no 500.
 
 Lo encontró `schemathesis` contra el contrato de QA y se verificó a mano en 9 de 9 endpoints con
 parámetro de id. FastAPI valida que el parámetro sea un entero, pero no su magnitud: el valor

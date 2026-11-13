@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     FIREBASE_CREDENTIALS_JSON: str = ""
 
     # Bloqueo de inicio de sesión (BE-16): intentos fallidos y minutos de bloqueo.
-    # Pool de conexiones a PostgreSQL (DEF-022). Configurables para poder ajustarlos sin tocar
+    # Pool de conexiones a PostgreSQL (DEF-038). Configurables para poder ajustarlos sin tocar
     # el código: el techo de peticiones por segundo de la API es, en la práctica,
     # (DB_POOL_SIZE + DB_MAX_OVERFLOW) dividido por lo que tarde cada consulta. Subirlos solo
     # ayuda si el plan de PostgreSQL admite esas conexiones; si no, las rechaza y empeora.
