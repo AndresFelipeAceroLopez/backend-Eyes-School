@@ -48,13 +48,16 @@ jobs:
       # ficticia para que nada toque una base real.
       - name: Tests unitarios
         run: |
-          pytest -q -m "not integration" --cov=app --cov-branch \
+          pytest -q -m "not integration" --cov=app --cov=main --cov-branch \
             --cov-report=term --cov-report=xml --junitxml=junit-unitarias.xml
 
       - name: Dependency audit
         run: pip-audit -r requirements.txt
 
+      # Se sube aunque falle la auditoria: si no, SonarQube analiza solo con la cobertura de
+      # integracion y el codigo nuevo aparece sin cubrir (paso en el PR #47: 65 % en vez de 98 %).
       - name: Upload coverage report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-xml
@@ -99,7 +102,7 @@ jobs:
         env:
           TEST_DATABASE_URL: postgresql+asyncpg://postgres:test@localhost:5432/eyes_test
         run: |
-          pytest -m integration -v --junitxml=junit-integracion.xml             --cov=app --cov-branch --cov-report=xml:coverage-integracion.xml
+          pytest -m integration -v --junitxml=junit-integracion.xml             --cov=app --cov=main --cov-branch --cov-report=xml:coverage-integracion.xml
 
       - name: Upload junit y cobertura de integracion
         if: always()
@@ -155,6 +158,6 @@ jobs:
       # Sin SONAR_TOKEN (por ejemplo en pull requests desde un fork) el paso se omite.
       - name: SonarQube Cloud
         if: env.SONAR_TOKEN != ''
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
