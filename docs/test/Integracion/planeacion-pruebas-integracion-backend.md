@@ -83,6 +83,19 @@ La colección Newman, `schemathesis` y los 69 casos que se ejecutan contra QA **
 
 Los 81 casos de la API del PR-02 se ejecutan así: 51 solo con Newman, 12 solo con pytest de integración (necesitan controlar la base, la `SECRET_KEY`, el reloj o Firebase) y 18 con las dos herramientas (la regla se prueba por HTTP en QA y la restricción en la base real).
 
+> **BC-06 (13/11/2026): los 81 CP-INT tienen ejecución.** 75 corren en Newman contra QA y 6 solo en pytest de integración, porque no se pueden hacer por HTTP sin un buzón de correo o tocan una capa interna. CP-INT-006, 009, 010, 029, 058 y 072 pasaron de pytest a Newman: se ejecutan sobre una **cuenta temporal** que la colección crea al empezar y borra al final, para no bloquear ni desactivar cuentas del seed.
+>
+> | Caso | Por qué se queda en pytest | Prueba que lo cubre (`tests/integration/`) |
+> |---|---|---|
+> | CP-INT-012 | El token de recuperación llega por correo | `test_auth_sesiones.py::test_restablecer_la_contrasena_permite_entrar_con_la_nueva` |
+> | CP-INT-013 | Ídem | `test_auth_sesiones.py::test_restablecer_con_una_contrasena_debil_responde_422` |
+> | CP-INT-014 | Ídem | `test_auth_sesiones.py::test_el_enlace_de_recuperacion_no_se_puede_reutilizar` |
+> | CP-INT-015 | Ídem (además necesita un token vencido) | `test_auth_sesiones.py::test_un_enlace_vencido_responde_401` |
+> | CP-INT-049 | Es del repositorio, no tiene ruta HTTP | `test_notas_novedades.py::test_el_promedio_del_estudiante_se_calcula_en_la_base` |
+> | CP-INT-057 | El envío push no es observable por HTTP | `test_notas_novedades.py::test_la_novedad_notifica_solo_a_los_acudientes_del_estudiante` |
+>
+> Los otros seis también tienen su prueba pytest: CP-INT-006 → `test_cinco_fallos_bloquean_el_sexto_intento_aunque_la_clave_sea_correcta`, CP-INT-009 → `test_login_refresh_logout_refresh_termina_en_401`, CP-INT-010 → `test_un_usuario_desactivado_no_renueva_su_sesion`, CP-INT-029 → `test_desactivar_desde_el_admin_revoca_las_sesiones`, CP-INT-058 → `test_registrar_el_mismo_dispositivo_dos_veces_no_lo_duplica`, CP-INT-072 → `test_el_avatar_valida_el_contenido_real_del_archivo`.
+
 | ID | Interfaz | Ejecución | Hoy |
 |---|---|---|---|
 | CP-INT-001 | POST /api/v1/auth/login | Newman (QA) | Sin ejecutar |
@@ -90,11 +103,11 @@ Los 81 casos de la API del PR-02 se ejecutan así: 51 solo con Newman, 12 solo c
 | CP-INT-003 | POST /api/v1/auth/login | Newman (QA) | Sin ejecutar |
 | CP-INT-004 | POST /api/v1/auth/login | Newman (QA) | Sin ejecutar |
 | CP-INT-005 | POST /api/v1/auth/login | Newman (QA) | Sin ejecutar |
-| CP-INT-006 | POST /api/v1/auth/login | pytest integración (local) | Falla esperada (BE-16) |
+| CP-INT-006 | POST /api/v1/auth/login | Newman (QA) con cuenta temporal + pytest integración (local) | Falla esperada (BE-16) |
 | CP-INT-007 | POST /api/v1/auth/login | Newman (QA) | Falla esperada (BE-12) |
 | CP-INT-008 | POST /api/v1/auth/refresh | Newman (QA) | Sin ejecutar |
-| CP-INT-009 | POST /auth/logout → POST /auth/refresh | pytest integración (local) | Falla esperada (BE-13, BE-17) |
-| CP-INT-010 | POST /api/v1/auth/refresh | pytest integración (local) | Falla esperada (BE-13) |
+| CP-INT-009 | POST /auth/logout → POST /auth/refresh | Newman (QA) con cuenta temporal + pytest integración (local) | Falla esperada (BE-13, BE-17) |
+| CP-INT-010 | POST /api/v1/auth/refresh | Newman (QA) con cuenta temporal + pytest integración (local) | Falla esperada (BE-13) |
 | CP-INT-011 | POST /api/v1/auth/forgot-password | Newman (QA) | Sin ejecutar |
 | CP-INT-012 | POST /api/v1/auth/reset-password | pytest integración (local) | Sin ejecutar |
 | CP-INT-013 | POST /api/v1/auth/reset-password | pytest integración (local) | Falla esperada (BE-09) |
@@ -113,7 +126,7 @@ Los 81 casos de la API del PR-02 se ejecutan así: 51 solo con Newman, 12 solo c
 | CP-INT-026 | GET /api/v1/usuarios | Newman (QA) | Sin ejecutar |
 | CP-INT-027 | GET y POST /api/v1/usuarios | Newman (QA) | Sin ejecutar |
 | CP-INT-028 | PUT /api/v1/usuarios/{propio} | Newman (QA) | Falla esperada (BE-09) |
-| CP-INT-029 | PATCH /api/v1/usuarios/{id}/estado?estado=false | pytest integración (local) | Falla esperada (BE-13) |
+| CP-INT-029 | PATCH /api/v1/usuarios/{id}/estado?estado=false | Newman (QA) con cuenta temporal + pytest integración (local) | Falla esperada (BE-13) |
 | CP-INT-030 | POST /api/v1/asistencia | Newman (QA) y pytest integración | Sin ejecutar |
 | CP-INT-031 | POST /api/v1/asistencia | Newman (QA) y pytest integración | Falla esperada (BE-08) |
 | CP-INT-032 | POST /api/v1/asistencia | Newman (QA) y pytest integración | Sin ejecutar |
@@ -142,7 +155,7 @@ Los 81 casos de la API del PR-02 se ejecutan así: 51 solo con Newman, 12 solo c
 | CP-INT-055 | POST /api/v1/novedades | Newman (QA) | Sin ejecutar |
 | CP-INT-056 | PUT y DELETE /api/v1/novedades/{id} | Newman (QA) | Falla esperada (BE-11) |
 | CP-INT-057 | NovedadService.create → Notificador | pytest integración (local) | Falla esperada (BE-18) |
-| CP-INT-058 | POST /api/v1/dispositivos | pytest integración (local) | Falla esperada (BE-18) |
+| CP-INT-058 | POST /api/v1/dispositivos | Newman (QA) con cuenta temporal + pytest integración (local) | Falla esperada (BE-18) |
 | CP-INT-059 | GET /api/v1/estudiantes/{id}/novedades | Newman (QA) | Sin ejecutar |
 | CP-INT-060 | GET /api/v1/dashboard/estudiante | Newman (QA) | Falla esperada (BE-03) |
 | CP-INT-061 | GET /api/v1/dashboard/padre | Newman (QA) | Sin ejecutar |
@@ -156,7 +169,7 @@ Los 81 casos de la API del PR-02 se ejecutan así: 51 solo con Newman, 12 solo c
 | CP-INT-069 | POST /api/v1/reportes/archivo → POST /api/v1/reportes | Newman (QA) | Sin ejecutar |
 | CP-INT-070 | GET /api/v1/reportes/{id}/archivo | Newman (QA) | Sin ejecutar |
 | CP-INT-071 | GET /static/reportes/{archivo} | Newman (QA) | Falla esperada (BE-15) |
-| CP-INT-072 | POST /api/v1/auth/me/avatar | pytest integración (local) | Falla esperada (BE-14) |
+| CP-INT-072 | POST /api/v1/auth/me/avatar | Newman (QA) con cuenta temporal + pytest integración (local) | Falla esperada (BE-14) |
 | CP-INT-073 | GET /api/v1/auth/me | Newman (QA) | Sin ejecutar |
 | CP-INT-074 | GET /api/v1/estudiantes/me | Newman (QA) | Sin ejecutar |
 | CP-INT-077 | POST /api/v1/usuarios | Newman (QA) y pytest integración | Falla esperada (BE-12) |

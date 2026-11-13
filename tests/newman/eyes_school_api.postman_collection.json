@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Eyes School API · integración (PR-05)",
-    "description": "69 casos CP-INT de la API contra QA. La contraseña entra con --env-var QA_PASSWORD.",
+    "description": "75 casos CP-INT de la API contra QA (los otros 6 de los 81 son de pytest). La contraseña entra con --env-var QA_PASSWORD.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -18,7 +18,7 @@
                 "exec": [
                   "pm.collectionVariables.set('sufijo', Date.now().toString().slice(-9));",
                   "pm.collectionVariables.set('hoy', new Date().toISOString().slice(0, 10));",
-                  "['dup','dup2','docente','padre','admin_crea'].forEach((k, i) =>",
+                  "['dup','dup2','docente','padre','admin_crea','temporal'].forEach((k, i) =>",
                   "  pm.collectionVariables.set('doc_' + k, '8' + (Date.now() % 100000000 + i)));",
                   "pm.collectionVariables.set('correo_docente_mayus', (pm.environment.get('correo_docente') || '').toUpperCase());"
                 ]
@@ -311,7 +311,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-001 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-001 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-001 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
                   "pm.test('CP-INT-001 cuerpo', () => { pm.expect(pm.response.json()).to.have.property('refresh_token'); });"
                 ]
               }
@@ -355,7 +355,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-002 → 401', () => pm.response.to.have.status(401));",
-                  "pm.test('CP-INT-002 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-002 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
                   "pm.test('CP-INT-002 cuerpo', () => { pm.expect(pm.response.json().detail).to.eql('Credenciales inválidas'); });"
                 ]
               }
@@ -399,7 +399,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-003 → 401', () => pm.response.to.have.status(401));",
-                  "pm.test('CP-INT-003 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-003 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
                   "pm.test('CP-INT-003 cuerpo', () => { pm.expect(pm.response.json().detail).to.eql('Credenciales inválidas'); });"
                 ]
               }
@@ -443,7 +443,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-004 → 422', () => pm.response.to.have.status(422));",
-                  "pm.test('CP-INT-004 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-004 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -486,7 +486,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-007 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-007 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-007 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -529,7 +529,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-008 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-008 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-008 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
                   "pm.test('CP-INT-008 cuerpo', () => { pm.expect(pm.response.json()).to.have.property('access_token'); });"
                 ]
               }
@@ -573,7 +573,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-011 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-011 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-011 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
                   "pm.test('CP-INT-011 cuerpo', () => { pm.expect(pm.response.json().message).to.include('Si el correo está registrado'); });"
                 ]
               }
@@ -617,7 +617,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-016 → 201', () => pm.response.to.have.status(201));",
-                  "pm.test('CP-INT-016 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-016 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
                   "pm.test('CP-INT-016 cuerpo', () => { pm.expect(pm.response.json().estado).to.eql(false); });",
                   "if (pm.response.code < 300) pm.collectionVariables.set('usuario_docente_id', pm.response.json().id_usuario);"
                 ]
@@ -662,7 +662,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-005 → 401', () => pm.response.to.have.status(401));",
-                  "pm.test('CP-INT-005 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-005 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
                   "pm.test('CP-INT-005 cuerpo', () => { pm.expect(pm.response.json().detail).to.eql('Usuario inactivo'); });"
                 ]
               }
@@ -706,7 +706,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-017 → 201', () => pm.response.to.have.status(201));",
-                  "pm.test('CP-INT-017 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-017 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
                   "if (pm.response.code < 300) pm.collectionVariables.set('usuario_padre_id', pm.response.json().id_usuario);"
                 ]
               }
@@ -750,7 +750,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-018 → 409', () => pm.response.to.have.status(409));",
-                  "pm.test('CP-INT-018 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-018 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -793,7 +793,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-019 → 409', () => pm.response.to.have.status(409));",
-                  "pm.test('CP-INT-019 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-019 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -836,7 +836,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-020 → 422', () => pm.response.to.have.status(422));",
-                  "pm.test('CP-INT-020 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-020 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -879,7 +879,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-021 → 422', () => pm.response.to.have.status(422));",
-                  "pm.test('CP-INT-021 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-021 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -922,7 +922,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-073 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-073 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-073 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
                   "pm.test('CP-INT-073 cuerpo', () => { pm.expect(pm.response.json().nombre_rol).to.eql('estudiante'); });"
                 ]
               }
@@ -962,7 +962,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-022 → 201', () => pm.response.to.have.status(201));",
-                  "pm.test('CP-INT-022 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-022 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
                   "if (pm.response.code < 300) pm.collectionVariables.set('usuario_creado_id', pm.response.json().id_usuario);"
                 ]
               }
@@ -1009,7 +1009,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-023 → 403', () => pm.response.to.have.status(403));",
-                  "pm.test('CP-INT-023 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-023 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -1055,7 +1055,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-024 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-024 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-024 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
                   "pm.test('CP-INT-024 cuerpo', () => { pm.expect(pm.response.json().primer_nombre).to.eql('Editado'); });"
                 ]
               }
@@ -1103,7 +1103,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-025 → 204', () => pm.response.to.have.status(204));",
-                  "pm.test('CP-INT-025 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-025 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -1137,7 +1137,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-026 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-026 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-026 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
                   "pm.test('CP-INT-026 cuerpo', () => { pm.expect(pm.response.json()).to.be.an('array'); });"
                 ]
               }
@@ -1171,7 +1171,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-027 → 403', () => pm.response.to.have.status(403));",
-                  "pm.test('CP-INT-027 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-027 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -1204,7 +1204,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-028 → 400', () => pm.response.to.have.status(400));",
-                  "pm.test('CP-INT-028 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-028 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -1251,7 +1251,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-077 → 409', () => pm.response.to.have.status(409));",
-                  "pm.test('CP-INT-077 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-077 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -1297,7 +1297,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-078 → 409', () => pm.response.to.have.status(409));",
-                  "pm.test('CP-INT-078 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-078 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -1343,7 +1343,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-079 → 403', () => pm.response.to.have.status(403));",
-                  "pm.test('CP-INT-079 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-079 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -1395,7 +1395,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-030 → 201', () => pm.response.to.have.status(201));",
-                  "pm.test('CP-INT-030 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-030 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
                   "if (pm.response.code < 300) pm.collectionVariables.set('asistencia_id', pm.response.json().id_asistencia);"
                 ]
               }
@@ -1442,7 +1442,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-031 → 409', () => pm.response.to.have.status(409));",
-                  "pm.test('CP-INT-031 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-031 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -1488,7 +1488,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-032 → 201', () => pm.response.to.have.status(201));",
-                  "pm.test('CP-INT-032 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-032 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
                   "if (pm.response.code < 300) pm.collectionVariables.set('asistencia_salida_id', pm.response.json().id_asistencia);"
                 ]
               }
@@ -1535,7 +1535,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-033 → 409', () => pm.response.to.have.status(409));",
-                  "pm.test('CP-INT-033 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-033 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -1581,7 +1581,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-034 → 400', () => pm.response.to.have.status(400));",
-                  "pm.test('CP-INT-034 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-034 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
                   "pm.test('CP-INT-034 cuerpo', () => { pm.expect(pm.response.json().detail).to.eql('No hay entrada registrada hoy para este estudiante'); });"
                 ]
               }
@@ -1628,7 +1628,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-035 → 201', () => pm.response.to.have.status(201));",
-                  "pm.test('CP-INT-035 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-035 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
                   "pm.test('CP-INT-035 cuerpo', () => { pm.expect(pm.response.json().registrado_por).to.eql(parseInt(pm.collectionVariables.get('id_usuario_docente'))); });",
                   "if (pm.response.code < 300) pm.collectionVariables.set('asistencia_clase_id', pm.response.json().id_asistencia);"
                 ]
@@ -1676,7 +1676,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-036 → 403', () => pm.response.to.have.status(403));",
-                  "pm.test('CP-INT-036 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-036 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -1715,7 +1715,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-037 → 400', () => pm.response.to.have.status(400));",
-                  "pm.test('CP-INT-037 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-037 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -1748,7 +1748,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-038 → 403', () => pm.response.to.have.status(403));",
-                  "pm.test('CP-INT-038 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-038 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -1782,7 +1782,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-039 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-039 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-039 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -1817,7 +1817,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-040 → 204', () => pm.response.to.have.status(204));",
-                  "pm.test('CP-INT-040 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-040 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -1851,7 +1851,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-081 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-081 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-081 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -1895,7 +1895,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-041 → 201', () => pm.response.to.have.status(201));",
-                  "pm.test('CP-INT-041 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-041 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
                   "if (pm.response.code < 300) pm.collectionVariables.set('nota_id', pm.response.json().id_nota);"
                 ]
               }
@@ -1942,7 +1942,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-042 → 401', () => pm.response.to.have.status(401));",
-                  "pm.test('CP-INT-042 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-042 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -1984,7 +1984,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-043 → 422', () => pm.response.to.have.status(422));",
-                  "pm.test('CP-INT-043 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-043 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -2030,7 +2030,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-044 → 403', () => pm.response.to.have.status(403));",
-                  "pm.test('CP-INT-044 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-044 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -2076,7 +2076,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-045 → 409', () => pm.response.to.have.status(409));",
-                  "pm.test('CP-INT-045 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-045 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -2122,7 +2122,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-046 → 422', () => pm.response.to.have.status(422));",
-                  "pm.test('CP-INT-046 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-046 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -2169,7 +2169,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-047 → 403', () => pm.response.to.have.status(403));",
-                  "pm.test('CP-INT-047 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-047 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -2215,7 +2215,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-048 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-048 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-048 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
                   "pm.test('CP-INT-048 cuerpo', () => { pm.expect(pm.response.json().every(x => x.id_estudiante != parseInt(pm.collectionVariables.get('id_estudiante_ds03a')) || pm.collectionVariables.get('docente2_dicta_curso_ds03a') === 'true')).to.be.true; });"
                 ]
               }
@@ -2255,7 +2255,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-050 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-050 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-050 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -2290,7 +2290,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-051 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-051 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-051 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
                   "pm.test('CP-INT-051 cuerpo', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('application/pdf'); });"
                 ]
               }
@@ -2353,7 +2353,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-052 → 404', () => pm.response.to.have.status(404));",
-                  "pm.test('CP-INT-052 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-052 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
                   "pm.test('CP-INT-052 cuerpo', () => { pm.expect(pm.environment.get('id_estudiante_sin_notas'), 'no se encontró ningún estudiante sin notas en este entorno').to.be.ok; });",
                   "pm.test('CP-INT-052 cuerpo', () => { pm.expect(pm.response.json().detail).to.eql('No hay datos disponibles para generar el boletín.'); });"
                 ]
@@ -2392,7 +2392,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-053 → 403', () => pm.response.to.have.status(403));",
-                  "pm.test('CP-INT-053 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-053 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -2429,7 +2429,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-080 → 422', () => pm.response.to.have.status(422));",
-                  "pm.test('CP-INT-080 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-080 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -2475,7 +2475,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-082 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-082 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-082 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -2515,7 +2515,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-054 → 201', () => pm.response.to.have.status(201));",
-                  "pm.test('CP-INT-054 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-054 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
                   "if (pm.response.code < 300) pm.collectionVariables.set('novedad_id', pm.response.json().id_novedad);"
                 ]
               }
@@ -2562,7 +2562,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-055 → 403', () => pm.response.to.have.status(403));",
-                  "pm.test('CP-INT-055 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-055 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -2608,7 +2608,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-056 → 403', () => pm.response.to.have.status(403));",
-                  "pm.test('CP-INT-056 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-056 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -2655,7 +2655,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-059 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-059 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-059 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -2690,7 +2690,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-083 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-083 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-083 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -2728,7 +2728,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-060 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-060 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-060 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -2762,7 +2762,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-061 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-061 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-061 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -2796,7 +2796,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-062 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-062 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-062 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
                   "pm.test('CP-INT-062 cuerpo', () => { pm.expect(pm.response.json()).to.have.lengthOf(2); });"
                 ]
               }
@@ -2832,7 +2832,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-063 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-063 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-063 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -2866,7 +2866,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-064 → 403', () => pm.response.to.have.status(403));",
-                  "pm.test('CP-INT-064 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-064 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -2906,7 +2906,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-065 → 403', () => pm.response.to.have.status(403));",
-                  "pm.test('CP-INT-065 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-065 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -2940,7 +2940,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-074 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-074 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-074 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -2979,7 +2979,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-066 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-066 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-066 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -3018,7 +3018,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-067 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-067 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-067 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -3062,7 +3062,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-068 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-068 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-068 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -3095,7 +3095,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-069 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-069 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-069 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
                   "if (pm.response.code < 300) pm.collectionVariables.set('reporte_archivo', pm.response.text().replace(/\"/g, ''));"
                 ]
               }
@@ -3140,7 +3140,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-069 → 201', () => pm.response.to.have.status(201));",
-                  "pm.test('CP-INT-069 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));",
+                  "pm.test('CP-INT-069 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
                   "if (pm.response.code < 300) pm.collectionVariables.set('reporte_id', pm.response.json().id_reporte);"
                 ]
               }
@@ -3187,7 +3187,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-070 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-070 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-070 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -3222,7 +3222,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('CP-INT-071 → 404', () => pm.response.to.have.status(404));",
-                  "pm.test('CP-INT-071 responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"
+                  "pm.test('CP-INT-071 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
                 ]
               }
             }
@@ -3231,6 +3231,441 @@
             "method": "GET",
             "header": [],
             "url": "{{base_host}}{{reporte_archivo}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sesión con cuenta temporal",
+      "item": [
+        {
+          "name": "T1 Admin crea la cuenta temporal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('T1 cuenta temporal → 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('usuario_temporal_id', pm.response.json().id_usuario);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/usuarios",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "raw": "{\"tipo_documento\": \"CC\", \"numero_documento\": \"{{doc_temporal}}\", \"primer_nombre\": \"Qa\", \"primer_apellido\": \"Newman\", \"password\": \"{{QA_PASSWORD}}\", \"correo\": \"qa.temporal.{{sufijo}}@example.com\", \"id_rol\": 2}"
+            }
+          }
+        },
+        {
+          "name": "T2 Sesión 1 de la cuenta temporal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('T2 Sesión 1 de la cuenta temporal → 200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('token_temporal', pm.response.json().access_token);",
+                  "pm.collectionVariables.set('refresh_temporal_1', pm.response.json().refresh_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "raw": "{\"correo\": \"qa.temporal.{{sufijo}}@example.com\", \"password\": \"{{QA_PASSWORD}}\"}"
+            }
+          }
+        },
+        {
+          "name": "T3 Sesión 2 de la cuenta temporal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('T3 Sesión 2 de la cuenta temporal → 200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('token_temporal', pm.response.json().access_token);",
+                  "pm.collectionVariables.set('refresh_temporal_2', pm.response.json().refresh_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              },
+              "raw": "{\"correo\": \"qa.temporal.{{sufijo}}@example.com\", \"password\": \"{{QA_PASSWORD}}\"}"
+            }
+          }
+        },
+        {
+          "name": "CP-INT-009 Refresh después de cerrar sesión → 401 (BE-13, BE-17)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.sendRequest({ url: pm.environment.get('base_url') + '/auth/logout', method: 'POST',",
+                  "  header: { 'Content-Type': 'application/json' },",
+                  "  body: { mode: 'raw', raw: JSON.stringify({ refresh_token: pm.collectionVariables.get('refresh_temporal_1') }) }",
+                  "}, (err, res) => pm.collectionVariables.set('logout_temporal', err ? 'error' : String(res.code)));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-009 → 401', () => pm.response.to.have.status(401));",
+                  "pm.test('CP-INT-009 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
+                  "pm.test('CP-INT-009 cuerpo', () => { pm.expect(pm.collectionVariables.get('logout_temporal')).to.eql('204'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"refresh_token\": \"{{refresh_temporal_1}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-072 Avatar que no es una imagen → 400 (BE-14)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-072 → 400', () => pm.response.to.have.status(400));",
+                  "pm.test('CP-INT-072 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
+                  "pm.test('CP-INT-072 cuerpo', () => { pm.expect(pm.response.json().detail).to.include('imagen'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_temporal}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/me/avatar",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "me",
+                "avatar"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "datos/reporte.pdf"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-058 La cuenta registra su teléfono para notificaciones → 201 (BE-18)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-058 → 201', () => pm.response.to.have.status(201));",
+                  "pm.test('CP-INT-058 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
+                  "pm.test('CP-INT-058 cuerpo', () => { pm.expect(pm.response.json().token_fcm).to.eql('qa-newman-' + pm.collectionVariables.get('sufijo') + '-dispositivo'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_temporal}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dispositivos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dispositivos"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"token_fcm\": \"qa-newman-{{sufijo}}-dispositivo\", \"plataforma\": \"android\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-006 Sexto intento con la clave CORRECTA tras 5 fallos → 429 (BE-16)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const base = pm.environment.get('base_url');",
+                  "const correo = 'qa.temporal.' + pm.collectionVariables.get('sufijo') + '@example.com';",
+                  "const fallo = (i) => {",
+                  "  if (i >= 5) return;",
+                  "  pm.sendRequest({ url: base + '/auth/login', method: 'POST',",
+                  "    header: { 'Content-Type': 'application/json' },",
+                  "    body: { mode: 'raw', raw: JSON.stringify({ correo: correo, password: 'Incorrecta#1' }) }",
+                  "  }, () => fallo(i + 1));",
+                  "};",
+                  "fallo(0);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-006 → 429', () => pm.response.to.have.status(429));",
+                  "pm.test('CP-INT-006 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
+                  "pm.test('CP-INT-006 cuerpo', () => { pm.expect(pm.response.json().detail).to.include('Demasiados intentos'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"correo\": \"qa.temporal.{{sufijo}}@example.com\", \"password\": \"{{QA_PASSWORD}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "CP-INT-029 Admin desactiva la cuenta → 200 con estado false (BE-13)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-029 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-029 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
+                  "pm.test('CP-INT-029 cuerpo', () => { pm.expect(pm.response.json().estado).to.eql(false); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/usuarios/{{usuario_temporal_id}}/estado?estado=false",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{usuario_temporal_id}}",
+                "estado"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "false"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-010 Una cuenta desactivada no renueva su sesión → 401 (BE-13)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-010 → 401', () => pm.response.to.have.status(401));",
+                  "pm.test('CP-INT-010 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"refresh_token\": \"{{refresh_temporal_2}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           }
         }
       ]
@@ -3498,6 +3933,72 @@
               "path": [
                 "reportes",
                 "{{reporte_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Borrar el teléfono de la cuenta temporal",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('usuario_temporal_id')) pm.execution.skipRequest();"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_temporal}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/dispositivos/qa-newman-{{sufijo}}-dispositivo",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "dispositivos",
+                "qa-newman-{{sufijo}}-dispositivo"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Borrar la cuenta temporal",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('usuario_temporal_id')) pm.execution.skipRequest();"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/usuarios/{{usuario_temporal_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{usuario_temporal_id}}"
               ]
             }
           }

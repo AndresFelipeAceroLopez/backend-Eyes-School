@@ -25,6 +25,7 @@ PLANEACION = RAIZ / "docs/test/Integracion/planeacion-pruebas-integracion-backen
 TOKENS = {
     "admin": "token_admin", "docente": "token_docente", "docente2": "token_docente2",
     "estudiante": "token_estudiante", "padre1": "token_padre1", "padre2": "token_padre2",
+    "temporal": "token_temporal",
 }
 LOGINS = {
     "admin": "correo_admin", "docente": "correo_docente", "docente2": "correo_docente2",
@@ -35,10 +36,11 @@ CASOS: list[dict] = []
 
 
 def caso(id_, nombre, metodo, ruta, rol=None, body=None, status=200, query=None, checks=(),
-         capturar=None, form=None, sin_token=False, carpeta="Auth"):
+         capturar=None, form=None, sin_token=False, carpeta="Auth", pre=None):
     CASOS.append(dict(id=id_, nombre=nombre, metodo=metodo, ruta=ruta, rol=rol, body=body,
                       status=status, query=query or {}, checks=list(checks),
-                      capturar=capturar or {}, form=form, carpeta=carpeta, sin_token=sin_token))
+                      capturar=capturar or {}, form=form, carpeta=carpeta, sin_token=sin_token,
+                      pre=pre))
 
 
 def cuenta(sufijo_doc):
@@ -136,8 +138,43 @@ caso(69, "Crear el reporte con el archivo subido → 201", "POST", "/reportes", 
 caso(70, "Admin descarga el archivo del reporte → 200", "GET", "/reportes/{{reporte_id}}/archivo", rol="admin", carpeta=r)
 caso(71, "Reporte por /static sin token → 404 (BE-15)", "GET", "{{reporte_archivo}}", status=404, sin_token=True, carpeta=r)
 
+# ------------------------------- Sesión con cuenta temporal (BC-06, 13/11/2026)
+# Estos seis casos estaban asignados a pytest local porque bloquean, desactivan o cambian la
+# foto de la cuenta con la que se prueban. Ahora corren también contra QA, pero sobre una cuenta
+# TEMPORAL que la carpeta crea al empezar y la limpieza borra al final: nunca se bloquea ni se
+# desactiva una cuenta del seed. El orden importa: primero lo que necesita la cuenta activa
+# (009, 072, 058), después el bloqueo (006) y al final la desactivación (029, 010), que usa una
+# sesión abierta antes de bloquearla.
+t = "Sesión con cuenta temporal"
+REFRESH_TEMPORAL_1 = {"refresh_token": "{{refresh_temporal_1}}"}
+LOGIN_TEMPORAL = {"correo": "qa.temporal.{{sufijo}}@example.com", "password": "{{QA_PASSWORD}}"}
+CERRAR_SESION_1 = [
+    "pm.sendRequest({ url: pm.environment.get('base_url') + '/auth/logout', method: 'POST',",
+    "  header: { 'Content-Type': 'application/json' },",
+    "  body: { mode: 'raw', raw: JSON.stringify({ refresh_token: pm.collectionVariables.get('refresh_temporal_1') }) }",
+    "}, (err, res) => pm.collectionVariables.set('logout_temporal', err ? 'error' : String(res.code)));",
+]
+CINCO_FALLOS = [
+    "const base = pm.environment.get('base_url');",
+    "const correo = 'qa.temporal.' + pm.collectionVariables.get('sufijo') + '@example.com';",
+    "const fallo = (i) => {",
+    "  if (i >= 5) return;",
+    "  pm.sendRequest({ url: base + '/auth/login', method: 'POST',",
+    "    header: { 'Content-Type': 'application/json' },",
+    "    body: { mode: 'raw', raw: JSON.stringify({ correo: correo, password: 'Incorrecta#1' }) }",
+    "  }, () => fallo(i + 1));",
+    "};",
+    "fallo(0);",
+]
+caso(9, "Refresh después de cerrar sesión → 401 (BE-13, BE-17)", "POST", "/auth/refresh", body=REFRESH_TEMPORAL_1, status=401, pre=CERRAR_SESION_1, checks=["pm.expect(pm.collectionVariables.get('logout_temporal')).to.eql('204')"], carpeta=t)
+caso(72, "Avatar que no es una imagen → 400 (BE-14)", "POST", "/auth/me/avatar", rol="temporal", form="datos/reporte.pdf", status=400, checks=["pm.expect(pm.response.json().detail).to.include('imagen')"], carpeta=t)
+caso(58, "La cuenta registra su teléfono para notificaciones → 201 (BE-18)", "POST", "/dispositivos", rol="temporal", body={"token_fcm": "qa-newman-{{sufijo}}-dispositivo", "plataforma": "android"}, status=201, checks=["pm.expect(pm.response.json().token_fcm).to.eql('qa-newman-' + pm.collectionVariables.get('sufijo') + '-dispositivo')"], carpeta=t)
+caso(6, "Sexto intento con la clave CORRECTA tras 5 fallos → 429 (BE-16)", "POST", "/auth/login", body=LOGIN_TEMPORAL, status=429, pre=CINCO_FALLOS, checks=["pm.expect(pm.response.json().detail).to.include('Demasiados intentos')"], carpeta=t)
+caso(29, "Admin desactiva la cuenta → 200 con estado false (BE-13)", "PATCH", "/usuarios/{{usuario_temporal_id}}/estado", rol="admin", query={"estado": "false"}, checks=["pm.expect(pm.response.json().estado).to.eql(false)"], carpeta=t)
+caso(10, "Una cuenta desactivada no renueva su sesión → 401 (BE-13)", "POST", "/auth/refresh", body={"refresh_token": "{{refresh_temporal_2}}"}, status=401, carpeta=t)
+
 ORDEN = ["Auth", "Usuarios", "Asistencia", "Notas", "Novedades", "Padres y dashboard",
-         "Horarios y asignaciones", "Reportes y archivos"]
+         "Horarios y asignaciones", "Reportes y archivos", "Sesión con cuenta temporal"]
 
 
 def ids_de_la_planeacion() -> set[int]:
@@ -156,7 +193,9 @@ def _script(lineas):
 def _pruebas(c):
     ident = f"CP-INT-{c['id']:03d}"
     js = [f"pm.test('{ident} → {c['status']}', () => pm.response.to.have.status({c['status']}));",
-          f"pm.test('{ident} responde en ≤ 800 ms', () => pm.expect(pm.response.responseTime).to.be.below(800));"]
+          # Tiempo aparte del resultado funcional: el umbral sale de `umbral_ms` (800 ms por
+          # defecto, el del MC-01; en QA se corre con 3000 por la decisión del PO del 10/11).
+          f"pm.test('{ident} TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"]
     for chk in c["checks"]:
         js.append(f"pm.test('{ident} cuerpo', () => {{ {chk}; }});")
     for var, campo in c["capturar"].items():
@@ -218,6 +257,8 @@ def _item(c):
     eventos = [{"listen": "test", "script": _script(_pruebas(c))}]
     if c["id"] == 52:
         eventos.insert(0, {"listen": "prerequest", "script": _script(BUSCAR_ESTUDIANTE_SIN_NOTAS)})
+    elif c.get("pre"):
+        eventos.insert(0, {"listen": "prerequest", "script": _script(c["pre"])})
     return {"name": f"CP-INT-{c['id']:03d} {c['nombre']}", "event": eventos, "request": _peticion(c)}
 
 
@@ -225,7 +266,7 @@ def _sesiones():
     prereq = [
         "pm.collectionVariables.set('sufijo', Date.now().toString().slice(-9));",
         "pm.collectionVariables.set('hoy', new Date().toISOString().slice(0, 10));",
-        "['dup','dup2','docente','padre','admin_crea'].forEach((k, i) =>",
+        "['dup','dup2','docente','padre','admin_crea','temporal'].forEach((k, i) =>",
         "  pm.collectionVariables.set('doc_' + k, '8' + (Date.now() % 100000000 + i)));",
         "pm.collectionVariables.set('correo_docente_mayus', (pm.environment.get('correo_docente') || '').toUpperCase());",
     ]
@@ -248,6 +289,35 @@ def _sesiones():
     return {"name": "00 Sesiones", "item": items}
 
 
+def _preparar_cuenta_temporal() -> list[dict]:
+    """La cuenta que usan los casos de «Sesión con cuenta temporal», con dos sesiones abiertas."""
+    json_h = [{"key": "Content-Type", "value": "application/json"}]
+    cuerpo = {"mode": "raw", "options": {"raw": {"language": "json"}}}
+
+    def login(nombre, refresh):
+        return {"name": nombre,
+                "event": [{"listen": "test", "script": _script([
+                    f"pm.test('{nombre} → 200', () => pm.response.to.have.status(200));",
+                    "pm.collectionVariables.set('token_temporal', pm.response.json().access_token);",
+                    f"pm.collectionVariables.set('{refresh}', pm.response.json().refresh_token);"])}],
+                "request": {"method": "POST", "header": json_h,
+                            "url": {"raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"],
+                                    "path": ["auth", "login"]},
+                            "body": {**cuerpo, "raw": json.dumps(LOGIN_TEMPORAL)}}}
+
+    datos = {**cuenta("temporal"), "correo": LOGIN_TEMPORAL["correo"], "id_rol": 2}
+    crear = {"name": "T1 Admin crea la cuenta temporal",
+             "event": [{"listen": "test", "script": _script([
+                 "pm.test('T1 cuenta temporal → 201', () => pm.response.to.have.status(201));",
+                 "pm.collectionVariables.set('usuario_temporal_id', pm.response.json().id_usuario);"])}],
+             "request": {"method": "POST",
+                         "header": json_h + [{"key": "Authorization", "value": "Bearer {{token_admin}}"}],
+                         "url": {"raw": "{{base_url}}/usuarios", "host": ["{{base_url}}"], "path": ["usuarios"]},
+                         "body": {**cuerpo, "raw": json.dumps(datos, ensure_ascii=False)}}}
+    return [crear, login("T2 Sesión 1 de la cuenta temporal", "refresh_temporal_1"),
+            login("T3 Sesión 2 de la cuenta temporal", "refresh_temporal_2")]
+
+
 def _limpieza():
     # Las peticiones de borrado se omiten si la variable quedó vacía (el caso no corrió).
     def borrar(nombre, ruta, rol, var):
@@ -264,6 +334,8 @@ def _limpieza():
         borrar("Borrar docente registrado", "/usuarios/{{usuario_docente_id}}", "admin", "usuario_docente_id"),
         borrar("Borrar padre registrado", "/usuarios/{{usuario_padre_id}}", "admin", "usuario_padre_id"),
         borrar("Borrar reporte de prueba", "/reportes/{{reporte_id}}", "admin", "reporte_id"),
+        borrar("Borrar el teléfono de la cuenta temporal", "/dispositivos/qa-newman-{{sufijo}}-dispositivo", "temporal", "usuario_temporal_id"),
+        borrar("Borrar la cuenta temporal", "/usuarios/{{usuario_temporal_id}}", "admin", "usuario_temporal_id"),
     ]}
 
 
@@ -274,11 +346,14 @@ def construir() -> dict:
     assert not sobran, f"Casos que no están en la planeación: {sorted(sobran)}"
     carpetas = [_sesiones()]
     for nombre in ORDEN:
-        carpetas.append({"name": nombre, "item": [_item(c) for c in CASOS if c["carpeta"] == nombre]})
+        items = [_item(c) for c in CASOS if c["carpeta"] == nombre]
+        if nombre == t:
+            items = _preparar_cuenta_temporal() + items
+        carpetas.append({"name": nombre, "item": items})
     carpetas.append(_limpieza())
     return {
         "info": {"name": "Eyes School API · integración (PR-05)",
-                 "description": "69 casos CP-INT de la API contra QA. La contraseña entra con --env-var QA_PASSWORD.",
+                 "description": "75 casos CP-INT de la API contra QA (los otros 6 de los 81 son de pytest). La contraseña entra con --env-var QA_PASSWORD.",
                  "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"},
         "item": carpetas,
         "variable": [],
@@ -294,7 +369,7 @@ def entorno() -> dict:
         "id_estudiante_ds01": "2", "id_estudiante_ds03a": "1", "id_estudiante_ds02_ajeno": "2",
         "id_materia_docente": "1", "id_curso_ds01": "1", "id_profesor_docente": "1",
         "id_padre_ajeno": "1", "id_estudiante_sin_notas": "",
-        "id_administrador": "1",
+        "id_administrador": "1", "umbral_ms": "800",
     }
     return {"id": "eyes-school-qa", "name": "Eyes School · QA",
             "values": [{"key": k, "value": val, "enabled": True} for k, val in valores.items()],
