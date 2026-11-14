@@ -2,7 +2,7 @@
 
     python -m scripts.qa.openapi_solo_lectura <url-del-entorno> <salida.json>
     schemathesis run <salida.json> --url <url-del-entorno> -H "Authorization: Bearer $TOKEN_ADMIN" \
-        --checks all --exclude-checks unsupported_method
+        --checks all --exclude-checks unsupported_method,allow_header_conformance
 
 Por qué un archivo y no los filtros de la CLI: el 13/11/2026 una corrida con `--include-method GET`
 y `--include-path-regex` seleccionó también 11 operaciones de escritura (schemathesis combina esos
@@ -12,7 +12,8 @@ Y por qué además `--exclude-checks unsupported_method` (ST204): ese check mand
 métodos que el contrato no declara, para ver si la API responde 405. Con el contrato recortado,
 PUT y DELETE quedan «no declarados» y los mandaría contra rutas que sí existen. En la repetición
 del 13/11 mandó 7 POST/PUT sin cuerpo y con id inexistente (todos 422, sin escribir nada), pero
-con otro id o con cuerpo podría escribir.
+con otro id o con cuerpo podría escribir. `allow_header_conformance` (ST205) se excluye porque
+compara la cabecera `Allow` del servidor (GET, PUT, DELETE) con el contrato recortado (solo GET).
 """
 
 import json
