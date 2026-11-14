@@ -13,10 +13,15 @@ Comprueba lo que a producción le faltaba antes de este despliegue:
 - 6 intentos fallidos → 429 (BE-16).
 
 Escribe `evidencias/PR-06/api/BC09_humo_produccion.txt`. Sale con 0 solo si todo pasa.
+
+Sin consola (CI, agentes): `PROD_ADMIN_CORREO` y `PROD_ADMIN_PASSWORD` por variable de entorno. Si
+no están y no hay consola, la prueba del bloqueo NO se hace (no se crea la cuenta temporal que
+después no se podría borrar) y queda anotada como pendiente.
 """
 
 import getpass
 import json
+import os
 import sys
 import urllib.error
 import urllib.request
@@ -55,8 +60,8 @@ def main() -> int:
     rutas = json.loads(cuerpo).get("paths", {}) if codigo == 200 else {}
     anotar("openapi.json incluye /padres/me/hijos", "/api/v1/padres/me/hijos" in rutas, str(codigo))
 
-    codigo, cabeceras, _ = _pedir("GET", f"{API}/cursos/")
-    anotar("GET /cursos/ → 200", codigo == 200, str(codigo))
+    codigo, cabeceras, _ = _pedir("GET", f"{API}/cursos")
+    anotar("GET /cursos → 200", codigo == 200, str(codigo))
     nosniff = {k.lower(): v for k, v in cabeceras.items()}.get("x-content-type-options")
     anotar("X-Content-Type-Options: nosniff", nosniff == "nosniff", str(nosniff))
 
@@ -64,7 +69,22 @@ def main() -> int:
                           {"correo": "no.existe.humo@example.com", "password": "NoExiste#2026"})
     anotar("Login con correo inexistente → 401", codigo == 401, str(codigo))
 
-    # BE-16 con una cuenta temporal.
+    # BE-16 con una cuenta temporal. Primero las credenciales del admin: sin ellas la cuenta no se
+    # podría borrar, así que ni se crea.
+    admin = os.environ.get("PROD_ADMIN_CORREO")
+    password = os.environ.get("PROD_ADMIN_PASSWORD")
+    if not (admin and password) and sys.stdin.isatty():
+        admin = input("Correo del administrador de producción: ").strip()
+        password = getpass.getpass("Contraseña del administrador (no se muestra): ")
+    if not (admin and password):
+        anotar("Bloqueo tras 6 intentos (BE-16): PENDIENTE, sin credenciales de admin", False, "-")
+        return _escribir(filas)
+    codigo, _, cuerpo = _pedir("POST", f"{API}/auth/login", {"correo": admin, "password": password})
+    token = json.loads(cuerpo).get("access_token") if codigo == 200 else None
+    anotar("Login del administrador de producción", token is not None, str(codigo))
+    if not token:
+        return _escribir(filas)
+
     correo = f"qa.humo.{uuid.uuid4().hex[:8]}@example.com"
     clave = f"Humo#{uuid.uuid4().hex[:10]}A1"
     codigo, _, cuerpo = _pedir("POST", f"{API}/auth/register", {
@@ -80,14 +100,12 @@ def main() -> int:
         codigo, _, _ = _pedir("POST", f"{API}/auth/login", {"correo": correo, "password": clave})
         anotar("6.º intento con la clave correcta tras 5 fallos → 429", codigo == 429, str(codigo))
 
-        admin = input("Correo del administrador de producción: ").strip()
-        password = getpass.getpass("Contraseña del administrador (no se muestra): ")
-        codigo, _, cuerpo = _pedir("POST", f"{API}/auth/login",
-                                   {"correo": admin, "password": password})
-        token = json.loads(cuerpo).get("access_token") if codigo == 200 else None
-        borrado = _pedir("DELETE", f"{API}/usuarios/{id_temporal}", token=token)[0] if token else None
+        borrado = _pedir("DELETE", f"{API}/usuarios/{id_temporal}", token=token)[0]
         anotar("Cuenta temporal borrada", borrado == 204, str(borrado))
+    return _escribir(filas)
 
+
+def _escribir(filas) -> int:
     lineas = [
         "BC-09 · Prueba de humo de producción",
         f"Fecha (UTC): {datetime.now(timezone.utc):%Y-%m-%d %H:%M}",

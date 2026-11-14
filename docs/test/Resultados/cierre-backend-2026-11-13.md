@@ -11,7 +11,7 @@
 | Tarea | Estado | Qué falta y de quién |
 |---|---|---|
 | BC-01 Rotar la contraseña de Render (#22) | 🟡 Herramienta lista | **Andrés:** rotar en Render y en las dos Web Apps; luego correr `scripts/qa/verificar_rotacion.py` |
-| BC-02 Rendimiento con 50 usuarios (#43) | 🟡 Corrección parcial desplegada | Revisar las métricas de Render del 11/11 22:40–22:43 UTC **antes** de la corrida S3 (ver 3.2) |
+| BC-02 Rendimiento con 50 usuarios (#43) | ✅ **S3 cumple** (0,08 % de errores, p95 1,07 s) | — (#43 cerrado) |
 | BC-03 Firebase en QA y producción | 🔴 Bloqueado | Las claves compartidas en el chat del 13/11 **deben revocarse**; generar otras y ponerlas en Azure (ver 3.3) |
 | BC-04 Archivos de reportes (N-23) | 🟢 Hecho en código (PR #48, opción A) | Migrar `qaeyesschool` y luego fusionar el #48 |
 | BC-05 Cuenta pendiente o desactivada (N-31) | 🟢 Hecho en código (PR #48) | Igual que BC-04; la app debe mostrar el `detail` (MC-03) |
@@ -63,7 +63,25 @@ No es saturación: es **una caída de ~90 s**. Los 2 104 errores de S2 equivalen
 | «Quitar el commit de las lecturas» (opción B) | **No se aplicó:** cerrar la transacción con `ROLLBACK` al devolver la conexión cuesta el mismo viaje que el `COMMIT` |
 | Bajar el costo de bcrypt | No se hizo (lo prohíbe la planeación) |
 
-**Para cerrar #43:** en Render → base → *Metrics/Events*, revisar del 11/11 de 22:40 a 22:43 UTC si hubo reinicio, memoria al límite o conexiones al máximo. Si fue eso, bajar `DB_POOL_SIZE` en QA (hoy 30 + 10 por proceso; con 24 req/s basta ~10) o subir el plan de Render, y correr la S3 con el *Log stream* abierto. Hasta entonces **CP-NF-001 sigue sin aprobar**. El diagnóstico completo está en el [comentario de #43](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/issues/43#issuecomment-6868695022).
+**Causa confirmada con las métricas de Render (13/11).** El servidor compartido tiene **0,1 CPU, 256 MB y un límite de 97 conexiones**. Con el pool anterior (30 + 10 por API), QA y producción podían pedir 80. Bajo carga, la base (una décima de núcleo) encola las consultas, las conexiones se acumulan y se agota el límite: desde ahí **toda conexión nueva falla, en las dos APIs a la vez**. La planeación tenía razón en que «falta CPU», pero la que falta es la de la base, no la del App Service.
+
+**Corrección (PR #51):** pool de **12 conexiones fijas y 0 de desbordamiento**, como mucho 24 entre QA y producción. Una prueba en `test_config.py` impide volver a pasarse.
+
+**Corrida S3 (14/11/2026 02:31–02:44 UTC, mismo guion que S1 y S2, con un vigilante que consultaba producción cada 5 s para abortar si caía):**
+
+| Criterio | Umbral QA | S1 | S2 | **S3** |
+|---|---|---|---|---|
+| Errores | < 1 % | 8,05 % | 10,90 % | **0,08 %** ✔ |
+| p95 de navegación | ≤ 3 000 ms | 2 720 ms | 1 650 ms | **1 070 ms** ✔ |
+| p95 global | ≤ 3 000 ms | 3 068 ms | 1 825 ms | **1 130 ms** ✔ |
+| p95 del login | ≤ 11 000 ms | — | 13 190 ms | **10 310 ms** ✔ |
+| Peticiones | — | — | 19 300 | 15 786 |
+
+- **Producción durante S3:** 93 consultas, **0 fallos**.
+- De los 13 errores, **11 son del cliente**: código 0, sin respuesta, y todos terminaron a la vez tras ~243 s, que es más que el límite de 60 s. Coinciden con un congelamiento de 4 minutos del equipo que ejecutaba la prueba, en el que el vigilante también se detuvo. Errores reales del servidor: **2 respuestas 502 de 15 786** (0,013 %).
+- **CP-NF-001: Aprobado** en QA con el umbral del PO. #43 cerrado.
+- Evidencia: `evidencias/PR-06/api/S3_k6_carga.{txt,json}` y `S3_vigilante_produccion.txt`. Se anularon los 1 011 registros de asistencia «clase» que creó la carga.
+- Falta para el PR-06: la captura de CPU y memoria de Azure durante la corrida (*Monitoring → Metrics*, 14/11 02:30–02:45 UTC) y la de Render.
 
 ### 3.3 BC-03 · Firebase
 
@@ -225,7 +243,7 @@ La cobertura de funciones de `api` es baja porque cuenta cada endpoint como func
 
 ## 4. Definición de terminado
 
-- [ ] #22, #43, N-23 y N-31 cerrados. **N-23 y N-31:** código listo en el #48, falta migrar y fusionar. **#22 y #43:** ver 3.1 y 3.2.
+- [ ] #22, #43, N-23 y N-31 cerrados. **#43: cerrado** (S3 cumple). **N-23 y N-31:** código listo en el #48, falta migrar y fusionar. **#22:** ver 3.1.
 - [x] 81/81 CP-INT de la API ejecutados con resultado por caso; 0 fallas funcionales.
 - [x] Schemathesis con 0 ST101, ST103 y ST108 (local y QA; anexo A).
 - [ ] Capturas y deuda de SonarQube en el PR-03. **Deuda: sí.** Faltan las capturas.
