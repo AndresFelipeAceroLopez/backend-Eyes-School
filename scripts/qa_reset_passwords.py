@@ -82,8 +82,8 @@ def exigir_database_url_del_entorno() -> None:
 def verificar_base(base_conectada: str, base_esperada: str) -> None:
     """Protección 3: la base realmente conectada tiene que ser la que se declaró en `--base`.
 
-    Es la única comprobación que mira la base y no una variable. Producción y QA están en el
-    mismo Render: el host no las distingue, el nombre sí.
+    Es la única comprobación que mira la base y no una variable: se lee de la propia conexión,
+    así que no depende de qué `DATABASE_URL` se haya pegado en la terminal.
     """
     if base_conectada != base_esperada:
         raise SystemExit(

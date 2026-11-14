@@ -43,6 +43,8 @@
 
 No depende de código. `scripts/qa/verificar_rotacion.py` deja la evidencia que pide la planeación (`evidencias/PR-03/api/BC01_rotacion.txt`). Pide la URL **vieja** sin mostrarla, comprueba que Render la rechaza y corre el preflight de producción y de QA. En el archivo solo quedan el host y el nombre de la base. El preflight ya está en verde en los dos entornos (13/11): `/docs` 200, `/cursos/` 200 y correo inexistente 401.
 
+**Hallazgo del 14/11 para el #22:** la credencial filtrada en el historial de git (la del `.env` local) es de `dpg-dae7si5bedkc73bltec0` / `eyesschool_tr7a`, que **no es la base de producción actual** (`dpg-dbkht01srm7s73c08bs0` / `eyesschool_wru2`) ni la de QA. Si en Render esa instancia ya no se usa, borrarla deja sin efecto la credencial filtrada aunque no se rote. Falta confirmar en el panel de Render qué es esa instancia.
+
 ### 3.2 BC-02 · Rendimiento con 50 usuarios (DEF-038, #43)
 
 **La premisa de la planeación («falta CPU») no se sostiene.** Se repitió una carga corta con el código de estado de **cada** petición (11/11, 50 usuarios, 5 min):
@@ -55,7 +57,7 @@ No depende de código. `scripts/qa/verificar_rotacion.py` deja la evidencia que 
 
 No es saturación: es **una caída de ~90 s**. Los 2 104 errores de S2 equivalen a una sola caída de ~88 s. Las peticiones que fallan responden rápido (los 502 en ~160 ms), así que no se cuelgan por falta de CPU.
 
-**Riesgo para producción:** la base de QA está **en el mismo servidor de Render que producción** (runbook, sección 3). Si la caída es del servidor (memoria o conexiones), cada corrida de carga en QA tumba también producción. Por eso **no se lanzó la S3**.
+**Corrección del 14/11:** este informe decía que QA y producción compartían servidor de Render y que cada carga en QA tumbaría producción. **Es falso:** QA y producción están en **servidores de Render distintos** (comprobado el 14/11/2026 desde las consolas de Azure): producción `eyesschool_wru2` en `dpg-dbkht01srm7s73c08bs0`, QA `qaeyesschool` en `dpg-dbki7dh42hec73cn2d1g`. La afirmación venía del runbook y no se había comprobado contra los hosts.
 
 | Hecho | Resultado |
 |---|---|
@@ -63,9 +65,9 @@ No es saturación: es **una caída de ~90 s**. Los 2 104 errores de S2 equivalen
 | «Quitar el commit de las lecturas» (opción B) | **No se aplicó:** cerrar la transacción con `ROLLBACK` al devolver la conexión cuesta el mismo viaje que el `COMMIT` |
 | Bajar el costo de bcrypt | No se hizo (lo prohíbe la planeación) |
 
-**Causa confirmada con las métricas de Render (13/11).** El servidor compartido tiene **0,1 CPU, 256 MB y un límite de 97 conexiones**. Con el pool anterior (30 + 10 por API), QA y producción podían pedir 80. Bajo carga, la base (una décima de núcleo) encola las consultas, las conexiones se acumulan y se agota el límite: desde ahí **toda conexión nueva falla, en las dos APIs a la vez**. La planeación tenía razón en que «falta CPU», pero la que falta es la de la base, no la del App Service.
+**Causa (métricas de Render del 13/11).** Cada servidor de Render es del plan más chico: **0,1 CPU, 256 MB y 97 conexiones**. Con el pool anterior (30 + 10), una carga de 50 usuarios abría hasta 40 conexiones, es decir, 40 procesos de PostgreSQL con su propia memoria compitiendo por una décima de núcleo, y la base dejó de responder ~90 s. No se pudo confirmar si el corte fue por memoria o por CPU, porque Render ya no muestra el 11/11. La planeación tenía razón en que «falta CPU», pero la que falta es la de la base, no la del App Service.
 
-**Corrección (PR #51):** pool de **12 conexiones fijas y 0 de desbordamiento**, como mucho 24 entre QA y producción. Una prueba en `test_config.py` impide volver a pasarse.
+**Corrección (PR #51):** pool de **12 conexiones fijas y 0 de desbordamiento** por entorno. Una prueba en `test_config.py` impide volver a pasarse.
 
 **Corrida S3 (14/11/2026 02:31–02:44 UTC, mismo guion que S1 y S2, con un vigilante que consultaba producción cada 5 s para abortar si caía):**
 
@@ -188,6 +190,13 @@ Evidencia: `evidencias/PR-06/api/BC09_humo_produccion_ANTES.txt` y `BC09_humo_pr
 ```powershell
 python -m scripts.qa.humo_produccion   # en una terminal normal pide el correo y la contraseña del admin sin mostrarla
 ```
+
+**Migración de producción (14/11, ~03:20 UTC), aplicada por error y sin respaldo previo.** Las instrucciones para QA se corrieron en la consola SSH de `api-eyesschool`, y la migración `c4e1f7a9d2b8` se aplicó en `eyesschool_wru2`. El comando no comprobaba la Web App antes de migrar. La restauración de QA sí se detuvo: su guardia comparó la base y se negó. Impacto, revisado desde la misma consola:
+- 8 reportes con archivo de nombre suelto recibieron el PDF «documento de ejemplo». Son los 8 del seed («Reporte de Asistencia Junio», «Reporte de Notas P1», «Novedades Mayo», «Asistencia Curso 6A», «Rendimiento General», «Asistencia Docentes», «Reporte Matriculas», «Reporte Padres de Familia»), cuyos archivos nunca existieron. Ningún reporte real cambió.
+- 0 cuentas marcadas como pendientes de validación.
+- La migración es aditiva: el código de producción de ese momento no lee la columna ni la tabla nuevas.
+
+Producción ya está en `c4e1f7a9d2b8`, así que el #48 puede ir a producción sin otra migración.
 
 **Pendiente para N-23 y N-31 en producción:** respaldo en Render → `alembic upgrade head` en la consola SSH de `api-eyesschool` → fusionar el #48 en `developer` → nuevo PR a `main`.
 

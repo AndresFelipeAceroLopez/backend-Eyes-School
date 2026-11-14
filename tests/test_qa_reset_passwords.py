@@ -86,7 +86,7 @@ def test_con_database_url_en_el_entorno_continua(monkeypatch):
 
 
 def test_si_la_base_conectada_no_es_la_esperada_no_escribe():
-    """Producción y QA están en el mismo Render: lo que distingue es el nombre de la base."""
+    """Lo que se comprueba es la base realmente conectada, no la variable que se pegó."""
     with pytest.raises(SystemExit) as error:
         verificar_base("eyesschool_prod", "qaeyesschool")
 

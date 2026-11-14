@@ -67,7 +67,7 @@ Guárdelo fuera del repositorio. Confirme que el archivo pesa más de unos pocos
 psql "$DATABASE_URL_PRODUCCION" -tAc "select current_database();"
 ```
 
-Producción y QA **están en el mismo Render**, así que el host no distingue: lo que distingue es el nombre de la base. Si responde `qaeyesschool`, está en QA y se detiene aquí.
+QA y producción están en **servidores de Render distintos** (comprobado el 14/11/2026 desde las consolas de Azure): producción `eyesschool_wru2` en `dpg-dbkht01srm7s73c08bs0`, QA `qaeyesschool` en `dpg-dbki7dh42hec73cn2d1g`. Aun así, antes de escribir se comprueba **la Web App** (`echo $WEBSITE_SITE_NAME`) y **la base** (`SELECT current_database()`): el 14/11 una migración pensada para QA se corrió en la consola de producción porque nadie miró en cuál estaba. Si responde `qaeyesschool`, está en QA y se detiene aquí.
 
 ### 4.3 Migrar (con el código viejo todavía corriendo)
 
