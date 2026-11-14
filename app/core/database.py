@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from app.core.config import settings
 
-# DEF-022: con 50 usuarios la API empezaba a encolar peticiones hasta agotar el tiempo de
+# DEF-038: con 50 usuarios la API empezaba a encolar peticiones hasta agotar el tiempo de
 # espera. El techo de throughput es (pool_size + max_overflow) / duración de cada consulta, y
 # con la base en otro continente cada consulta tarda cerca de un segundo. Dos cambios:
 #

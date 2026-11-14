@@ -1,8 +1,8 @@
-from datetime import datetime
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, EmailStr, field_validator
 
+from app.application.common.tipos import FechaHoraUTC
 from app.core.password_policy import exigir_password_valida
 
 
@@ -78,8 +78,8 @@ class UsuarioOut(BaseModel):
     correo: str | None
     telefono: str | None
     estado: bool
-    fecha_registro: datetime
-    ultimo_acceso: datetime | None
+    fecha_registro: FechaHoraUTC
+    ultimo_acceso: FechaHoraUTC | None
     id_rol: int
     foto_perfil: str | None = None
     rol: RolOut | None = None

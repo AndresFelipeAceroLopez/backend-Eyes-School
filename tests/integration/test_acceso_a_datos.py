@@ -185,11 +185,11 @@ async def test_un_padre_no_lee_el_vinculo_de_otro_padre(api):
     assert (await api.get("/api/v1/padres/1", headers=rosa)).status_code == 200
 
 
-# --- DEF-023: un id fuera del rango de PostgreSQL responde 422, no 500 ---
+# --- DEF-039: un id fuera del rango de PostgreSQL responde 422, no 500 ---
 
 
 async def test_un_id_fuera_de_rango_responde_422_contra_la_base_real(api):
-    """Prueba de verdad del manejador: la base rechaza el valor y la API traduce a 422.
+    """Con la base real, el id gigante responde 422 (validación) y nunca 500.
 
     Las unitarias de `tests/test_id_fuera_de_rango.py` simulan el error; esta lo provoca de
     verdad con PostgreSQL, que es donde se descubrió (schemathesis contra QA).
@@ -206,7 +206,7 @@ async def test_un_id_fuera_de_rango_responde_422_contra_la_base_real(api):
     ):
         r = await api.get(ruta, headers=h)
         assert r.status_code == 422, f"{ruta} respondió {r.status_code}"
-        assert r.json()["detail"] == "Valor fuera del rango permitido."
+        assert r.json()["detail"][0]["loc"][0] == "path"
 
 
 async def test_un_id_valido_sigue_funcionando(api):

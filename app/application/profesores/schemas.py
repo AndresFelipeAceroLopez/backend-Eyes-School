@@ -1,7 +1,9 @@
-from datetime import date, datetime
+from datetime import date
 from typing import Literal
 
 from pydantic import BaseModel
+
+from app.application.common.tipos import FechaHoraUTC
 
 
 class EspecializacionOut(BaseModel):
@@ -45,7 +47,7 @@ class ProfesorOut(BaseModel):
     nivel_estudios: str
     fecha_vinculacion: date
     estado: str
-    fecha_registro: datetime
+    fecha_registro: FechaHoraUTC
     # Nombre embebido (join con usuario) para resolver el nombre del profesor en
     # horarios sin leer /usuarios. Opcionales: solo se llenan en el listado.
     primer_nombre: str | None = None

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.application.common.tipos import ENTERO32_MAX, Entero32
 from app.application.profesores.schemas import (
     AgregarEspecializacionRequest,
     ProfesorCreate,
@@ -16,7 +17,7 @@ from app.infrastructure.repositories.actores_repository import ProfesorRepositor
 router = APIRouter(prefix="/profesores", tags=["Profesores"])
 
 
-async def _assert_propio_o_admin(db: AsyncSession, current_user: CurrentUser, id_profesor: int) -> None:
+async def _assert_propio_o_admin(db: AsyncSession, current_user: CurrentUser, id_profesor: Entero32) -> None:
     """El admin gestiona a cualquier profesor; el docente, solo el suyo."""
     if current_user.nombre_rol == "admin":
         return
@@ -31,7 +32,7 @@ async def _assert_propio_o_admin(db: AsyncSession, current_user: CurrentUser, id
 @router.get("", response_model=list[ProfesorOut], dependencies=[require_roles("admin", "docente")])
 async def list_profesores(
     db: DbSession,
-    skip: int = Query(0, ge=0),
+    skip: int = Query(0, ge=0, le=ENTERO32_MAX),
     limit: int = Query(100, ge=1, le=500),
     estado: str | None = None,
 ):
@@ -44,32 +45,32 @@ async def create_profesor(data: ProfesorCreate, db: DbSession):
 
 
 @router.get("/{id_profesor}", response_model=ProfesorOut, dependencies=[require_roles("admin", "docente")])
-async def get_profesor(id_profesor: int, db: DbSession):
+async def get_profesor(id_profesor: Entero32, db: DbSession):
     return await ProfesorService(db).get(id_profesor)
 
 
 @router.put("/{id_profesor}", response_model=ProfesorOut, dependencies=[require_roles("admin")])
-async def update_profesor(id_profesor: int, data: ProfesorUpdate, db: DbSession):
+async def update_profesor(id_profesor: Entero32, data: ProfesorUpdate, db: DbSession):
     return await ProfesorService(db).update(id_profesor, data)
 
 
 @router.delete("/{id_profesor}", status_code=204, dependencies=[require_roles("admin")])
-async def delete_profesor(id_profesor: int, db: DbSession):
+async def delete_profesor(id_profesor: Entero32, db: DbSession):
     await ProfesorService(db).delete(id_profesor)
 
 
 @router.get("/{id_profesor}/especializaciones", response_model=list[ProfesorEspecializacionOut], dependencies=[require_roles("admin", "docente")])
-async def get_especializaciones(id_profesor: int, db: DbSession):
+async def get_especializaciones(id_profesor: Entero32, db: DbSession):
     return await ProfesorService(db).get_especializaciones(id_profesor)
 
 
 @router.post("/{id_profesor}/especializaciones", response_model=ProfesorEspecializacionOut, status_code=201, dependencies=[require_roles("admin", "docente")])
-async def agregar_especializacion(id_profesor: int, data: AgregarEspecializacionRequest, db: DbSession, current_user: AuthUser):
+async def agregar_especializacion(id_profesor: Entero32, data: AgregarEspecializacionRequest, db: DbSession, current_user: AuthUser):
     await _assert_propio_o_admin(db, current_user, id_profesor)
     return await ProfesorService(db).agregar_especializacion(id_profesor, data)
 
 
 @router.delete("/{id_profesor}/especializaciones/{id_especializacion}", status_code=204, dependencies=[require_roles("admin", "docente")])
-async def quitar_especializacion(id_profesor: int, id_especializacion: int, db: DbSession, current_user: AuthUser):
+async def quitar_especializacion(id_profesor: Entero32, id_especializacion: Entero32, db: DbSession, current_user: AuthUser):
     await _assert_propio_o_admin(db, current_user, id_profesor)
     await ProfesorService(db).quitar_especializacion(id_profesor, id_especializacion)

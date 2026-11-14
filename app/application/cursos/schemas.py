@@ -1,7 +1,8 @@
-from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel
+
+from app.application.common.tipos import FechaHoraUTC
 
 
 class CursoCreate(BaseModel):
@@ -35,5 +36,5 @@ class CursoOut(BaseModel):
     intensidad_horaria: int | None
     descripcion: str | None
     activo: bool
-    fecha_creacion: datetime
+    fecha_creacion: FechaHoraUTC
     model_config = {"from_attributes": True}

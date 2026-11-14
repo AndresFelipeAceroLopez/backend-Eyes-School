@@ -30,14 +30,14 @@
 > ese no se escala: «8 % de peticiones sin respuesta» no se vuelve aceptable por estar lejos de la
 > base. Lo que ocurre es que QA alcanza su techo de throughput (~20 req/s) con 50 usuarios, y a
 > partir de ahí encola hasta agotar el tiempo de espera. **CP-NF-001 sigue sin cumplirse por el
-> criterio de errores**, y eso es lo que queda abierto en DEF-022.
+> criterio de errores**, y eso es lo que queda abierto en DEF-038.
 >
 > El escenario de carga se corrigió el 09/11/2026: antes iniciaba sesión en **cada** iteración, y
 > como el login tarda ~3 s por bcrypt (frente a ~1 s de una consulta normal), la prueba medía sobre
 > todo el costo de hashear. Ahora cada usuario virtual inicia sesión una vez y reutiliza el token,
 > como hacen la web y la app, y el login se mide en su propio escenario a 6 por minuto.
 >
-> **Anterior:** `k6 v2.3.0` ya está instalado (`winget install k6`) y los scripts `tests/carga/carga_50.js` y `tests/carga/estres.js` existen. La ejecución sigue **bloqueada por BE-INF-4 (DEF-020/DEF-WEB-01)**: la API de QA responde 500 en todo lo que consulta la base, y las pruebas de carga **no se corren contra producción** (regla 1.4 de la planeación de correcciones). Si BE-INF-4 no se cierra antes del 15 nov, la carga y el estrés se corren contra la API local sobre la base de PostgreSQL de pruebas y se anota en el PR-06 que los números no representan al servidor de Azure.
+> **Anterior:** `k6 v2.3.0` ya está instalado (`winget install k6`) y los scripts `tests/carga/carga_50.js` y `tests/carga/estres.js` existen. La ejecución sigue **bloqueada por BE-INF-4 (DEF-036/DEF-WEB-01)**: la API de QA responde 500 en todo lo que consulta la base, y las pruebas de carga **no se corren contra producción** (regla 1.4 de la planeación de correcciones). Si BE-INF-4 no se cierra antes del 15 nov, la carga y el estrés se corren contra la API local sobre la base de PostgreSQL de pruebas y se anota en el PR-06 que los números no representan al servidor de Azure.
 
 ---
 

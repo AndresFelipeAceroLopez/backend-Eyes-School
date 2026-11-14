@@ -3,6 +3,7 @@ from fastapi import APIRouter, Query
 from app.application.asistencia.schemas import AsistenciaOut
 from app.application.asistencia.service import AsistenciaService
 from app.application.common.authz import assert_acceso_estudiante
+from app.application.common.tipos import ENTERO32_MAX, Entero32
 from app.application.estudiantes.schemas import (
     EstudianteCreate,
     EstudianteIPSCreate,
@@ -33,9 +34,9 @@ async def get_mi_estudiante(current_user: AuthUser, db: DbSession):
 @router.get("", response_model=list[EstudianteOut], dependencies=[require_roles("admin", "docente")])
 async def list_estudiantes(
     db: DbSession,
-    skip: int = Query(0, ge=0),
+    skip: int = Query(0, ge=0, le=ENTERO32_MAX),
     limit: int = Query(100, ge=1, le=500),
-    id_curso: int | None = None,
+    id_curso: Entero32 | None = None,
     estado: str | None = None,
 ):
     return await EstudianteService(db).list(skip=skip, limit=limit, id_curso=id_curso, estado=estado)
@@ -47,28 +48,28 @@ async def create_estudiante(data: EstudianteCreate, db: DbSession):
 
 
 @router.get("/{id_estudiante}", response_model=EstudianteOut, dependencies=[require_roles("admin", "docente", "padre")])
-async def get_estudiante(id_estudiante: int, db: DbSession, current_user: AuthUser):
+async def get_estudiante(id_estudiante: Entero32, db: DbSession, current_user: AuthUser):
     await assert_acceso_estudiante(db, current_user, id_estudiante)
     return await EstudianteService(db).get(id_estudiante)
 
 
-@router.put("/{id_estudiante}", response_model=EstudianteOut, dependencies=[require_roles("admin")])
-async def update_estudiante(id_estudiante: int, data: EstudianteUpdate, db: DbSession):
+@router.put("/{id_estudiante:int}", response_model=EstudianteOut, dependencies=[require_roles("admin")])
+async def update_estudiante(id_estudiante: Entero32, data: EstudianteUpdate, db: DbSession):
     return await EstudianteService(db).update(id_estudiante, data)
 
 
-@router.delete("/{id_estudiante}", status_code=204, dependencies=[require_roles("admin")])
-async def delete_estudiante(id_estudiante: int, db: DbSession):
+@router.delete("/{id_estudiante:int}", status_code=204, dependencies=[require_roles("admin")])
+async def delete_estudiante(id_estudiante: Entero32, db: DbSession):
     await EstudianteService(db).delete(id_estudiante)
 
 
 @router.get("/{id_estudiante}/notas", response_model=list[NotaOut], dependencies=[require_roles("admin", "docente", "estudiante", "padre")])
 async def get_notas_estudiante(
-    id_estudiante: int,
+    id_estudiante: Entero32,
     db: DbSession,
     current_user: AuthUser,
-    id_periodo: int | None = None,
-    id_materia: int | None = None,
+    id_periodo: Entero32 | None = None,
+    id_materia: Entero32 | None = None,
 ):
     await assert_acceso_estudiante(db, current_user, id_estudiante)
     return await NotaService(db).list(id_estudiante=id_estudiante, id_materia=id_materia, id_periodo=id_periodo)
@@ -76,10 +77,10 @@ async def get_notas_estudiante(
 
 @router.get("/{id_estudiante}/asistencia", response_model=list[AsistenciaOut], dependencies=[require_roles("admin", "docente", "estudiante", "padre")])
 async def get_asistencia_estudiante(
-    id_estudiante: int,
+    id_estudiante: Entero32,
     db: DbSession,
     current_user: AuthUser,
-    skip: int = Query(0, ge=0),
+    skip: int = Query(0, ge=0, le=ENTERO32_MAX),
     limit: int = Query(100, ge=1, le=500),
 ):
     await assert_acceso_estudiante(db, current_user, id_estudiante)
@@ -87,7 +88,7 @@ async def get_asistencia_estudiante(
 
 
 @router.get("/{id_estudiante}/novedades", response_model=list[NovedadOut], dependencies=[require_roles("admin", "docente", "estudiante", "padre")])
-async def get_novedades_estudiante(id_estudiante: int, db: DbSession, current_user: AuthUser):
+async def get_novedades_estudiante(id_estudiante: Entero32, db: DbSession, current_user: AuthUser):
     await assert_acceso_estudiante(db, current_user, id_estudiante)
     return await NovedadService(db).list(id_estudiante=id_estudiante)
 
@@ -95,18 +96,18 @@ async def get_novedades_estudiante(id_estudiante: int, db: DbSession, current_us
 # EPS: el estudiante (y el padre asociado) consulta la del estudiante propio;
 # admin/docente la de cualquiera. La propiedad la valida assert_acceso_estudiante.
 @router.get("/{id_estudiante}/ips", response_model=list[EstudianteIPSOut], dependencies=[require_roles("admin", "docente", "estudiante", "padre")])
-async def get_ips_estudiante(id_estudiante: int, db: DbSession, current_user: AuthUser):
+async def get_ips_estudiante(id_estudiante: Entero32, db: DbSession, current_user: AuthUser):
     await assert_acceso_estudiante(db, current_user, id_estudiante)
     return await EstudianteService(db).get_ips(id_estudiante)
 
 
 # El estudiante registra/actualiza su propia EPS; el admin la de cualquiera.
 @router.post("/{id_estudiante}/ips", response_model=EstudianteIPSOut, status_code=201, dependencies=[require_roles("admin", "estudiante")])
-async def create_ips_estudiante(id_estudiante: int, data: EstudianteIPSCreate, db: DbSession, current_user: AuthUser):
+async def create_ips_estudiante(id_estudiante: Entero32, data: EstudianteIPSCreate, db: DbSession, current_user: AuthUser):
     await assert_acceso_estudiante(db, current_user, id_estudiante)
     return await EstudianteService(db).create_ips(id_estudiante, data)
 
 
 @router.delete("/{id_estudiante}/ips/{id_ips}", status_code=204, dependencies=[require_roles("admin")])
-async def delete_ips_estudiante(id_estudiante: int, id_ips: int, db: DbSession):
+async def delete_ips_estudiante(id_estudiante: Entero32, id_ips: Entero32, db: DbSession):
     await EstudianteService(db).delete_ips(id_estudiante, id_ips)

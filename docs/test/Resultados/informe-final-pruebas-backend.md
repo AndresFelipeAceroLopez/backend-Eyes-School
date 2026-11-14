@@ -56,7 +56,7 @@ repositorios, Firebase, disco y reloj por dobles.
 |---|---|---|
 | U1 (09/11, commit `0af4531`) | 154 | Las 18 pruebas UT-API-01 a 18 de las correcciones BE-03 a BE-19 |
 | Tras BE-INF-2 | 159 | Las tres protecciones nuevas del script de contraseñas de QA |
-| Tras DEF-023 y servicios CRUD | 199 | 13 del id fuera de rango + 27 de servicios sin cubrir |
+| Tras DEF-039 y servicios CRUD | 199 | 13 del id fuera de rango + 27 de servicios sin cubrir |
 | **Final** | **201** | Las dos cabeceras de seguridad que marcó ZAP |
 
 ### Cobertura por capa
@@ -92,7 +92,7 @@ Cada prueba corre en una transacción que se revierte.
 | Archivo | Casos | Correcciones que cubre |
 |---|---|---|
 | `integration/test_notas_novedades.py` | 18 | BE-06, BE-10, BE-11, BE-14, BE-15, BE-18, BE-19 |
-| `integration/test_acceso_a_datos.py` | 19 | BE-03, BE-04, BE-05, BE-07, BE-08 y DEF-023 |
+| `integration/test_acceso_a_datos.py` | 19 | BE-03, BE-04, BE-05, BE-07, BE-08 y DEF-039 |
 | `integration/test_auth_sesiones.py` | 17 | BE-09, BE-12, BE-13, BE-16, BE-17 |
 | `integration/test_humo.py` | 1 | La app arranca contra la base real |
 
@@ -144,7 +144,7 @@ Generación automática de peticiones a partir del contrato publicado en `/opena
 > **Por qué solo lectura:** schemathesis genera peticiones aleatorias y se ejecutó con un token de
 > administrador. Un `DELETE` generado al azar habría borrado datos de QA.
 
-**Los ST101 destaparon un defecto real (DEF-023):** un id fuera del rango de PostgreSQL devolvía
+**Los ST101 destaparon un defecto real (DEF-039):** un id fuera del rango de PostgreSQL devolvía
 **500 en 9 de 9 endpoints** con parámetro de id. Se verificó a mano con el entorno en reposo para
 descartar que fuera secuela de la prueba de carga. **Corregido y verificado en QA:** ahora responde
 **422 «Valor fuera del rango permitido»**.
@@ -331,7 +331,7 @@ que no sea imagen; esto es la segunda barrera.
 
 ### 9.1 Las dos bases iban por detrás de su código
 
-El defecto DEF-020 (la API de QA respondía 500 en todo lo que consultaba la base) **no era de
+El defecto DEF-036 (la API de QA respondía 500 en todo lo que consultaba la base) **no era de
 configuración**, como suponía la planeación: **a la base de QA le faltaba la migración
 `b7d2e9a41c03`**, y el código desplegado ya necesitaba las tablas `sesiones_refresco` y
 `dispositivos`. **La misma falta estaba en producción.**
@@ -361,7 +361,7 @@ usuarios, 103 estudiantes): **2,9 s**, aditiva, sin pérdida de datos, reversibl
 | Login con cuerpo inválido | — | 422 ✔ |
 | Login real del admin | — | **200 con token** ✔ |
 
-**BE-INF-4 / DEF-020 cerrado** con el criterio de aceptación completo.
+**BE-INF-4 / DEF-036 cerrado** con el criterio de aceptación completo.
 
 > **Corrección al criterio:** pedía «`GET /cursos/` sin token → 401 o 403», y estaba equivocado.
 > Ese endpoint es **público a propósito** —es el catálogo que el formulario de registro de
@@ -414,15 +414,15 @@ no fueron descuidos al programar, fueron reglas que no se definieron antes de co
 | # | Defecto | Por qué sigue abierto |
 |---|---|---|
 | **#22** | **DEF-001 · Credenciales en el historial de git** | **Crítico.** El historial está limpio y gitleaks en verde, pero **la contraseña de Render no se rotó**: esas credenciales siguen abriendo la base de producción. No depende de código |
-| **#43** | DEF-022 · Rendimiento con 50 usuarios | Mejorado un 65 % en coste de base y un 48 % en throughput. La causa quedó acotada al **plan de App Service**: decisión de costo del PO |
+| **#43** | DEF-038 · Rendimiento con 50 usuarios | Mejorado un 65 % en coste de base y un 48 % en throughput. La causa quedó acotada al **plan de App Service**: decisión de costo del PO |
 
 ### Defectos nuevos encontrados durante esta campaña
 
 | Defecto | Lo encontró | Estado |
 |---|---|---|
-| DEF-021 · `create_admin.py` con credenciales, también en `main` | gitleaks (B8) | Cerrado |
-| DEF-022 · La API falla con 50 usuarios | k6 (CP-NF-001) | Abierto |
-| DEF-023 · Un id fuera de rango devuelve 500 | schemathesis | Cerrado y verificado en QA |
+| DEF-037 · `create_admin.py` con credenciales, también en `main` | gitleaks (B8) | Cerrado |
+| DEF-038 · La API falla con 50 usuarios | k6 (CP-NF-001) | Abierto |
+| DEF-039 · Un id fuera de rango devuelve 500 | schemathesis | Cerrado y verificado en QA |
 
 ---
 
@@ -452,7 +452,7 @@ no fueron descuidos al programar, fueron reglas que no se definieron antes de co
 | BE-INF-2 · Datos de QA | `test_qa_reset_passwords.py` | — | — | ✅ |
 | BE-INF-3 · Sonar y gitleaks | — | — | — | 🟡 gitleaks ✅, Sonar pendiente de captura |
 | BE-INF-4 · Entorno de QA | Preflight | — | Preflight | ✅ |
-| DEF-023 · Id fuera de rango | `test_id_fuera_de_rango.py` | `test_acceso_a_datos.py` | Verificado en QA | ✅ |
+| DEF-039 · Id fuera de rango | `test_id_fuera_de_rango.py` | `test_acceso_a_datos.py` | Verificado en QA | ✅ |
 
 ---
 

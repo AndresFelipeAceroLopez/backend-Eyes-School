@@ -1,13 +1,21 @@
-"""DEF-023: un id fuera del rango de PostgreSQL debe responder 422, no 500.
+"""DEF-039: un id fuera del rango de PostgreSQL debe responder 4xx, no 500.
 
 Lo encontró `schemathesis` contra el contrato de QA y se verificó a mano en 9 de 9 endpoints con
 parámetro de id. FastAPI valida que el parámetro sea un entero, pero no su magnitud: el valor
 llegaba a la consulta, la base lo rechazaba y el error subía sin capturar.
 
-La corrección es un manejador de `DBAPIError` en `main.py` que responde 422 **solo** cuando el
-error viene del valor que mandó el cliente. El caso que más importa de este archivo es el
-último: un fallo real de la base (conexión caída) tiene que seguir siendo 500, porque
-convertirlo en 422 escondería una caída del servidor.
+La corrección tiene dos capas (la segunda se rehízo el 13/11/2026, BC-07):
+
+1. **Validación.** Los ids de los routers son `Entero32` (`application/common/tipos.py`): un valor
+   fuera del `integer` de PostgreSQL se rechaza con 422 antes de consultar la base, y el contrato
+   publica el rango. Antes respondía 422 desde la base y schemathesis lo marcaba (ST202), porque
+   para el contrato ese id era válido.
+2. **Red de seguridad.** Si un valor igual llega a la base y esta lo rechaza (`DataError`), el
+   manejador de `main.py` responde 404 si estaba en la ruta y 422 con forma de error de
+   validación si estaba en el cuerpo o la query.
+
+El caso que más importa de este archivo es el último: un fallo real de la base (conexión caída)
+tiene que seguir siendo 500, porque convertirlo en 404 o 422 escondería una caída del servidor.
 """
 
 import asyncpg
@@ -56,8 +64,8 @@ def test_distingue_un_valor_invalido_de_una_caida_de_la_base():
         "/api/v1/especializaciones/{}",
     ],
 )
-async def test_un_id_fuera_de_rango_responde_422_y_no_500(client, ruta, monkeypatch):
-    """Con el id gigante, la base rechaza el valor y la API debe responder 422."""
+async def test_un_id_fuera_de_rango_se_rechaza_antes_de_la_base(client, ruta, monkeypatch):
+    """El id gigante responde 422 por validación: la sesión, que fallaría, ni se usa."""
 
     class _SesionQueRechazaElValor:
         async def execute(self, *_a, **_k):
@@ -81,7 +89,7 @@ async def test_un_id_fuera_de_rango_responde_422_y_no_500(client, ruta, monkeypa
         app.dependency_overrides.pop(get_db, None)
 
     assert r.status_code == 422, f"{ruta} respondió {r.status_code}"
-    assert r.json()["detail"] == "Valor fuera del rango permitido."
+    assert r.json()["detail"][0]["type"] == "less_than_equal"
 
 
 async def test_una_caida_de_la_base_sigue_siendo_500(client, monkeypatch):
@@ -108,3 +116,31 @@ async def test_una_caida_de_la_base_sigue_siendo_500(client, monkeypatch):
             await client.get("/api/v1/estudiantes/1", headers=bearer("admin", 3))
     finally:
         app.dependency_overrides.pop(get_db, None)
+
+
+async def test_si_la_base_rechaza_un_valor_de_la_ruta_responde_404(client):
+    """Red de seguridad: un id en rango que la base rechaza igual no es un 500."""
+
+    class _Sesion:
+        async def get(self, *_a, **_k):
+            raise _error_de_dato()
+
+        async def execute(self, *_a, **_k):
+            raise _error_de_dato()
+
+        async def scalar(self, *_a, **_k):
+            raise _error_de_dato()
+
+    async def _db():
+        yield _Sesion()
+
+    from tests.conftest import bearer
+
+    app.dependency_overrides[get_db] = _db
+    try:
+        r = await client.get("/api/v1/cursos/5", headers=bearer("admin", 3))
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+    assert r.status_code == 404
+    assert r.json() == {"detail": "Recurso no encontrado"}

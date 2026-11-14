@@ -2,7 +2,7 @@
 
 > **Qué cubre:** fusionar el PR #21 (`developer` → `main`), que dispara el despliegue automático a la Web App **`api-eyesschool`** (westus3) y **requiere una migración de base de datos**.
 > **Preparado el:** 09/11/2026 · **Commit de `developer`:** `03bebef` · **Migración:** `b7d2e9a41c03`
-> **Por qué existe:** el código de `v1.1.0` **no arranca** contra la base de producción actual. Si se fusiona el PR sin migrar antes, el login y el refresh fallan con `relation "sesiones_refresco" does not exist` para todos los usuarios. Es el mismo síntoma que tenía QA (DEF-020).
+> **Por qué existe:** el código de `v1.1.0` **no arranca** contra la base de producción actual. Si se fusiona el PR sin migrar antes, el login y el refresh fallan con `relation "sesiones_refresco" does not exist` para todos los usuarios. Es el mismo síntoma que tenía QA (DEF-036).
 
 ---
 

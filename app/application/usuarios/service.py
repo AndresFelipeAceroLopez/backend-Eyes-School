@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.application.usuarios.schemas import UsuarioCreate, UsuarioOut, UsuarioUpdate
 from app.core.exceptions import BusinessRuleException, ConflictException, NotFoundException
 from app.core.reloj import Reloj, ahora_utc
-from app.core.security import hash_password, verify_password
+from app.core.security import hash_password_async, verify_password_async
 from app.infrastructure.repositories.sesion_repository import SesionRepository
 from app.infrastructure.repositories.usuario_repository import RolRepository, UsuarioRepository
 
@@ -42,7 +42,7 @@ class UsuarioService:
 
         raw = data.model_dump()
         if raw.get("password"):
-            raw["password"] = hash_password(raw["password"])
+            raw["password"] = await hash_password_async(raw["password"])
 
         user = await self.repo.create(raw)
         return UsuarioOut.model_validate(await self.repo.get_by_id_with_rol(user.id_usuario))
@@ -64,9 +64,9 @@ class UsuarioService:
             if exigir_password_actual:
                 if not data.password_actual:
                     raise BusinessRuleException("Debe indicar la contraseña actual para cambiarla")
-                if not user.password or not verify_password(data.password_actual, user.password):
+                if not user.password or not await verify_password_async(data.password_actual, user.password):
                     raise BusinessRuleException("La contraseña actual no es correcta")
-            raw["password"] = hash_password(raw["password"])
+            raw["password"] = await hash_password_async(raw["password"])
             raw["password_actualizada"] = self.reloj()
 
         updated = await self.repo.update(user, raw)
