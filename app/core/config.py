@@ -46,8 +46,16 @@ class Settings(BaseSettings):
     # 164 ms. Siete veces más. Por eso el pool se dimensiona al revés de lo habitual: muchas
     # conexiones FIJAS, que se abren una vez y duran, y poco desbordamiento, porque cada conexión
     # de desbordamiento se abre durante el pico y le cobra 1,2 s a la petición que la provocó.
-    DB_POOL_SIZE: int = 30
-    DB_MAX_OVERFLOW: int = 10
+    #
+    # TECHO DEL SERVIDOR (13/11/2026). QA y producción comparten UN servidor de Render con
+    # 0,1 CPU, 256 MB y un límite de 97 conexiones. Con 30 + 10 por API, las dos podían pedir 80;
+    # en una carga de 50 usuarios la base (una décima de núcleo) encola las consultas, las
+    # conexiones se acumulan, se llega al límite y TODA conexión nueva falla, en las dos APIs a
+    # la vez: es la caída de ~90 s de DEF-038. Más conexiones que CPU no dan velocidad, solo
+    # fila. Por eso: 12 fijas y ninguna de desbordamiento → como mucho 24 entre QA y producción.
+    # Si se sube el plan de Render, se puede volver a subir esto (y debe sumar < límite − 10).
+    DB_POOL_SIZE: int = 12
+    DB_MAX_OVERFLOW: int = 0
     # `pool_pre_ping` hace un «SELECT 1» antes de entregar cada conexión. Con la base en otro
     # continente eso cuesta un viaje de ida y vuelta (~200 ms) en CADA petición. Se desactiva y
     # se reciclan las conexiones antes de que el servidor las cierre por inactividad. Si
