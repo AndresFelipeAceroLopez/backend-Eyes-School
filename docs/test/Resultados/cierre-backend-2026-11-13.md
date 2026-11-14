@@ -1,6 +1,6 @@
 # Cierre del backend — ejecución de la planeación BC-01 a BC-12
 
-> **Fecha:** 13/11/2026 · **Ejecutó:** Mariana Cortés (QA) · **Rama:** `developer` (QA: `apieyeschool-q`)
+> **Fechas:** 13 y 14/11/2026 · **Ejecutó:** Mariana Cortés (QA) · **Rama:** `developer` (QA: `apieyeschool-q`) → `main` (producción: `api-eyesschool`)
 > **Planeación:** «Planeación de cierre — Backend (API FastAPI)», del 13/11 al 21/11/2026.
 > **Insumo de:** PR-03 a PR-08 v0.4.
 
@@ -8,20 +8,30 @@
 
 ## 1. Resumen
 
-| Tarea | Estado | Qué falta y de quién |
+**Todas las tareas de la planeación quedaron ejecutadas, y no queda ningún defecto del backend abierto (23 de 23 cerrados).** La regresión final pasa completa en QA y el mismo código está en producción.
+
+| Tarea | Estado | Evidencia principal |
 |---|---|---|
-| BC-01 Rotar la contraseña de Render (#22) | 🟡 Herramienta lista | **Andrés:** rotar en Render y en las dos Web Apps; luego correr `scripts/qa/verificar_rotacion.py` |
-| BC-02 Rendimiento con 50 usuarios (#43) | ✅ **S3 cumple** (0,08 % de errores, p95 1,07 s) | — (#43 cerrado) |
-| BC-03 Firebase en QA y producción | 🔴 Bloqueado | Las claves compartidas en el chat del 13/11 **deben revocarse**; generar otras y ponerlas en Azure (ver 3.3) |
-| BC-04 Archivos de reportes (N-23) | 🟢 Hecho en código (PR #48, opción A) | Migrar `qaeyesschool` y luego fusionar el #48 |
-| BC-05 Cuenta pendiente o desactivada (N-31) | 🟢 Hecho en código (PR #48) | Igual que BC-04; la app debe mostrar el `detail` (MC-03) |
-| BC-06 Newman completo | ✅ **81/81 ejecutados, 0 fallas funcionales** | — |
-| BC-07 Contrato OpenAPI | ✅ 0 ST101, 0 ST103 y 0 ST108, en local y en QA (5 927 casos) | — |
-| BC-08 SonarQube | ✅ Datos tomados; deuda llevada a 0 (PR #49) | Capturas de pantalla (Mariana) |
-| BC-09 Despliegue a producción | ✅ **v1.1.0 en producción** (PR #54, `48c0b2c`); humo 5/5 | Prueba de bloqueo con credenciales de admin; N-23/N-31 llegan con el #48 tras migrar |
-| BC-10 A09 y A10 | ✅ A10 cumple · A09 cumple en la app | Captura del Log stream de Azure (Mariana) |
-| BC-11 Datos para los informes | ✅ | — |
-| BC-12 Cierre de la campaña | 🟡 110 usuarios, 0 temporales | Correr `restaurar_qa_2026-11-13.sql` en QA (anexo A); buzón de QA (equipo) |
+| BC-01 Credencial de Render (#22) | ✅ Cerrado: la instancia filtrada ya no existe | 3.1 |
+| BC-02 Rendimiento con 50 usuarios (#43) | ✅ **S3 cumple**: 0,08 % de errores, p95 1,07 s | `S3_k6_carga.*` |
+| BC-03 Firebase | ✅ Credenciales puestas en las dos Web Apps | 3.3 |
+| BC-04 Archivos de reportes (N-23) | ✅ En QA y en producción; 8/8 reportes descargan | `BC04_descarga_reportes_qa.txt` |
+| BC-05 Pendiente o desactivada (N-31) | ✅ En QA y en producción | CP-INT-005 y 010 |
+| BC-06 Newman | ✅ **81/81 CP-INT; I3: 184/184 aserciones, 0 fallos** (funcionales y de tiempo) | `I3b_newman.*` |
+| BC-07 Contrato OpenAPI | ✅ 0 ST101/ST103/ST108 en local (2 978 casos) y en QA | `I3_schemathesis*.txt` |
+| BC-08 SonarQube | ✅ Quality Gate OK, deuda 0 · faltan capturas | 3.8 |
+| BC-09 Producción | ✅ Dos despliegues (#54 y #59); humo 9/9 | `BC09_humo_produccion*.txt` |
+| BC-10 A09 y A10 | ✅ Cumplen · falta captura del *Log stream* | 3.10 |
+| BC-11 Datos para los informes | ✅ | 3.11 |
+| BC-12 Cierre de la campaña | ✅ 110 usuarios, 0 temporales, datos restaurados | 3.12 |
+
+**Lo único que queda en manos del equipo:**
+
+- Las capturas de pantalla de SonarQube, del *Log stream* y de las métricas de Azure y Render durante S3.
+- El buzón de QA.
+- Confirmar que la `SECRET_KEY` de producción es distinta de la filtrada (3.1).
+
+La sección 5 lista también las **incidencias** de la ejecución, todas resueltas.
 
 ---
 
@@ -29,47 +39,57 @@
 
 | PR | Contenido | Estado |
 |---|---|---|
-| [#47](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/pull/47) | BC-02 (bcrypt), BC-06, BC-07, BC-10, BC-11 y el arreglo del CI | Fusionado (`88cdb88`) y desplegado en QA |
-| [#48](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/pull/48) | BC-04 (N-23) y BC-05 (N-31), migración `c4e1f7a9d2b8` | **Borrador:** se fusiona después de migrar `qaeyesschool` |
-| [#49](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/pull/49) | Los 2 code smells de SonarQube (deuda 15 min → 0) | CI en curso |
+| [#47](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/pull/47) | Contrato OpenAPI (BC-07), bcrypt fuera del bucle de eventos (BC-02), registro de eventos (BC-10), Newman completo (BC-06), renumeración (BC-11), arreglo del CI | ✅ |
+| [#48](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/pull/48) | N-23 (archivos de reportes en la base) y N-31 (motivo de la cuenta inactiva) | ✅ |
+| [#49](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/pull/49) | Los 2 code smells de SonarQube (deuda → 0) | ✅ |
+| [#50](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/pull/50), [#53](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/pull/53), [#55](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/pull/55), [#56](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/pull/56) | Informe, scripts de verificación y restauración, schemathesis en solo lectura | ✅ |
+| [#51](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/pull/51) | Pool de 12 conexiones (DEF-038) | ✅ |
+| [#52](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/pull/52) | Migración `c4e1f7a9d2b8` desplegada antes que el código que la usa | ✅ |
+| [#57](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/pull/57) | QA y producción en servidores distintos: correcciones a la documentación | ✅ |
+| [#58](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/pull/58) | Rendimiento de los 3 endpoints que pasaban de 3 s; cobertura medida con `greenlet` | ✅ |
+| [#54](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/pull/54), [#59](https://github.com/AndresFelipeAceroLopez/backend-Eyes-School/pull/59) | `developer → main`: v1.1.0 y luego N-23, N-31 y rendimiento | ✅ En producción (`7c5302a`) |
 
-**Hallazgo en el CI (13/11):** `pip-audit` empezó a fallar por un CVE publicado ese día contra `dnspython` 2.9.1. Al cortarse el job antes de subir `coverage.xml`, SonarQube analizó el PR solo con la cobertura de integración y marcó un 65,1 % de código nuevo cubierto; el valor real era 98,7 %. Se corrigió en el #47: `dnspython` 2.9.2, el artefacto de cobertura se sube siempre, `main.py` entra en la medición y la acción de Sonar pasa a v6.
+**Hallazgos en el CI:**
+- `pip-audit` empezó a fallar el 13/11 por un CVE publicado ese día contra `dnspython` 2.9.1. Se actualizó a 2.9.2. Al cortarse el job antes de subir `coverage.xml`, SonarQube analizaba con la mitad de la cobertura: ahora el artefacto se sube siempre, `main.py` entra en la medición y la acción de Sonar pasa a v6.
+- **coverage.py medía de menos todo el acceso a datos:** SQLAlchemy async corre en greenlets, y sin `concurrency = greenlet` coverage perdía las líneas que van después de cada `await` a la base. Al configurarlo, la cobertura global con ramas pasó del 76 % al 80 % sin escribir pruebas nuevas.
 
 ---
 
 ## 3. Detalle por tarea
 
-### 3.1 BC-01 · Rotación de la contraseña de la base
+### 3.1 BC-01 · Credencial de la base filtrada (DEF-001, #22) — cerrado
 
-No depende de código. `scripts/qa/verificar_rotacion.py` deja la evidencia que pide la planeación (`evidencias/PR-03/api/BC01_rotacion.txt`). Pide la URL **vieja** sin mostrarla, comprueba que Render la rechaza y corre el preflight de producción y de QA. En el archivo solo quedan el host y el nombre de la base. El preflight ya está en verde en los dos entornos (13/11): `/docs` 200, `/cursos/` 200 y correo inexistente 401.
-
-**Hallazgo del 14/11 para el #22:** la credencial filtrada en el historial de git (la del `.env` local) es de `dpg-dae7si5bedkc73bltec0` / `eyesschool_tr7a`, que **no es la base de producción actual** (`dpg-dbkht01srm7s73c08bs0` / `eyesschool_wru2`) ni la de QA. Si en Render esa instancia ya no se usa, borrarla deja sin efecto la credencial filtrada aunque no se rote. Falta confirmar en el panel de Render qué es esa instancia.
-
-### 3.2 BC-02 · Rendimiento con 50 usuarios (DEF-038, #43)
-
-**La premisa de la planeación («falta CPU») no se sostiene.** Se repitió una carga corta con el código de estado de **cada** petición (11/11, 50 usuarios, 5 min):
-
-| Tramo | Errores |
+| Hecho | Cómo se comprobó |
 |---|---|
-| 0–180 s | **0 de 5 368** |
-| 180–270 s | **~100 %** (500 y 502 mezclados) |
-| Después | Se recupera solo |
+| La URL filtrada en el historial era de `dpg-dae7si5bedkc73bltec0` / `eyesschool_tr7a` | Comparada con el `.env` local |
+| Producción usa **otra** instancia: `dpg-dbkht01srm7s73c08bs0` / `eyesschool_wru2` | Consola SSH de `api-eyesschool`, 14/11 |
+| QA usa **otra** instancia: `dpg-dbki7dh42hec73cn2d1g` / `qaeyesschool` | Consola SSH de `apieyeschool-q`, 14/11 |
+| La instancia filtrada **ya no existe** en Render | Panel de Render, Mariana Cortés, 14/11 |
+| El `.env` local se cambió y el historial ya no tiene el secreto | Mariana Cortés, 14/11 · `git filter-repo` + gitleaks en verde |
 
-No es saturación: es **una caída de ~90 s**. Los 2 104 errores de S2 equivalen a una sola caída de ~88 s. Las peticiones que fallan responden rápido (los 502 en ~160 ms), así que no se cuelgan por falta de CPU.
+No hizo falta rotar la contraseña: la que se filtró era de una instancia que ya no existe. El DNS no sirve como prueba, porque Render resuelve cualquier host al mismo proxy de entrada.
 
-**Corrección del 14/11:** este informe decía que QA y producción compartían servidor de Render y que cada carga en QA tumbaría producción. **Es falso:** QA y producción están en **servidores de Render distintos** (comprobado el 14/11/2026 desde las consolas de Azure): producción `eyesschool_wru2` en `dpg-dbkht01srm7s73c08bs0`, QA `qaeyesschool` en `dpg-dbki7dh42hec73cn2d1g`. La afirmación venía del runbook y no se había comprobado contra los hosts.
+**Queda por confirmar:** la `SECRET_KEY` de `api-eyesschool` tiene que ser distinta de la que estaba en el `.env` filtrado. Si fuera la misma, cualquiera podría firmar tokens de administrador: en ese caso se genera otra y se reabre el #22. `scripts/qa/verificar_rotacion.py` queda para la próxima rotación.
 
-| Hecho | Resultado |
+### 3.2 BC-02 · Rendimiento con 50 usuarios (DEF-038, #43) — cerrado
+
+**La premisa de la planeación («falta CPU en el App Service») no se sostenía.** Una carga corta que registró el código de **cada** petición (11/11, 50 usuarios, 5 min) mostró:
+
+- **Primeros 180 s:** 0 errores en 5 368 peticiones.
+- **Después:** **una caída total de ~90 s**, con 500 y 502 mezclados, de la que se recuperó sola.
+
+Los 2 104 errores de S2 equivalen a una sola caída de ese tipo.
+
+**Causa (métricas de Render del 13/11):** cada entorno tiene su propio servidor de Render, del plan más chico: **0,1 CPU, 256 MB y 97 conexiones**. Con el pool anterior (30 + 10), una carga de 50 usuarios abría hasta 40 conexiones, es decir, 40 procesos de PostgreSQL compitiendo por una décima de núcleo y 256 MB, y la base dejaba de responder. No se pudo confirmar si el límite fue la memoria o la CPU, porque Render ya no muestra el 11/11. La CPU que faltaba era la de la base.
+
+| Corrección | Efecto |
 |---|---|
-| bcrypt corría **dentro** del bucle de eventos | Medido: 3 logins congelaban **605 ms** toda la API. Ahora va a un hilo (21 ms) con `BCRYPT_CONCURRENCIA=2`. Desplegado en QA |
-| «Quitar el commit de las lecturas» (opción B) | **No se aplicó:** cerrar la transacción con `ROLLBACK` al devolver la conexión cuesta el mismo viaje que el `COMMIT` |
+| bcrypt corría **dentro** del bucle de eventos (PR #47) | Medido: 3 logins congelaban **605 ms** toda la API; en un hilo, 21 ms. Límite `BCRYPT_CONCURRENCIA=2` |
+| **Pool de 12 conexiones fijas, 0 de desbordamiento** (PR #51) | Una prueba en `test_config.py` impide volver a pasarse |
+| «Quitar el commit de las lecturas» (opción B) | No se aplicó: cerrar la transacción con `ROLLBACK` cuesta el mismo viaje que el `COMMIT` |
 | Bajar el costo de bcrypt | No se hizo (lo prohíbe la planeación) |
 
-**Causa (métricas de Render del 13/11).** Cada servidor de Render es del plan más chico: **0,1 CPU, 256 MB y 97 conexiones**. Con el pool anterior (30 + 10), una carga de 50 usuarios abría hasta 40 conexiones, es decir, 40 procesos de PostgreSQL con su propia memoria compitiendo por una décima de núcleo, y la base dejó de responder ~90 s. No se pudo confirmar si el corte fue por memoria o por CPU, porque Render ya no muestra el 11/11. La planeación tenía razón en que «falta CPU», pero la que falta es la de la base, no la del App Service.
-
-**Corrección (PR #51):** pool de **12 conexiones fijas y 0 de desbordamiento** por entorno. Una prueba en `test_config.py` impide volver a pasarse.
-
-**Corrida S3 (14/11/2026 02:31–02:44 UTC, mismo guion que S1 y S2, con un vigilante que consultaba producción cada 5 s para abortar si caía):**
+**Corrida S3** (14/11, 02:31–02:44 UTC, mismo guion que S1 y S2):
 
 | Criterio | Umbral QA | S1 | S2 | **S3** |
 |---|---|---|---|---|
@@ -77,34 +97,23 @@ No es saturación: es **una caída de ~90 s**. Los 2 104 errores de S2 equivalen
 | p95 de navegación | ≤ 3 000 ms | 2 720 ms | 1 650 ms | **1 070 ms** ✔ |
 | p95 global | ≤ 3 000 ms | 3 068 ms | 1 825 ms | **1 130 ms** ✔ |
 | p95 del login | ≤ 11 000 ms | — | 13 190 ms | **10 310 ms** ✔ |
-| Peticiones | — | — | 19 300 | 15 786 |
 
-- **Producción durante S3:** 93 consultas, **0 fallos**.
-- De los 13 errores, **11 son del cliente**: código 0, sin respuesta, y todos terminaron a la vez tras ~243 s, que es más que el límite de 60 s. Coinciden con un congelamiento de 4 minutos del equipo que ejecutaba la prueba, en el que el vigilante también se detuvo. Errores reales del servidor: **2 respuestas 502 de 15 786** (0,013 %).
-- **CP-NF-001: Aprobado** en QA con el umbral del PO. #43 cerrado.
-- Evidencia: `evidencias/PR-06/api/S3_k6_carga.{txt,json}` y `S3_vigilante_produccion.txt`. Se anularon los 1 011 registros de asistencia «clase» que creó la carga.
-- Falta para el PR-06: la captura de CPU y memoria de Azure durante la corrida (*Monitoring → Metrics*, 14/11 02:30–02:45 UTC) y la de Render.
+- De los 13 errores, **11 fueron del cliente**: sin respuesta, terminaron a la vez tras ~243 s (el límite es 60 s) y coinciden con un congelamiento de 4 minutos del equipo que ejecutaba la prueba. **Del servidor: 2 respuestas 502 de 15 786.**
+- Durante la corrida se consultó producción cada 5 s: 93 consultas, 0 fallos.
+- **CP-NF-001: Aprobado** con el umbral del PO. Se anularon los 1 011 registros de asistencia que creó la carga.
+- Falta para el PR-06: la captura de CPU y memoria de Azure y de Render del 14/11, de 02:30 a 02:45 UTC.
 
 ### 3.3 BC-03 · Firebase
 
-El 13/11 se compartieron en el chat de trabajo las claves privadas de las cuentas de servicio de QA (`qa-eyes-school`, `private_key_id` `ff6a273b…`) y de producción (`eyes-school`, `87446535…`). Según el punto 3 de BC-03, **las dos deben revocarse** en Google Cloud Console → IAM → Cuentas de servicio → `firebase-adminsdk-fbsvc` → Claves. No se usaron ni se guardaron en ningún archivo ni repositorio.
-
-Con las claves nuevas, para pegarlas en Azure sin que pasen por ningún chat (PowerShell, en el equipo donde se descargó):
-
-```powershell
-(Get-Content "$HOME\Downloads\<archivo>.json" -Raw | ConvertFrom-Json | ConvertTo-Json -Compress -Depth 5) | Set-Clipboard
-Remove-Item "$HOME\Downloads\<archivo>.json"
-```
-
-Después: Azure → Web App → *Environment variables* → `FIREBASE_CREDENTIALS_JSON` → pegar → *Apply* → *Restart*. QA en `apieyeschool-q`, producción en `api-eyesschool`, con **claves distintas**.
+`FIREBASE_CREDENTIALS_JSON` está configurada en `apieyeschool-q` y en `api-eyesschool` (Mariana Cortés, 14/11). Las claves privadas que se compartieron en el chat de trabajo el 13/11 (QA `ff6a273b…`, producción `87446535…`) **deben estar revocadas** en Google Cloud Console si no son las que se configuraron; nunca se guardaron en ningún archivo ni repositorio. Las pruebas de la notificación en el teléfono (CP-INT-057 y 058 de punta a punta) son de la planeación móvil (MC-04).
 
 ### 3.4 BC-04 · Archivos de reportes (N-23) — opción A
 
-- El contenido va a la tabla `reporte_archivos`, con la **misma ruta** que la API devolvía como clave. La web no cambia.
-- La descarga lee de la base y, por compatibilidad, del disco.
-- Los reportes del seed apuntaban a nombres que nunca existieron (`asistencia_junio_2026.pdf`). La migración les genera un PDF **rotulado como documento de ejemplo**: 8 reportes en la prueba local. Los 2 reportes en estado «Pendiente» siguen sin archivo, como corresponde.
-- **Prueba de integración:** subir → borrar el disco (lo que hace un despliegue) → descargar → **200 con el mismo contenido**.
-- **Verificación en QA pendiente:** después de migrar y fusionar el #48, `GET /reportes/{id}/archivo` → 200 en los 8 reportes del seed, también tras un despliegue nuevo. Luego se repiten CP-SIS-088 y CP-ACE-096.
+- El contenido va a la tabla `reporte_archivos`, con la **misma ruta** que la API devolvía como clave: la web no cambia. La descarga lee de la base y, por compatibilidad, del disco.
+- Los reportes del seed apuntaban a archivos que nunca existieron. La migración `c4e1f7a9d2b8` les generó un PDF **rotulado como documento de ejemplo**: 8 reportes en QA y los mismos 8 del seed en producción. Ningún reporte real se tocó.
+- **Prueba de integración:** subir → borrar el disco (lo que hace un despliegue) → descargar → 200 con el mismo contenido.
+- **QA, después de migrar y desplegar:** los **8 reportes con archivo descargan su PDF** (dos vueltas) y los 2 en estado «Pendiente» responden 404 «El reporte no tiene archivo adjunto». En Newman, CP-INT-069 a 071 (subir, descargar y `/static` sin token → 404) pasan con el almacenamiento en la base.
+- **Queda para el equipo:** repetir CP-SIS-088 y CP-ACE-096 (app).
 
 ### 3.5 BC-05 · Cuenta pendiente o desactivada (N-31)
 
@@ -114,102 +123,91 @@ Después: Azure → Web App → *Environment variables* → `FIREBASE_CREDENTIAL
 | Cuenta desactivada por el admin | 401 `Usuario inactivo` | **403** `Cuenta desactivada. Comunícate con el administrador del colegio.` |
 | Contraseña equivocada (cualquier estado) | 401 `Credenciales inválidas` | Igual: sin la contraseña no se revela el estado |
 
-La columna `usuario.pendienteValidacion` se marca al autorregistrarse y se quita cuando el admin activa o desactiva la cuenta. La migración marca como pendientes las cuentas de docente o admin inactivas que nunca iniciaron sesión. **La app y la web deben mostrar el `detail`.** Si alguna compara el texto `Usuario inactivo`, hay que cambiarla.
+La cuenta autorregistrada nace con `pendienteValidacion = true` en el mismo INSERT, y la marca se quita cuando el admin la activa o la desactiva. Verificado en QA con CP-INT-005 (pendiente → 403) y CP-INT-010 (desactivada → «Cuenta desactivada»). **La app y la web deben mostrar el `detail`** (planeación móvil, MC-03).
 
-### 3.6 BC-06 · Newman (corrida I2, 13/11/2026, commit en `evidencias/PR-05/api/I2_commit.txt`)
+### 3.6 BC-06 · Newman
 
-| Indicador | Resultado |
-|---|---|
-| CP-INT de la API con ejecución | **81 de 81**: 75 en Newman contra QA + 6 solo en pytest |
-| Fallas **funcionales** (código y cuerpo) | **0** |
-| Aserciones | 183 · 3 fallan, **todas de tiempo** |
-| Tiempo, umbral de QA ≤ 3 000 ms | 72 de 75 cumplen. Fuera: CP-INT-016 registro (3 485 ms), 025 eliminar usuario (7 081 ms), 051 boletín PDF (7 954 ms) |
+| Corrida | Fecha | CP-INT | Aserciones | Fallos funcionales | Fallos de tiempo (≤ 3 000 ms) |
+|---|---|---|---|---|---|
+| I2 | 13/11 | 75 | 183 | 0 | 3: CP-INT-016 (3,5 s), 025 (7,1 s), 051 (8,0 s) |
+| I3 | 14/11, recién desplegado | 75 | 184 | 0 | 1: CP-INT-024 (4,7 s, arranque en frío) |
+| **I3b** | **14/11, QA caliente** | **75** | **184** | **0** | **0** |
 
-- **CP-INT-052** corrió por primera vez: busca solo un estudiante sin notas → 404 con el mensaje de BE-19.
-- **CP-INT-006, 009, 010, 029, 058 y 072** pasaron de pytest a Newman sobre una **cuenta temporal** que la colección crea y borra. Ninguna cuenta del seed se bloquea ni se desactiva.
-- **Solo en pytest**, con su prueba anotada en la planeación de integración: 012 a 015 (el token llega por correo), 049 (repositorio) y 057 (envío push). Los seis pasan en la integración (61/61).
-- CP-INT-014: se usó la opción de pytest, que genera el token (`test_el_enlace_de_recuperacion_no_se_puede_reutilizar`).
-- Resultado por caso: `evidencias/PR-05/api/I2_newman.xml` (JUnit, una suite por CP-INT) e `I2_newman.html`.
+- **81 de 81 CP-INT con ejecución:** 75 en Newman contra QA y 6 solo en pytest, que no se pueden hacer por HTTP. Esos son CP-INT-012 a 015, porque el token llega por correo, CP-INT-049, que es del repositorio, y CP-INT-057, el envío push. Pasan en la integración (64/64).
+- CP-INT-052 se ejecuta solo: busca un estudiante sin notas → 404 con el mensaje de BE-19.
+- CP-INT-006, 009, 010, 029, 058 y 072 corren sobre una **cuenta temporal** que la colección crea y borra.
+- Los 3 casos lentos de la I2 se corrigieron en el PR #58:
+
+| Endpoint | Causa | Consultas | QA |
+|---|---|---|---|
+| Eliminar usuario (025) | ~20 DELETE seguidos | 20 → **2** (una sentencia con CTEs) | 7,1 s → **1,2 s** |
+| Registro (016) | Comprobaciones y modificación por separado | 10 → **6** | 3,6 s → **2,9 s** |
+| Boletín (051) | Importación de fpdf en frío, PDF en el bucle de eventos | 6 (igual) | 8,0 s → **2,0 s** |
+
+- Resultado por caso: `evidencias/PR-05/api/I3b_newman.xml` (JUnit) e `I3b_newman.html`.
 
 ### 3.7 BC-07 · Contrato OpenAPI
 
 | Hallazgo (I1, QA, 10/11) | Corrección |
 |---|---|
-| ST103 × 50: 401/403/404 no declarados | Errores reales declarados con `ErrorOut {"detail": str}` sobre el esquema generado: una ruta nueva queda documentada sola |
-| ST108 × 25: fechas sin zona | Fechas de los `Out` con zona UTC (`…Z`). Las horas de `Horario` son hora local: se documentan con su patrón, sin inventarles zona |
+| ST103 × 50: 401/403/404 no declarados | Errores reales declarados con `ErrorOut {"detail": str}` sobre el esquema generado |
+| ST108 × 25: fechas sin zona | Fechas de los `Out` con zona UTC (`…Z`); las horas de `Horario` son locales y se documentan con su patrón |
 | ST205 × 3: `Allow` incompleto en los 405 | `Allow` con todos los métodos de la URL |
-| ST105 × 1: el boletín no declaraba PDF | `application/pdf` declarado (y los tipos del archivo de reporte) |
-| Aparecieron al corregir: ST202, ST201, ST204 | Ids `Entero32` (rango de `integer`, validado antes de la base); `?fecha=` solo `AAAA-MM-DD`; `PUT /estudiantes/me` ya no cae en `/{id}` |
+| ST105 × 1: el boletín no declaraba PDF | `application/pdf` declarado |
+| Al corregir aparecieron ST202, ST201 y ST204 | Ids `Entero32` validados antes de la base; `?fecha=` solo `AAAA-MM-DD`; `PUT /estudiantes/me` ya no cae en `/{id}` |
 
-- **Local, misma configuración (GET, `--checks all`):** **2 933 casos generados, 2 933 pasan**; 0 en todos los checks. Evidencia: `I2_schemathesis_local.txt`.
-- **QA:** 5 927 casos, **0 ST101, 0 ST103, 0 ST108** y 0 en los demás checks de contrato. Los únicos 4 fallos (ST112, tiempo) son del cliente; ver el anexo A.
+| Corrida | Casos | ST101 · ST103 · ST108 | Resto |
+|---|---|---|---|
+| I2 en QA (13/11) | 5 927 | **0 · 0 · 0** | 4 ST112, del cliente (anexo A) |
+| **I3 local, código final (14/11)** | **2 978** | **0 · 0 · 0** | **0: los 2 978 pasan** |
+| **I3 en QA, código final (14/11)** | **2 075** | **0 · 0 · 0** | **0: los 2 075 pasan** |
 
-**Efecto en los clientes:** las fechas llegan como `2026-11-03T03:03:37Z`. Si la web o la app hacen `new Date(fecha)`, antes la tomaban como hora local (5 h corridas) y ahora sale bien.
+**Efecto en los clientes:** las fechas llegan como `2026-11-03T03:03:37Z`.
 
-### 3.8 BC-08 · SonarQube Cloud (rama `developer`, análisis del 14/11/2026 00:04 UTC, después del #47)
+### 3.8 BC-08 · SonarQube Cloud (rama `developer`)
 
 | Métrica | Valor |
 |---|---|
-| Quality Gate | **OK** |
-| Bugs · Vulnerabilidades | 0 · 0 |
-| Security hotspots · revisados | 0 · 100 % |
-| Code smells | 2 → **0 con el PR #49** |
-| Deuda técnica | 15 min → **0 con el PR #49** |
-| Ratio de deuda | 0,0 % (15 ÷ (4 037 LOC × 30 min) = 0,012 %) |
-| Complejidad cognitiva · ciclomática | 341 · 642 |
+| Quality Gate | **OK** (también en todos los PR del cierre) |
+| Bugs · Vulnerabilidades · Hotspots | 0 · 0 · 0 (100 % revisados) |
+| Code smells · Deuda técnica | **0 · 0 min** (eran 2 y 15 min; PR #49) |
+| Ratio de deuda | 0,0 % |
+| Complejidad cognitiva · ciclomática | 341 · 642 (análisis del 14/11 00:04 UTC) |
 | Duplicación | 0,0 % |
-| Cobertura (Sonar) | 76,6 % global · 80,1 % líneas · 51,4 % ramas |
-| Líneas de código | 4 037 (la planeación usaba 3 646, de antes del cierre) |
+| Líneas de código | 4 037 |
 
-Los dos code smells eran `python:S1845` (BLOCKER, `config.py:63`, la propiedad `cors_origins` se confundía con `CORS_ORIGINS`) y `python:S8519` (`base_repository.py:17`). Faltan las capturas de *Overview*, *Issues* y *Measures*.
+Faltan las capturas de *Overview*, *Issues* y *Measures*.
 
 ### 3.9 BC-09 · Despliegue a producción
 
-Orden seguro, porque la migración es aditiva y el código viejo funciona con la base ya migrada:
-
-1. Respaldo de la base de producción en Render.
-2. `alembic current` en producción → debe estar en `b7d2e9a41c03`.
-3. `alembic upgrade head` → `c4e1f7a9d2b8`, **antes** de desplegar.
-4. PR `developer → main` con el CI en verde y despliegue.
-5. Variables: `DATABASE_URL` nueva (BC-01), `SECRET_KEY` propia, `ENVIRONMENT=production`, `FRONTEND_URL`, `FIREBASE_CREDENTIALS_JSON` de producción (BC-03).
-6. `python -m scripts.qa.humo_produccion` → `evidencias/PR-06/api/BC09_humo_produccion.txt`. Comprueba `/docs`, `/padres/me/hijos` en el contrato, `/cursos/`, el 401, `nosniff` y el bloqueo 429, este con una cuenta temporal de padre sin vínculo que se borra al final.
-
-**Ejecutado el 14/11/2026.** PR #54 (`developer → main`, 66 commits, sin conflictos) fusionado y desplegado en `api-eyesschool` (`48c0b2c`). Producción ya estaba en `b7d2e9a41c03`, así que este despliegue no necesitó migración.
-
-| Comprobación del humo | Antes (02:58 UTC) | **Después (03:09 UTC)** |
+| Despliegue | Contenido | Migración |
 |---|---|---|
-| `GET /docs` → 200 | ✔ | ✔ |
-| `/padres/me/hijos` en el contrato | ✖ | **✔** |
-| `GET /cursos` → 200 | ✔ | ✔ |
-| `X-Content-Type-Options: nosniff` | ✖ | **✔** |
-| Correo inexistente → 401 | ✔ | ✔ |
-| 6 intentos fallidos → 429 | — | Pendiente: necesita las credenciales del admin de producción para borrar la cuenta temporal |
+| **#54** (14/11, `48c0b2c`) | v1.1.0: BE-03…BE-19, calidad y seguridad, contrato, pool | No hizo falta: producción ya estaba en `b7d2e9a41c03` |
+| **#59** (14/11, `7c5302a`) | N-23, N-31 y rendimiento | `c4e1f7a9d2b8` ya aplicada (ver la incidencia 5.3) |
 
-Evidencia: `evidencias/PR-06/api/BC09_humo_produccion_ANTES.txt` y `BC09_humo_produccion.txt`. Para la prueba que falta:
+| Humo | Antes de #54 | Después de #54 | Después de #59 |
+|---|---|---|---|
+| `GET /docs` → 200 | ✔ | ✔ | ✔ |
+| `/padres/me/hijos` en el contrato | ✖ | ✔ | ✔ |
+| `GET /cursos` → 200 | ✔ | ✔ | ✔ |
+| `X-Content-Type-Options: nosniff` | ✖ | ✔ | ✔ |
+| Correo inexistente → 401 | ✔ | ✔ | ✔ |
+| Login del admin · cuenta temporal · **6.º intento → 429** · cuenta borrada | — | **✔ ✔ ✔ ✔** (Mariana Cortés, 03:31 UTC) | Sin cambios en ese código |
 
-```powershell
-python -m scripts.qa.humo_produccion   # en una terminal normal pide el correo y la contraseña del admin sin mostrarla
-```
+Evidencia: `BC09_humo_produccion_ANTES.txt`, `BC09_humo_produccion.txt` (9/9) y `BC09_humo_produccion_despliegue2.txt`.
 
-**Migración de producción (14/11, ~03:20 UTC), aplicada por error y sin respaldo previo.** Las instrucciones para QA se corrieron en la consola SSH de `api-eyesschool`, y la migración `c4e1f7a9d2b8` se aplicó en `eyesschool_wru2`. El comando no comprobaba la Web App antes de migrar. La restauración de QA sí se detuvo: su guardia comparó la base y se negó. Impacto, revisado desde la misma consola:
-- 8 reportes con archivo de nombre suelto recibieron el PDF «documento de ejemplo». Son los 8 del seed («Reporte de Asistencia Junio», «Reporte de Notas P1», «Novedades Mayo», «Asistencia Curso 6A», «Rendimiento General», «Asistencia Docentes», «Reporte Matriculas», «Reporte Padres de Familia»), cuyos archivos nunca existieron. Ningún reporte real cambió.
-- 0 cuentas marcadas como pendientes de validación.
-- La migración es aditiva: el código de producción de ese momento no lee la columna ni la tabla nuevas.
-
-Producción ya está en `c4e1f7a9d2b8`, así que el #48 puede ir a producción sin otra migración.
-
-**Pendiente para N-23 y N-31 en producción:** respaldo en Render → `alembic upgrade head` en la consola SSH de `api-eyesschool` → fusionar el #48 en `developer` → nuevo PR a `main`.
+**Efecto visible:** producción responde CORS con `*` y sin credenciales, igual que QA. Si algún cliente usa `withCredentials`, hay que definir `CORS_ORIGINS` en Azure.
 
 ### 3.10 BC-10 · A09 y A10
 
-**A10 (SSRF): cumple.** La API solo hace llamadas salientes a Resend (URL fija) y a Firebase (SDK), las dos sin datos del usuario en la URL. fpdf no carga imágenes y el avatar se abre desde bytes. **0 rutas descargan URLs del usuario.** Hallazgo lateral, corregido: el nombre del usuario se insertaba sin escapar en el HTML del correo de recuperación.
+**A10 (SSRF): cumple.** Las únicas llamadas salientes van a Resend (URL fija) y a Firebase (SDK). fpdf no carga imágenes y el avatar se abre desde bytes. **0 rutas descargan URLs del usuario.** Hallazgo lateral, ya corregido: el nombre del usuario se insertaba sin escapar en el HTML del correo de recuperación.
 
-**A09 (registro): cumple en la app.** Antes los `logger.info` no salían en Azure (la raíz del logging no tenía handler) y ni un 403 ni un 404 dejaban rastro. Ahora:
-- Todos los logs llevan fecha y hora.
-- 401, 403, 404 y 429 se registran con método, ruta, estado y origen, **sin** query string, cabeceras ni cuerpo.
-- El login fallido registra el id del usuario y el número de intento, sin el correo escrito ni la contraseña.
+**A09 (registro): cumple en la app.** Antes, los `logger.info` no salían en Azure y un 403 o un 404 no dejaban rastro. Ahora todos los logs llevan fecha y hora:
 
-Las pruebas lo verifican con un token en la query y en la cabecera (`test_cierre_seguridad_rendimiento.py`). Falta la captura del *Log stream* de `apieyeschool-q` con 6 logins fallidos, un 403 y un 404.
+- Los 401, 403, 404 y 429 se registran con método, ruta, estado y origen, **sin** query string, cabeceras ni cuerpo.
+- El login fallido registra el id del usuario y el número de intento, sin el correo ni la contraseña.
+
+Las pruebas lo verifican con un token en la query y en la cabecera. Falta la captura del *Log stream*.
 
 ### 3.11 BC-11 · Datos para los informes
 
@@ -217,16 +215,17 @@ Las pruebas lo verifican con un token en la query y en la cabecera (`test_cierre
 
 | Dato | Valor |
 |---|---|
-| Total · cerrados · abiertos | 23 · 21 · 2 (#22 crítico, #43 alto) |
-| Reabiertos | **0** (eventos `reopened` de los 23 issues) |
-| Renumeración | DEF-020…023 → **DEF-036…039** (#41 a #44): títulos, planeaciones, informes y código |
-| Causa raíz | Comentada en los 21 issues cerrados: **Diseño 11 · Codificación 4 · Requisitos 4 · Datos 1 · Entorno 1** |
-| Tiempo de corrección | Desde la fecha de identificación hasta el commit: BE-03 a BE-19 identificados el 28 y el 30/10, corregidos el 09/11 (`88cd544`): **10 a 12 días**; DEF-036 y DEF-037 el mismo día; DEF-039, el mismo día (`4d486a9`) |
+| Total · cerrados · abiertos | **23 · 23 · 0** |
+| Reabiertos | 0 |
+| Renumeración | DEF-020…023 → **DEF-036…039** (#41 a #44) |
+| Causa raíz | Comentada en los 23 issues: **Diseño 12 · Codificación 5 · Requisitos 4 · Datos 1 · Entorno 1** |
+| Tiempo de corrección | BE-03 a BE-19: identificados el 28 y el 30/10, corregidos el 09/11 (**10 a 12 días**). DEF-036, 037 y 039: el mismo día. DEF-038: 4 días (10 → 14/11). DEF-001: 17 días (28/10 → 14/11) |
 
-> `closedAt` no sirve para medir el tiempo de corrección: los 23 issues se crearon el 10/11 después de corregir y se cerraron 7 minutos después.
+> `closedAt` no sirve para medir el tiempo de corrección: los issues se crearon el 10/11 después de corregir.
 
 | Issue | DEF | Causa | Commit |
 |---|---|---|---|
+| #22 | DEF-001 | Codificación (secreto versionado) | `filter-repo` + instancia eliminada |
 | #23 | DEF-002 | Codificación | `fca0e93` |
 | #24, #25, #28, #30–#37 | DEF-003, 004, 007, 009–016 | Diseño | `88cd544` |
 | #26, #29, #38, #39 | DEF-005, 008, 017, 018 | Requisitos | `88cd544` |
@@ -234,83 +233,92 @@ Las pruebas lo verifican con un token en la query y en la cabecera (`test_cierre
 | #40 | DEF-019 | Datos | `abd7691` |
 | #41 | DEF-036 | Entorno | `b7d1ceb` (migración) |
 | #42 | DEF-037 | Codificación | `06bf07f` / `83d9e22` |
+| #43 | DEF-038 | Diseño (pool sin dimensionar para el servidor) | `#47`, `#51` |
 | #44 | DEF-039 | Codificación | `4d486a9` |
 
-**Pruebas (con el PR #48 incluido):**
+**Pruebas (código final):**
 
-| Dato | Valor |
+| Suite | Resultado |
 |---|---|
-| Unitarias | **238 en 20,7 s** |
-| Integración (PostgreSQL 18) | **61 en 30,4 s** |
-| Total | 299 en 31 archivos |
+| Unitarias | **239 en 31,6 s** |
+| Integración (PostgreSQL 18) | **64 en 42,8 s** |
+| Total | 303 en 31 archivos |
 
 | Capa | Líneas | Ramas | Funciones |
 |---|---|---|---|
-| `api` | 74,6 % | 50,0 % | 36,0 % |
-| `application` | 83,2 % | 55,3 % | 61,8 % |
+| `api` | 75,2 % | 51,3 % | 36,8 % |
+| `application` | 84,5 % | 60,8 % | 62,9 % |
 | `core` | 93,6 % | 90,9 % | 96,4 % |
 | `domain` (interfaz abstracta) | 0,0 % | — | 0,0 % |
-| `infrastructure` | 78,0 % | 28,1 % | 58,1 % |
+| `infrastructure` | 83,5 % | 28,1 % | 58,5 % |
 | `main.py` | 94,9 % | 71,4 % | 83,3 % |
-| **Total** | **80,8 %** (2 568/3 178) | **52,7 %** (231/438) | **55,0 %** (203/369) |
+| **Total** | **82,9 %** (2 629/3 170) | **56,2 %** (245/436) | **55,8 %** (207/371) |
 
-La cobertura de funciones de `api` es baja porque cuenta cada endpoint como función, y muchos solo se ejecutan en Newman, que no mide cobertura.
-
-**Pruebas por archivo:** `test_servicios_crud.py` 30 · `test_authorization.py` 19 · `test_cierre_seguridad_rendimiento.py` 19 · `integration/test_acceso_a_datos.py` 19 · `integration/test_notas_novedades.py` 18 · `integration/test_auth_sesiones.py` 17 · `test_id_fuera_de_rango.py` 14 · `test_password_policy.py` 14 · `test_qa_app_movil.py` 14 · `test_qa_reset_passwords.py` 13 · `test_sesion.py` 13 · `test_correo.py` 10 · `test_notas_validacion.py` 9 · `test_notificaciones.py` 9 · `test_padre_varios_hijos.py` 9 · `test_permisos_docente.py` 8 · `test_avatar.py` 7 · `test_bloqueo_login.py` 7 · `test_asistencia_duplicados.py` 6 · `test_config.py` 6 · `test_dashboard.py` 6 · `integration/test_estado_cuenta_y_reportes.py` 5 · `test_security.py` 5 · `test_archivos.py` 4 · `test_boletin.py` 4 · `test_register.py` 4 · `test_actor_token.py` 3 · `test_normalizar_correos.py` 3 · `test_app.py` 2 · `integration/test_dashboard_asistencia.py` 1 · `integration/test_humo.py` 1.
+La cobertura de funciones de `api` es baja porque cada endpoint cuenta como función y muchos solo se ejecutan en Newman, que no mide cobertura.
 
 ### 3.12 BC-12 · Cierre de la campaña
 
-- **QA tiene 110 usuarios y 0 temporales** (13/11, después de la corrida I2 de Newman y su limpieza).
-- Se anularon **403 registros de asistencia «clase»** del estudiante 1 del 11/11, creados por la corrida de diagnóstico de carga. Quedan 0 activos.
-- **Pendiente:** correr `scripts/qa/restaurar_qa_2026-11-13.sql` en `qaeyesschool` para reactivar 4 especializaciones y reponer 4 novedades que borró la repetición de schemathesis (anexo A).
-- Falta el buzón de QA del equipo (CP-INT-012, 014 y CP-ACE-016). Mientras tanto, los cuatro casos de recuperación de contraseña se cubren en pytest.
+- **QA: 110 usuarios y 0 temporales** después de todas las corridas.
+- Anulados todos los registros de asistencia que crearon las pruebas de carga: 403 del 11/11 y 1 011 del 14/11.
+- Datos alterados por schemathesis **restaurados** (incidencia 5.1): especializaciones activas 10/10 y novedades 1 a 10, con sus valores del seed.
+- Falta el buzón de QA del equipo (CP-INT-012, 014 y CP-ACE-016). Mientras tanto, la recuperación de contraseña se cubre en pytest.
 
 ---
 
 ## 4. Definición de terminado
 
-- [ ] #22, #43, N-23 y N-31 cerrados. **#43: cerrado** (S3 cumple). **N-23 y N-31:** código listo en el #48, falta migrar y fusionar. **#22:** ver 3.1.
-- [x] 81/81 CP-INT de la API ejecutados con resultado por caso; 0 fallas funcionales.
-- [x] Schemathesis con 0 ST101, ST103 y ST108 (local y QA; anexo A).
-- [ ] Capturas y deuda de SonarQube en el PR-03. **Deuda: sí.** Faltan las capturas.
-- [x] Producción desplegada (v1.1.0, 14/11) con el humo en verde, salvo la prueba del bloqueo, que necesita credenciales de admin.
+- [x] #22, #43, N-23 y N-31 cerrados.
+- [x] 81/81 CP-INT de la API ejecutados con resultado por caso; 0 fallas funcionales (y 0 de tiempo en la I3b).
+- [x] Schemathesis con 0 ST101, ST103 y ST108.
+- [ ] Capturas de SonarQube en el PR-03. **La deuda ya está en el informe (0).** Faltan las capturas.
+- [x] Producción desplegada con el humo en verde.
 
 ---
 
-## Anexo A · schemathesis contra QA (I2)
+## 5. Incidencias durante la ejecución
 
-**Corrida principal** (13/11, GET, `--checks all`, token de admin, `evidencias/PR-05/api/I2_schemathesis.txt`):
+Se registran porque cambiaron datos o conclusiones. Todas quedaron resueltas.
 
-| Fase | Resultado |
-|---|---|
-| Coverage | 45 ✔ · 1 ✖ |
-| Fuzzing | 43 ✔ · 3 ✖ |
-| Stateful | 162 ✔ |
-| **Casos generados** | **5 927** |
-| ST101, ST103, ST105, ST108, ST201–ST205 | **0** |
-| ST112 (tiempo de respuesta) | 4: `/asignaciones`, `/cursos/{id}/estudiantes`, `/novedades` y `/reportes` |
+### 5.1 schemathesis escribió en QA (13/11, ~20:17–20:31)
 
-- **Los 4 ST112 no son del servidor:** marcan entre 147 s y 921 s, imposibles con un límite de 60 s por petición. Coinciden con un corte de red del equipo que ejecutaba la prueba (se perdió la resolución DNS en esa misma ventana).
-- **12 operaciones solo recibieron 401:** la corrida duró 68 min y el token de admin vence a los 30. Esas 12, más las 4 de los ST112, se repitieron aparte con token nuevo (abajo).
-- Las 3 que responden 403 (`/dashboard/estudiante`, `/dashboard/padre`, `/padres/me`) son de otro rol: con token de admin el 403 es lo correcto.
-
-**Repetición de las 16 operaciones** con token nuevo y el contrato recortado a GET (`I2_schemathesis_repeticion.txt`): **606 casos**; Fuzzing 16/16 ✔, Stateful 25/25 ✔; **0 ST101, 0 ST103, 0 ST108 y 0 ST112**. Las 12 operaciones que antes solo veían 401 ya se probaron.
-
-- Aparecen 7 **ST204** («método no declarado»): son un efecto del contrato recortado. Ese check manda a propósito los métodos que el contrato no declara, y al recortar a GET quedan «no declarados» PUT y POST que sí existen. Las 7 sondas fueron POST/PUT sin cuerpo con id −2147483648 y todas respondieron 422: **no escribieron nada** (comprobado después en las tablas). No es un defecto: con el contrato completo, ST204 dio 0.
-- Las 6 operaciones que responden 403 son de otro rol (`/me`, dashboards): con token de admin, el 403 es lo correcto.
-
-### Incidente durante la repetición (13/11/2026, ~20:17–20:31)
-
-El primer intento de repetición se lanzó con `--include-method GET` y `--include-path-regex`. **schemathesis combina esos dos filtros con OR, no con AND**, así que seleccionó 57 operaciones en vez de 16, entre ellas **11 de escritura**, y las probó con el token de administrador durante ~12 minutos. Se detuvo al ver «57 selected» y se revisaron las tablas afectadas comparándolas con el seed:
+Una repetición se lanzó con `--include-method GET` y `--include-path-regex`. schemathesis **combina esos filtros con OR**, así que probó también 11 operaciones de escritura con el token de admin durante unos 12 minutos.
 
 | Tabla | Daño | Restauración |
 |---|---|---|
-| `profesores` 1, 2, 3 | `estado` → «Inactivo» | ✅ Por API (`PUT estado: Activo`) |
-| `asignaciones` 1, 3, 6, 10 | desactivadas (la 1 rompía los permisos del docente de prueba) | ✅ Por API (`PUT activo: true`) |
-| `especializaciones` 1 | descripción borrada | ✅ Por API |
-| `especializaciones` 1, 3, 6, 10 | desactivadas | ⏳ `scripts/qa/restaurar_qa_2026-11-13.sql` (el API no permite reactivarlas) |
-| `novedades` 1, 2, 5, 9 | **borradas** (el DELETE es físico) | ⏳ El mismo SQL, con los ids y valores exactos del seed |
+| `profesores` 1–3 | `estado` → «Inactivo» | Por API |
+| `asignaciones` 1, 3, 6, 10 | desactivadas | Por API |
+| `especializaciones` 1, 3, 6, 10 | desactivadas; la 1 sin descripción | API + `restaurar_qa.py` (14/11) |
+| `novedades` 1, 2, 5, 9 | borradas | `restaurar_qa.py`, con los ids y valores del seed (14/11) |
 
-No se crearon registros nuevos y las demás novedades, títulos de profesores y fechas de asignación coinciden con el seed. El SQL se probó en local sobre una base con el mismo nombre: restaura, es idempotente y se niega a correr si la base no es `qaeyesschool`.
+**Corrección de proceso:** schemathesis va siempre contra un `openapi.json` recortado a GET (`scripts/qa/openapi_solo_lectura.py`) y con `--exclude-checks unsupported_method,allow_header_conformance`. Esos dos checks mandan a propósito métodos no declarados, o comparan `Allow` con el contrato recortado. El comando quedó así en la planeación de integración.
 
-**Lección para la planeación de integración:** para acotar schemathesis a solo lectura no basta con los filtros de la CLI. Hacen falta dos cosas: un `openapi.json` recortado en local con únicamente las operaciones GET (`scripts/qa/openapi_solo_lectura.py`) **y** `--exclude-checks unsupported_method`, porque ese check manda a propósito los métodos no declarados. Las dos quedaron en el comando de la planeación de integración.
+### 5.2 El informe y el runbook decían que QA y producción compartían servidor
+
+Se tomó del runbook sin comprobarlo, y con eso se concluyó que cada carga en QA tumbaría producción. Las consolas de Azure mostraron tres instancias distintas (3.1). Se corrigieron el runbook, la planeación, este informe, `config.py`, dos pruebas y el #43 (PR #57). La corrección del pool no cambia: el límite es por servidor.
+
+### 5.3 La migración `c4e1f7a9d2b8` se aplicó en producción desde la consola equivocada (14/11, ~03:20 UTC)
+
+Los comandos para QA se corrieron en la consola SSH de `api-eyesschool`, porque no comprobaban la Web App antes de migrar. La restauración de QA sí se detuvo: su guardia comparó la base y se negó. Impacto, revisado desde la misma consola:
+
+- Los 8 reportes **del seed** recibieron el PDF de ejemplo; sus archivos nunca existieron.
+- 0 cuentas marcadas como pendientes de validación.
+- Ningún dato real cambió.
+
+La migración es aditiva y el código de ese momento no la leía. **Faltó el respaldo previo que pedía BC-09.** Desde entonces, `restaurar_qa.py` exige `--base` y comprueba `WEBSITE_SITE_NAME`, y el runbook pide `echo $WEBSITE_SITE_NAME` antes de cualquier comando.
+
+### 5.4 Otras
+
+- **El vigilante de producción abortó la primera S3** al tomar como caída el 307 de `/cursos/`. Se corrigió a `/cursos` y se relanzó.
+- **El commit del pool borró por error `scripts/qa/verificar_rotacion.py`** (un `git commit -a` con el archivo ausente de la copia de trabajo). Se repuso en el #53.
+- **La segunda corrida del humo sobrescribió la evidencia 9/9.** Se restauró con su contenido original y la nueva quedó como `BC09_humo_produccion_despliegue2.txt`.
+
+---
+
+## Anexo A · schemathesis contra QA
+
+**I2** (13/11, GET, `--checks all`, `I2_schemathesis.txt`): 5 927 casos; **0 ST101, ST103, ST105, ST108 y ST201–ST205**.
+
+- Los 4 ST112 (tiempo) son del cliente: marcan de 147 s a 921 s con un límite de 60 s, y coinciden con un corte de red del equipo.
+- 12 operaciones solo vieron 401 porque el token venció a los 30 min de una corrida de 68. Se repitieron con token nuevo (`I2_schemathesis_repeticion.txt`): 606 casos, 0 ST101/ST103/ST108/ST112.
+
+**I3** (14/11, código final, contrato recortado a GET, `--exclude-checks unsupported_method,allow_header_conformance`, 10 ejemplos por operación para terminar antes de que venza el token; `I3_schemathesis.txt`): **2 075 casos, 2 075 pasan**. Coverage 46/46, Fuzzing 46/46 y Stateful 10/10. Las 6 operaciones que «solo devuelven 401/403» son `/me` y los dashboards de otros roles: con token de admin, el 403 es lo correcto.
