@@ -211,11 +211,13 @@ newman run tests/newman/eyes_school_api.postman_collection.json \
        --reporter-junit-export evidencias/PR-05/api/I1_newman.xml \
        --reporter-htmlextra-export evidencias/PR-05/api/I1_newman.html
 
-# 3. Contrato contra OpenAPI
-schemathesis run "$QA_API/openapi.json" -H "Authorization: Bearer $TOKEN_ADMIN" \
-       --checks all --report > evidencias/PR-05/api/I1_schemathesis.txt
+# 3. Contrato contra OpenAPI, SOLO LECTURA (ver la nota de abajo)
+python -m scripts.qa.openapi_solo_lectura "${QA_API%/api/v1}" openapi_solo_get.json
+schemathesis run openapi_solo_get.json --url "${QA_API%/api/v1}" -H "Authorization: Bearer $TOKEN_ADMIN" \
+       --checks all > evidencias/PR-05/api/I2_schemathesis.txt
 ```
 
+- **schemathesis va siempre contra un contrato recortado a GET** (`scripts/qa/openapi_solo_lectura.py`). Con el contrato completo prueba también POST, PUT y DELETE con el token de administrador; y los filtros `--include-method`/`--include-path-regex` se combinan con OR, así que no lo impiden. Así se alteraron datos de QA el 13/11/2026 (ver `Resultados/cierre-backend-2026-11-13.md`, anexo A).
 - Antes de cada corrida en QA se ejecuta `scripts/qa_reset_passwords.py` y se verifica que la prueba de humo de la API responda.
 - Los casos con el mismo ID en Newman y en pytest se reportan como **un solo caso**: aprobado si pasan los dos.
 
