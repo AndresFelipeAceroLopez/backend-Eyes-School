@@ -186,8 +186,7 @@ Orden seguro, porque la migración es aditiva y el código viejo funciona con la
 Evidencia: `evidencias/PR-06/api/BC09_humo_produccion_ANTES.txt` y `BC09_humo_produccion.txt`. Para la prueba que falta:
 
 ```powershell
-$env:PROD_ADMIN_CORREO = "<admin>"; $env:PROD_ADMIN_PASSWORD = Read-Host -AsSecureString | ConvertFrom-SecureString -AsPlainText
-python -m scripts.qa.humo_produccion
+python -m scripts.qa.humo_produccion   # en una terminal normal pide el correo y la contraseña del admin sin mostrarla
 ```
 
 **Pendiente para N-23 y N-31 en producción:** respaldo en Render → `alembic upgrade head` en la consola SSH de `api-eyesschool` → fusionar el #48 en `developer` → nuevo PR a `main`.
