@@ -63,7 +63,7 @@ pytest -q --cov=app --cov-report=term
 El `.env` local del backend apunta a la base de **producción**. Varios scripts (seeds, migraciones y `qa_reset_passwords.py`) escriben en la base a la que se conecten, así que un descuido cambia datos o contraseñas reales.
 
 1. **Ningún seed, migración ni script de QA se corre con el `.env`.** `DATABASE_URL` se fija en la terminal. La variable del proceso le gana al `.env` en `pydantic-settings` y en `load_dotenv()` sin `override`; si un script carga la configuración de otra forma, se revisa antes de correrlo.
-2. **Antes de escribir se comprueba la base, no la variable:** `SELECT current_database()` debe devolver `qaeyesschool`. `ENVIRONMENT=qa` no protege: es solo una variable. El host tampoco, porque producción y QA están en el mismo Render.
+2. **Antes de escribir se comprueba la base, no la variable:** `SELECT current_database()` debe devolver `qaeyesschool`. `ENVIRONMENT=qa` no protege: es solo una variable. El host sí los distingue (son servidores de Render distintos, comprobado el 14/11/2026), pero se exige el nombre de la base porque es lo que se lee desde la propia conexión.
 3. **Mientras se trabaja con QA, el `.env` de producción sale de la carpeta del repositorio** y vuelve al terminar. No se renombra dentro de la carpeta: `.gitignore` ignora `.env`, pero un nombre como `.env.produccion` podría quedar sin ignorar y subirse con un commit.
 4. **Nunca `git add -A` en el backend.** Los archivos se agregan por nombre. Antes de cada commit, `git status` y `git ls-files | Select-String "\.env"` deben mostrar solo `.env.example`.
 5. Los valores de `DATABASE_URL`, contraseñas, `SECRET_KEY` y `QA_PASSWORD` no se escriben en documentos, commits, chats ni capturas. Se leen con `Read-Host`.

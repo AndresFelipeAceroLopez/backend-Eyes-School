@@ -5,8 +5,8 @@ con Python usando la misma `DATABASE_URL` que tiene la app:
 
     python -m scripts.qa.restaurar_qa --base <nombre-de-la-base-de-QA>
 
-Dos protecciones, porque la base de QA no se llama como decía la documentación («qaeyesschool»;
-el 14/11 resultó ser `eyesschool_wru2`) y no se puede confiar en el nombre a ciegas:
+Dos protecciones, porque el 14/11 este script se corrió primero en la consola de PRODUCCIÓN
+(base `eyesschool_wru2`) creyendo que era la de QA; el guardia del SQL lo detuvo:
 1. En Azure, la Web App tiene que ser `apieyeschool-q` (variable `WEBSITE_SITE_NAME`).
 2. La base conectada tiene que ser la que se pasa en `--base`; el SQL lo vuelve a comprobar.
 """

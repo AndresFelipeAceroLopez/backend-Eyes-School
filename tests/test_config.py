@@ -36,11 +36,12 @@ def test_cors_origins_se_lee_como_lista(raw, expected):
     assert Settings(_env_file=None, CORS_ORIGINS=raw).origenes_cors == expected
 
 
-def test_dos_apis_caben_en_el_limite_de_conexiones_de_render():
-    """DEF-038: QA y producción comparten un servidor de Render con 97 conexiones como máximo.
+def test_el_pool_cabe_en_un_servidor_de_render_de_0_1_cpu():
+    """DEF-038: cada entorno tiene un Render de 0,1 CPU, 256 MB y 97 conexiones.
 
-    Con el pool anterior (30 + 10) las dos APIs podían pedir 80 y, bajo carga, agotar el límite:
-    a partir de ahí toda conexión nueva fallaba en las dos a la vez.
+    Con el pool anterior (30 + 10) una carga de 50 usuarios abría hasta 40 procesos de PostgreSQL
+    y la base dejaba de responder. El límite deja margen para dos instancias de la API (si algún
+    día se escala) más psql y las migraciones.
     """
     s = Settings(_env_file=None)
     por_api = s.DB_POOL_SIZE + s.DB_MAX_OVERFLOW

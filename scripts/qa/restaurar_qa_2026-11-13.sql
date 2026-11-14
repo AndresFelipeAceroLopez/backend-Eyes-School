@@ -11,8 +11,8 @@
 -- Se corre UNA vez contra la base de QA, con `python -m scripts.qa.restaurar_qa --base <nombre>`
 -- desde la consola SSH de apieyeschool-q. Es idempotente y se niega a correr en otra base.
 
--- La base de QA se declara antes de correr esto (el nombre real de la de QA es el que muestra
--- la consola de apieyeschool-q; el 14/11 resultó ser eyesschool_wru2, no «qaeyesschool»):
+-- La base de QA (qaeyesschool) se declara antes de correr esto. El 14/11 se corrió primero en
+-- la consola de producción (eyesschool_wru2) por error y este guardia lo detuvo:
 --     SET eyes.base_qa = '<nombre>';
 -- scripts/qa/restaurar_qa.py lo hace solo, después de comprobar que corre en apieyeschool-q.
 DO $$
