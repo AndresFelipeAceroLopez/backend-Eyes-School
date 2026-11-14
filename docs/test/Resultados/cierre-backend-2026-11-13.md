@@ -250,7 +250,10 @@ La cobertura de funciones de `api` es baja porque cuenta cada endpoint como func
 - **12 operaciones solo recibieron 401:** la corrida duró 68 min y el token de admin vence a los 30. Esas 12, más las 4 de los ST112, se repitieron aparte con token nuevo (abajo).
 - Las 3 que responden 403 (`/dashboard/estudiante`, `/dashboard/padre`, `/padres/me`) son de otro rol: con token de admin el 403 es lo correcto.
 
-**Repetición de las 16 operaciones** (`I2_schemathesis_repeticion.txt`): _ver la sección siguiente._
+**Repetición de las 16 operaciones** con token nuevo y el contrato recortado a GET (`I2_schemathesis_repeticion.txt`): **606 casos**; Fuzzing 16/16 ✔, Stateful 25/25 ✔; **0 ST101, 0 ST103, 0 ST108 y 0 ST112**. Las 12 operaciones que antes solo veían 401 ya se probaron.
+
+- Aparecen 7 **ST204** («método no declarado»): son un efecto del contrato recortado. Ese check manda a propósito los métodos que el contrato no declara, y al recortar a GET quedan «no declarados» PUT y POST que sí existen. Las 7 sondas fueron POST/PUT sin cuerpo con id −2147483648 y todas respondieron 422: **no escribieron nada** (comprobado después en las tablas). No es un defecto: con el contrato completo, ST204 dio 0.
+- Las 6 operaciones que responden 403 son de otro rol (`/me`, dashboards): con token de admin, el 403 es lo correcto.
 
 ### Incidente durante la repetición (13/11/2026, ~20:17–20:31)
 
@@ -266,4 +269,4 @@ El primer intento de repetición se lanzó con `--include-method GET` y `--inclu
 
 No se crearon registros nuevos y las demás novedades, títulos de profesores y fechas de asignación coinciden con el seed. El SQL se probó en local sobre una base con el mismo nombre: restaura, es idempotente y se niega a correr si la base no es `qaeyesschool`.
 
-**Lección para la planeación de integración:** para acotar schemathesis a solo lectura no basta con los filtros de la CLI. La repetición correcta usa un `openapi.json` recortado en local con únicamente las operaciones GET, así es imposible que mande una escritura.
+**Lección para la planeación de integración:** para acotar schemathesis a solo lectura no basta con los filtros de la CLI. Hacen falta dos cosas: un `openapi.json` recortado en local con únicamente las operaciones GET (`scripts/qa/openapi_solo_lectura.py`) **y** `--exclude-checks unsupported_method`, porque ese check manda a propósito los métodos no declarados. Las dos quedaron en el comando de la planeación de integración.
