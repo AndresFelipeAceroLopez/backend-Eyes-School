@@ -18,7 +18,7 @@
 | BC-06 Newman completo | ✅ **81/81 ejecutados, 0 fallas funcionales** | — |
 | BC-07 Contrato OpenAPI | ✅ 0 ST101, 0 ST103 y 0 ST108, en local y en QA (5 927 casos) | — |
 | BC-08 SonarQube | ✅ Datos tomados; deuda llevada a 0 (PR #49) | Capturas de pantalla (Mariana) |
-| BC-09 Despliegue a producción | 🟡 Herramienta lista | Respaldo, migración y PR `developer → main` (equipo); humo con `scripts/qa/humo_produccion.py` |
+| BC-09 Despliegue a producción | ✅ **v1.1.0 en producción** (PR #54, `48c0b2c`); humo 5/5 | Prueba de bloqueo con credenciales de admin; N-23/N-31 llegan con el #48 tras migrar |
 | BC-10 A09 y A10 | ✅ A10 cumple · A09 cumple en la app | Captura del Log stream de Azure (Mariana) |
 | BC-11 Datos para los informes | ✅ | — |
 | BC-12 Cierre de la campaña | 🟡 110 usuarios, 0 temporales | Correr `restaurar_qa_2026-11-13.sql` en QA (anexo A); buzón de QA (equipo) |
@@ -172,7 +172,24 @@ Orden seguro, porque la migración es aditiva y el código viejo funciona con la
 5. Variables: `DATABASE_URL` nueva (BC-01), `SECRET_KEY` propia, `ENVIRONMENT=production`, `FRONTEND_URL`, `FIREBASE_CREDENTIALS_JSON` de producción (BC-03).
 6. `python -m scripts.qa.humo_produccion` → `evidencias/PR-06/api/BC09_humo_produccion.txt`. Comprueba `/docs`, `/padres/me/hijos` en el contrato, `/cursos/`, el 401, `nosniff` y el bloqueo 429, este con una cuenta temporal de padre sin vínculo que se borra al final.
 
-Si el equipo decide no desplegar todavía, el PR-08 lo dice: la versión aceptada es la de QA.
+**Ejecutado el 14/11/2026.** PR #54 (`developer → main`, 66 commits, sin conflictos) fusionado y desplegado en `api-eyesschool` (`48c0b2c`). Producción ya estaba en `b7d2e9a41c03`, así que este despliegue no necesitó migración.
+
+| Comprobación del humo | Antes (02:58 UTC) | **Después (03:09 UTC)** |
+|---|---|---|
+| `GET /docs` → 200 | ✔ | ✔ |
+| `/padres/me/hijos` en el contrato | ✖ | **✔** |
+| `GET /cursos` → 200 | ✔ | ✔ |
+| `X-Content-Type-Options: nosniff` | ✖ | **✔** |
+| Correo inexistente → 401 | ✔ | ✔ |
+| 6 intentos fallidos → 429 | — | Pendiente: necesita las credenciales del admin de producción para borrar la cuenta temporal |
+
+Evidencia: `evidencias/PR-06/api/BC09_humo_produccion_ANTES.txt` y `BC09_humo_produccion.txt`. Para la prueba que falta:
+
+```powershell
+python -m scripts.qa.humo_produccion   # en una terminal normal pide el correo y la contraseña del admin sin mostrarla
+```
+
+**Pendiente para N-23 y N-31 en producción:** respaldo en Render → `alembic upgrade head` en la consola SSH de `api-eyesschool` → fusionar el #48 en `developer` → nuevo PR a `main`.
 
 ### 3.10 BC-10 · A09 y A10
 
@@ -247,7 +264,7 @@ La cobertura de funciones de `api` es baja porque cuenta cada endpoint como func
 - [x] 81/81 CP-INT de la API ejecutados con resultado por caso; 0 fallas funcionales.
 - [x] Schemathesis con 0 ST101, ST103 y ST108 (local y QA; anexo A).
 - [ ] Capturas y deuda de SonarQube en el PR-03. **Deuda: sí.** Faltan las capturas.
-- [ ] Producción desplegada con el humo en verde, o la decisión de no desplegar escrita en el PR-08.
+- [x] Producción desplegada (v1.1.0, 14/11) con el humo en verde, salvo la prueba del bloqueo, que necesita credenciales de admin.
 
 ---
 

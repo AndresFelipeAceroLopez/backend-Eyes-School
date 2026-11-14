@@ -74,8 +74,11 @@ def main() -> int:
     admin = os.environ.get("PROD_ADMIN_CORREO")
     password = os.environ.get("PROD_ADMIN_PASSWORD")
     if not (admin and password) and sys.stdin.isatty():
-        admin = input("Correo del administrador de producción: ").strip()
-        password = getpass.getpass("Contraseña del administrador (no se muestra): ")
+        try:
+            admin = input("Correo del administrador de producción: ").strip()
+            password = getpass.getpass("Contraseña del administrador (no se muestra): ")
+        except EOFError:  # en Windows, NUL se reporta como consola aunque no haya nadie
+            admin = password = None
     if not (admin and password):
         anotar("Bloqueo tras 6 intentos (BE-16): PENDIENTE, sin credenciales de admin", False, "-")
         return _escribir(filas)
