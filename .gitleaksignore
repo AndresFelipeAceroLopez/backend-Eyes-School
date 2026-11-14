@@ -1,0 +1,27 @@
+# Hallazgos históricos de BE-01, silenciados por huella para que gitleaks en el CI
+# señale solo secretos NUEVOS. Cada línea es un hallazgo ya conocido y documentado en
+# docs/test/Especificaciones (BE-01) y en docs/test/Resultados/corrida-2026-11-09.md.
+#
+# ESTADO AL 09/11/2026 — LEER ANTES DE CONFIAR EN ESTE ARCHIVO:
+#
+#   * SECRET_KEY: hay una clave nueva configurada en Azure App Service.
+#   * DATABASE_URL de Render: la contraseña NO se rotó. Decisión del equipo del
+#     09/11/2026. Es decir, el usuario y la contraseña que están en estas líneas
+#     del historial SIGUEN SIENDO VÁLIDOS contra la base de datos de producción.
+#
+# Esto no es una lista de secretos ya desactivados: es una lista de secretos
+# conocidos que se dejan de reportar para no bloquear el CI. Quien retome BE-01
+# debe cambiar esa contraseña en Render y actualizar DATABASE_URL en las dos Web
+# Apps de Azure; hecho eso, esta advertencia se reemplaza por la fecha de rotación.
+# Reescribir el historial (git filter-repo) no desactiva las credenciales: los
+# clones antiguos, los forks y las vistas de los pull requests las conservan.
+
+# --- DATABASE_URL con usuario y contraseña (NO ROTADA) ---
+6fdf2cc603d6eb448db8cf887ff9a3e7d6d94080:.env:url-conexion-con-credenciales:1
+db5565c9c3ea1d5924604e58cabb2a7e61937322:.env:url-conexion-con-credenciales:1
+e21775a441623a24c79802505b7e0fcc29cc29e7:.env:url-conexion-con-credenciales:1
+6fdf2cc603d6eb448db8cf887ff9a3e7d6d94080:create_admin.py:url-conexion-con-credenciales:16
+476c0de71e1a5f87b9f5f0065b5be4e88f4cb29e:create_admin.py:url-conexion-con-credenciales:16
+
+# --- SECRET_KEY (reemplazada en Azure) ---
+ccaec1c3c26f546fb48ee2dceb20e432fd9f5e7d:.env:secret-key-en-env:3

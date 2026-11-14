@@ -1,7 +1,8 @@
-from sqlalchemy import func, select
+from sqlalchemy import exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.infrastructure.models.academico import AsignacionModel
 from app.infrastructure.models.actores import EstudianteModel
 from app.infrastructure.models.notas import NotaModel
 from app.infrastructure.repositories.base_repository import BaseRepository
@@ -26,6 +27,7 @@ class NotaRepository(BaseRepository[NotaModel]):
         id_periodo: int | None = None,
         skip: int = 0,
         limit: int = 100,
+        id_profesor: int | None = None,
     ) -> list[NotaModel]:
         query = select(NotaModel).options(
             selectinload(NotaModel.materia),
@@ -37,6 +39,16 @@ class NotaRepository(BaseRepository[NotaModel]):
             query = query.where(NotaModel.id_materia == id_materia)
         if id_periodo:
             query = query.where(NotaModel.id_periodo == id_periodo)
+        if id_profesor is not None:
+            # Solo las notas de estudiantes de cursos donde el docente tiene asignación.
+            query = query.where(
+                exists().where(
+                    EstudianteModel.id_estudiante == NotaModel.id_estudiante,
+                    AsignacionModel.id_curso == EstudianteModel.id_curso_actual,
+                    AsignacionModel.id_profesor == id_profesor,
+                    AsignacionModel.activo == True,  # noqa: E712
+                )
+            )
         result = await self.session.execute(query.offset(skip).limit(limit))
         return list(result.scalars().all())
 

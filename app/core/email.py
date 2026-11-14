@@ -1,3 +1,4 @@
+import html
 import logging
 
 import httpx
@@ -33,7 +34,9 @@ async def send_email(to: str, subject: str, html: str) -> bool:
 
 
 def build_reset_email_html(nombre: str, reset_url: str) -> str:
-    saludo = f"Hola {nombre}," if nombre else "Hola,"
+    # El nombre lo escribe el propio usuario al registrarse: se escapa para que no inyecte HTML
+    # en el correo (hallazgo de la revisión A10 del 13/11/2026).
+    saludo = f"Hola {html.escape(nombre)}," if nombre else "Hola,"
     return f"""
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #1e293b;">
       <h2 style="color: #2563eb;">Restablece tu contraseña</h2>

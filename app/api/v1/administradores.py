@@ -4,20 +4,21 @@ from typing import Literal
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
+from app.application.common.tipos import ENTERO32_MAX, Entero32
 from app.core.dependencies import DbSession, require_roles
 from app.infrastructure.repositories.actores_repository import AdministradorRepository
 
 
 class AdministradorCreate(BaseModel):
-    id_usuario: int
+    id_usuario: Entero32
     cargo: str
     nivel_acceso: Literal["Bajo", "Medio", "Alto"] = "Bajo"
     fecha_asignacion: date
 
 
 class AdministradorOut(BaseModel):
-    id_administrador: int
-    id_usuario: int
+    id_administrador: Entero32
+    id_usuario: Entero32
     cargo: str
     nivel_acceso: str
     estado: str
@@ -30,7 +31,7 @@ router = APIRouter(prefix="/administradores", tags=["Administradores"])
 
 
 @router.get("", response_model=list[AdministradorOut], dependencies=[require_roles("admin")])
-async def list_admins(db: DbSession, skip: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=500)):
+async def list_admins(db: DbSession, skip: int = Query(0, ge=0, le=ENTERO32_MAX), limit: int = Query(100, ge=1, le=500)):
     items = await AdministradorRepository(db).get_all_with_usuario(skip=skip, limit=limit)
     return [AdministradorOut.model_validate(a) for a in items]
 
@@ -42,7 +43,7 @@ async def create_admin(data: AdministradorCreate, db: DbSession):
 
 
 @router.get("/{id_administrador}", response_model=AdministradorOut, dependencies=[require_roles("admin")])
-async def get_admin(id_administrador: int, db: DbSession):
+async def get_admin(id_administrador: Entero32, db: DbSession):
     from app.core.exceptions import NotFoundException
     item = await AdministradorRepository(db).get_by_id(id_administrador)
     if not item:
@@ -51,7 +52,7 @@ async def get_admin(id_administrador: int, db: DbSession):
 
 
 @router.put("/{id_administrador}", response_model=AdministradorOut, dependencies=[require_roles("admin")])
-async def update_admin(id_administrador: int, data: AdministradorCreate, db: DbSession):
+async def update_admin(id_administrador: Entero32, data: AdministradorCreate, db: DbSession):
     from app.core.exceptions import NotFoundException
     repo = AdministradorRepository(db)
     item = await repo.get_by_id(id_administrador)
@@ -62,7 +63,7 @@ async def update_admin(id_administrador: int, data: AdministradorCreate, db: DbS
 
 
 @router.delete("/{id_administrador}", status_code=204, dependencies=[require_roles("admin")])
-async def delete_admin(id_administrador: int, db: DbSession):
+async def delete_admin(id_administrador: Entero32, db: DbSession):
     from app.core.exceptions import NotFoundException
     repo = AdministradorRepository(db)
     item = await repo.get_by_id(id_administrador)

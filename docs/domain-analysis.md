@@ -66,7 +66,7 @@
 ### 3.1 Autenticación
 - **UC-AUTH-01**: Login con correo y password → JWT (access + refresh)
 - **UC-AUTH-02**: Refresh de token de acceso usando refresh token
-- **UC-AUTH-03**: Logout (invalida refresh token en Redis)
+- **UC-AUTH-03**: Logout (revoca la sesión de refresco en PostgreSQL)
 - **UC-AUTH-04**: Obtener perfil propio (`/me`)
 - **UC-AUTH-05**: Actualizar `ultimoAcceso` al login
 

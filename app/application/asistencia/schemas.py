@@ -1,7 +1,9 @@
-from datetime import date, datetime
+from datetime import date
 from typing import Literal
 
 from pydantic import BaseModel
+
+from app.application.common.tipos import FechaHoraUTC
 
 
 class AsistenciaCreate(BaseModel):
@@ -9,14 +11,12 @@ class AsistenciaCreate(BaseModel):
     fecha: date
     estado: Literal["Presente", "Ausente", "Tarde", "Excusa", "Suspensión"]
     observacion: str | None = None
-    registrado_por: int
     tipo: Literal["entrada", "salida", "clase"] | None = None
 
 
 class AsistenciaQRCreate(BaseModel):
     codigo_qr: str
     tipo: Literal["entrada", "salida", "clase"] = "entrada"
-    registrado_por: int
 
 
 class AsistenciaUpdate(BaseModel):
@@ -31,7 +31,7 @@ class AsistenciaOut(BaseModel):
     estado: str
     observacion: str | None
     registrado_por: int
-    fecha_registro: datetime
+    fecha_registro: FechaHoraUTC
     tipo: str | None
     codigo_qr: str | None
     activo: bool | None
@@ -44,7 +44,6 @@ class AsistenciaAulaCreate(BaseModel):
     fecha: date
     estado: Literal["Presente", "Ausente", "Tarde", "Excusa", "Suspensión"]
     observacion: str
-    registrado_por: int
 
 
 class AsistenciaAulaOut(BaseModel):
@@ -55,5 +54,5 @@ class AsistenciaAulaOut(BaseModel):
     estado: str
     observacion: str
     registrado_por: int
-    fecha_registro: datetime
+    fecha_registro: FechaHoraUTC
     model_config = {"from_attributes": True}

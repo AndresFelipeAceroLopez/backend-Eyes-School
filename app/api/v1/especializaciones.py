@@ -1,9 +1,10 @@
 from fastapi import APIRouter
+from pydantic import BaseModel
 
+from app.application.common.tipos import Entero32
 from app.application.profesores.schemas import EspecializacionOut
 from app.core.dependencies import DbSession, require_roles
 from app.infrastructure.repositories.academico_repository import EspecializacionRepository
-from pydantic import BaseModel
 
 
 class EspecializacionCreate(BaseModel):
@@ -30,7 +31,7 @@ async def create_especializacion(data: EspecializacionCreate, db: DbSession):
 
 
 @router.get("/{id_especializacion}", response_model=EspecializacionOut, dependencies=[require_roles("admin")])
-async def get_especializacion(id_especializacion: int, db: DbSession):
+async def get_especializacion(id_especializacion: Entero32, db: DbSession):
     from app.core.exceptions import NotFoundException
     item = await EspecializacionRepository(db).get_by_id(id_especializacion)
     if not item:
@@ -39,7 +40,7 @@ async def get_especializacion(id_especializacion: int, db: DbSession):
 
 
 @router.put("/{id_especializacion}", response_model=EspecializacionOut, dependencies=[require_roles("admin")])
-async def update_especializacion(id_especializacion: int, data: EspecializacionCreate, db: DbSession):
+async def update_especializacion(id_especializacion: Entero32, data: EspecializacionCreate, db: DbSession):
     from app.core.exceptions import NotFoundException
     repo = EspecializacionRepository(db)
     item = await repo.get_by_id(id_especializacion)
@@ -50,7 +51,7 @@ async def update_especializacion(id_especializacion: int, data: EspecializacionC
 
 
 @router.delete("/{id_especializacion}", status_code=204, dependencies=[require_roles("admin")])
-async def delete_especializacion(id_especializacion: int, db: DbSession):
+async def delete_especializacion(id_especializacion: Entero32, db: DbSession):
     from app.core.exceptions import NotFoundException
     repo = EspecializacionRepository(db)
     item = await repo.get_by_id(id_especializacion)

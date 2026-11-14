@@ -28,3 +28,8 @@ class ForbiddenException(HTTPException):
 class BusinessRuleException(HTTPException):
     def __init__(self, detail: str):
         super().__init__(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
+
+
+class TooManyRequestsException(HTTPException):
+    def __init__(self, detail: str = "Demasiados intentos, espera 15 minutos"):
+        super().__init__(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=detail)

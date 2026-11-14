@@ -1,22 +1,23 @@
-from datetime import datetime, time
 from typing import Literal
 
 from pydantic import BaseModel
+
+from app.application.common.tipos import HoraLocal
 
 
 class HorarioCreate(BaseModel):
     id_curso: int
     id_materia: int
     dia: Literal["Lunes", "Martes", "Miercoles", "Jueves", "Viernes"]
-    hora_inicio: time
-    hora_fin: time
+    hora_inicio: HoraLocal
+    hora_fin: HoraLocal
     salon: str
 
 
 class HorarioUpdate(BaseModel):
     dia: Literal["Lunes", "Martes", "Miercoles", "Jueves", "Viernes"] | None = None
-    hora_inicio: time | None = None
-    hora_fin: time | None = None
+    hora_inicio: HoraLocal | None = None
+    hora_fin: HoraLocal | None = None
     salon: str | None = None
     activo: bool | None = None
 
@@ -26,8 +27,8 @@ class HorarioOut(BaseModel):
     id_curso: int
     id_materia: int
     dia: str
-    hora_inicio: time
-    hora_fin: time
+    hora_inicio: HoraLocal
+    hora_fin: HoraLocal
     salon: str
     activo: bool
     model_config = {"from_attributes": True}

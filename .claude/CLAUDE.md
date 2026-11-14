@@ -17,7 +17,7 @@ app/
 ├── application/    → Capa de aplicación (servicios + schemas Pydantic)
 ├── domain/         → Capa de dominio (entidades + interfaces de repositorio)
 ├── infrastructure/ → Capa de infraestructura (modelos SQLAlchemy + repositorios concretos)
-└── core/           → Transversal (config, seguridad, DB, Redis, dependencias, excepciones)
+└── core/           → Transversal (config, seguridad, DB, dependencias, excepciones)
 ```
 
 ### Flujo de una petición
@@ -50,7 +50,7 @@ api → application → infrastructure
 | ORM              | SQLAlchemy 2.0+ (async)            |
 | Base de datos    | PostgreSQL (asyncpg)               |
 | Migraciones      | Alembic                            |
-| Cache/Sesiones   | Redis (redis-py async)             |
+| Sesiones         | PostgreSQL (`sesiones_refresco`)   |
 | Auth             | JWT (python-jose) + bcrypt         |
 | Validación       | Pydantic v2                        |
 | Config           | pydantic-settings + .env           |
@@ -235,7 +235,6 @@ backend-Eyes-School-1/
 │   ├── core/                        # ← Transversal
 │   │   ├── config.py                #    Pydantic Settings (DATABASE_URL, SECRET_KEY, etc.)
 │   │   ├── database.py              #    Engine async + sessionmaker + get_db()
-│   │   ├── redis.py                 #    Cliente Redis async singleton
 │   │   ├── security.py              #    Hash/verify password, create/decode JWT
 │   │   ├── dependencies.py          #    DI: DbSession, AuthUser, require_roles()
 │   │   └── exceptions.py            #    Excepciones HTTP reutilizables
@@ -347,7 +346,7 @@ backend-Eyes-School-1/
 - **NO crear archivos de test fuera de `tests/`** (el directorio no existe aún pero está configurado en pytest).
 - **NO modificar `.env`** — solo `.env.example` para documentar nuevas variables.
 - **NO cambiar la estructura de capas** — Respetar la separación api/application/domain/infrastructure.
-- **SIEMPRE usar async** — Todo acceso a DB/Redis debe ser async.
+- **SIEMPRE usar async** — Todo acceso a DB debe ser async.
 - **SIEMPRE validar permisos** — Usar `require_roles()` en cada endpoint.
 - **SIEMPRE manejar errores** — Usar las excepciones de `core/exceptions.py`.
 - **Schemas `Out` siempre con `from_attributes = True`** para serializar modelos ORM.
@@ -359,7 +358,7 @@ backend-Eyes-School-1/
 ### Sistema de auth
 
 - **JWT Bearer** — Access token (30 min) + Refresh token (7 días).
-- **Refresh tokens** almacenados en Redis con TTL para revocación.
+- **Refresh tokens** registrados en PostgreSQL (`sesiones_refresco`) para poder revocarlos.
 - **Roles**: `admin`, `docente`, `estudiante`, `padre`.
 - **Protección**: `require_roles("admin", "docente")` en `dependencies` del endpoint.
 
@@ -368,7 +367,7 @@ backend-Eyes-School-1/
 ```
 POST /api/v1/auth/login        → Devuelve access_token + refresh_token
 POST /api/v1/auth/refresh      → Nuevo access_token con refresh_token válido
-POST /api/v1/auth/logout       → Revoca el refresh_token en Redis
+POST /api/v1/auth/logout       → Revoca el refresh_token (sesión en PostgreSQL)
 GET  /api/v1/auth/me           → Info del usuario autenticado
 ```
 
@@ -376,7 +375,6 @@ GET  /api/v1/auth/me           → Info del usuario autenticado
 
 ```python
 DbSession    = Annotated[AsyncSession, Depends(get_db)]         # Sesión de DB
-RedisClient  = Annotated[Redis, Depends(get_redis)]              # Cliente Redis
 AuthUser     = Annotated[CurrentUser, Depends(get_current_user)] # Usuario actual
 require_roles("admin", "docente")                                # Verificación de rol
 ```
@@ -389,7 +387,7 @@ require_roles("admin", "docente")                                # Verificación
 
 - `SECRET_KEY` — **DEBE** cambiarse en producción. Nunca commitear el valor real.
 - `DATABASE_URL` — Credenciales de PostgreSQL. Solo en `.env`, nunca en código.
-- `REDIS_URL` — URL de conexión a Redis.
+- `FIREBASE_CREDENTIALS_JSON` — cuenta de servicio de Firebase (push). Solo en Azure.
 - `.env` está en `.gitignore` (solo `.env.example` se versiona).
 
 ### Passwords
@@ -408,7 +406,7 @@ require_roles("admin", "docente")                                # Verificación
 - Nunca exponer stack traces en producción.
 - Validar todos los inputs con Pydantic.
 - Usar query parameters con `ge`, `le` para paginación segura.
-- Redis es degradable: si falla, la app sigue funcionando (refresh token revocation se salta).
+- Las sesiones de refresco viven en PostgreSQL: si la base falla, la API no autentica (no hay degradación silenciosa de la revocación).
 
 ---
 
@@ -435,7 +433,6 @@ Configurar en Azure App Service > Configuration:
 | Variable                      | Descripción                          |
 |-------------------------------|--------------------------------------|
 | `DATABASE_URL`                | PostgreSQL de producción             |
-| `REDIS_URL`                   | Redis de producción                  |
 | `SECRET_KEY`                  | Clave secreta fuerte y única         |
 | `ALGORITHM`                   | `HS256` (no cambiar sin migrar JWTs) |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | `30` (ajustar según necesidad)       |
@@ -448,7 +445,6 @@ Configurar en Azure App Service > Configuration:
 - [ ] CORS restringido al dominio del frontend
 - [ ] `ENVIRONMENT=production` (desactiva SQL echo)
 - [ ] Migraciones aplicadas (`alembic upgrade head`)
-- [ ] Redis accesible desde el servidor
 - [ ] Secrets de GitHub configurados para Azure OIDC
 
 ---

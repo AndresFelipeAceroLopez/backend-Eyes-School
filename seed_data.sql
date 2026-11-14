@@ -26,11 +26,9 @@ RESTART IDENTITY CASCADE;
 
 -- ============================================================
 -- SEED DATA - Eyes School Backend
--- Credenciales de prueba:
---   admin@eyesschool.edu.co          -> Admin2026*
---   carlos.jimenez@eyes.edu.co       -> Profe2026*
---   sofia.rodriguez@student.eyes.co  -> Estu2026*
---   rosa.perez@gmail.com             -> Padre2026*
+-- Las contraseñas de estos usuarios NO se documentan aquí (hallazgo H-08).
+-- En QA se asignan con `python -m scripts.qa_reset_passwords` (variable QA_PASSWORD);
+-- las pruebas de integración fijan la suya en tests/integration/conftest.py.
 -- ============================================================
 
 INSERT INTO public.roles ("nombreRol") VALUES
@@ -181,22 +179,22 @@ INSERT INTO public.estudiantes ("idUsuario","codigoEstudiante","fechaIngreso","e
 (7, 'EST003', '2026-01-20', 'Activo', 2, NOW());
 
 INSERT INTO public."Asistencia" ("idEstudiante","fecha","estado","observacion","registradoPor","fechaRegistro","tipo","codigo_qr","activo") VALUES
-(1, '2026-06-16', 'Presente',  NULL,                    2, NOW(), 'Manual', NULL,                    true),
-(1, '2026-06-17', 'Ausente',   'Sin justificación',     2, NOW(), 'Manual', NULL,                    true),
-(1, '2026-06-18', 'Presente',  NULL,                    2, NOW(), 'QR',    'QR-EST001-20260618',     true),
-(2, '2026-06-16', 'Presente',  NULL,                    2, NOW(), 'QR',    'QR-EST002-20260616',     true),
-(2, '2026-06-17', 'Tardanza',  'Llegó 15 min tarde',    2, NOW(), 'Manual', NULL,                    true),
-(2, '2026-06-18', 'Presente',  NULL,                    2, NOW(), 'Manual', NULL,                    true),
-(3, '2026-06-16', 'Ausente',   'Permiso médico',        2, NOW(), 'Manual', NULL,                    true),
-(3, '2026-06-17', 'Presente',  NULL,                    2, NOW(), 'QR',    'QR-EST003-20260617',     true),
-(3, '2026-06-18', 'Presente',  NULL,                    2, NOW(), 'Manual', NULL,                    true),
-(1, '2026-06-19', 'Presente',  NULL,                    2, NOW(), 'QR',    'QR-EST001-20260619',     true);
+(1, '2026-06-16', 'Presente',  NULL,                    2, NOW(), NULL,     NULL,                    true),
+(1, '2026-06-17', 'Ausente',   'Sin justificación',     2, NOW(), NULL,     NULL,                    true),
+(1, '2026-06-18', 'Presente',  NULL,                    2, NOW(), NULL,     'QR-EST001-20260618',     true),
+(2, '2026-06-16', 'Presente',  NULL,                    2, NOW(), NULL,     'QR-EST002-20260616',     true),
+(2, '2026-06-17', 'Tarde',     'Llegó 15 min tarde',    2, NOW(), NULL,     NULL,                    true),
+(2, '2026-06-18', 'Presente',  NULL,                    2, NOW(), NULL,     NULL,                    true),
+(3, '2026-06-16', 'Ausente',   'Permiso médico',        2, NOW(), NULL,     NULL,                    true),
+(3, '2026-06-17', 'Presente',  NULL,                    2, NOW(), NULL,     'QR-EST003-20260617',     true),
+(3, '2026-06-18', 'Presente',  NULL,                    2, NOW(), NULL,     NULL,                    true),
+(1, '2026-06-19', 'Presente',  NULL,                    2, NOW(), NULL,     'QR-EST001-20260619',     true);
 
 
 INSERT INTO public."Asistencia_Aula" ("idEstudiante","idHorario","fecha","estado","observacion","registradoPor","fechaRegistro") VALUES
 (1, 1, '2026-06-16', 'Presente', 'Sin novedad',   2, NOW()),
 (1, 2, '2026-06-16', 'Presente', 'Sin novedad',   2, NOW()),
-(2, 1, '2026-06-16', 'Tardanza', 'Llegó tarde',   2, NOW()),
+(2, 1, '2026-06-16', 'Tarde',    'Llegó tarde',   2, NOW()),
 (2, 4, '2026-06-17', 'Presente', 'Sin novedad',   2, NOW()),
 (3, 4, '2026-06-17', 'Ausente',  'No asistió',    2, NOW()),
 (1, 3, '2026-06-17', 'Presente', 'Sin novedad',   2, NOW()),

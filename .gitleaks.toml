@@ -1,0 +1,49 @@
+# Configuración de gitleaks (BE-SA-2).
+# Extiende las reglas por defecto y agrega una para URLs de conexión con usuario y contraseña,
+# que es justo lo que se filtró en el incidente BE-01 (DATABASE_URL de Render en un .env).
+title = "Eyes School"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "url-conexion-con-credenciales"
+description = "URL de conexión a base de datos con usuario y contraseña"
+regex = '''(?i)(postgres(?:ql)?(?:\+\w+)?|mysql|mongodb(?:\+srv)?|redis|amqp)://[^\s:/@'"]+:[^\s@'"/]{3,}@[^\s'"]+'''
+keywords = ["postgres", "mysql", "mongodb", "redis", "amqp"]
+
+  # Valores de ejemplo y de las pruebas, que no son secretos reales.
+  [rules.allowlist]
+  description = "Ejemplos del repositorio y bases desechables de pruebas"
+  regexTarget = "match"
+  regexes = [
+    '''://(postgres|test):(password|test)@(localhost|127\.0\.0\.1)''',
+    '''://user:pass(word)?@''',
+  ]
+
+[[rules]]
+id = "secret-key-en-env"
+description = "SECRET_KEY asignada con un valor real en un archivo .env"
+regex = '''(?im)^\s*SECRET_KEY\s*=\s*['"]?[A-Za-z0-9_\-\.=+/]{32,}['"]?\s*$'''
+keywords = ["secret_key"]
+
+[allowlist]
+description = "Archivos de pruebas y documentación"
+paths = [
+  '''docs/test/.*''',
+  '''\.env\.example$''',
+  # Entorno y colección de Postman: son archivos JSON cuyos objetos tienen la forma
+  # {"key": "<nombre de variable>", "value": "..."}. La regla generic-api-key de
+  # gitleaks lee ese `"key":` como si declarara una clave y reporta el NOMBRE de la
+  # variable (por ejemplo `id_estudiante_ds02_ajeno`) como secreto. Es un falso
+  # positivo: la colección no guarda credenciales. QA_PASSWORD entra en tiempo de
+  # ejecución con `newman --env-var`, nunca escrita en estos archivos (ver
+  # tests/README.md y la planeación de integración, BE-IT-2).
+  '''tests/newman/.*\.json$''',
+  # Carpetas que no se versionan y que solo ensucian `gitleaks dir .` en local: el
+  # entorno virtual trae claves de prueba en los fixtures de sus dependencias y
+  # `evidencias/` son salidas de las corridas. `.env` NO se incluye a propósito:
+  # si alguna vez llega al índice, gitleaks debe reportarlo.
+  '''^\.?venv/''',
+  '''^evidencias/''',
+]

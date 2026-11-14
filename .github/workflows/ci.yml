@@ -1,0 +1,163 @@
+name: CI
+
+# Punto de control QG3 del modelo de calidad (MC-01): cada pull request debe pasar lint,
+# pruebas unitarias, pruebas de integración contra PostgreSQL, auditoría de dependencias,
+# detección de secretos y el Quality Gate de SonarQube Cloud antes de fusionarse.
+on:
+  pull_request:
+  push:
+    branches:
+      - develop
+      - developer
+      - main
+
+jobs:
+  lint_test_audit:
+    name: Lint, pruebas y auditoria
+    runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # SonarQube necesita el historial para atribuir los cambios
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio pytest-cov ruff pip-audit
+
+      - name: Lint (ruff)
+        run: ruff check app main.py tests scripts
+
+      # BE-17: Redis salió del sistema. Si vuelve a aparecer en el código, el CI falla.
+      - name: Sin restos de Redis
+        run: |
+          if grep -rIi redis app requirements.txt tests; then
+            echo "::error::Quedan referencias a Redis (BE-17)"; exit 1
+          fi
+
+      # Las pruebas unitarias no necesitan Postgres: tests/conftest.py fija una dirección
+      # ficticia para que nada toque una base real.
+      - name: Tests unitarios
+        run: |
+          pytest -q -m "not integration" --cov=app --cov=main --cov-branch \
+            --cov-report=term --cov-report=xml --junitxml=junit-unitarias.xml
+
+      - name: Dependency audit
+        run: pip-audit -r requirements.txt
+
+      # Se sube aunque falle la auditoria: si no, SonarQube analiza solo con la cobertura de
+      # integracion y el codigo nuevo aparece sin cubrir (paso en el PR #47: 65 % en vez de 98 %).
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: |
+            coverage.xml
+            junit-unitarias.xml
+
+  integracion:
+    name: Pruebas de integracion (PostgreSQL 18)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: eyes_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio pytest-cov
+
+      # La base es desechable: la suite recrea el esquema desde los modelos y carga los seeds.
+      - name: Tests de integracion
+        env:
+          TEST_DATABASE_URL: postgresql+asyncpg://postgres:test@localhost:5432/eyes_test
+        run: |
+          pytest -m integration -v --junitxml=junit-integracion.xml             --cov=app --cov=main --cov-branch --cov-report=xml:coverage-integracion.xml
+
+      - name: Upload junit y cobertura de integracion
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-integracion
+          path: |
+            junit-integracion.xml
+            coverage-integracion.xml
+
+  secretos:
+    name: Deteccion de secretos (gitleaks)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # revisa todo el historial, no solo el último commit
+
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  sonarqube:
+    name: SonarQube Cloud (Quality Gate)
+    runs-on: ubuntu-latest
+    # Espera a los dos jobs de pruebas para analizar con la cobertura COMPLETA: las unitarias
+    # no tocan los repositorios y las de integracion si, asi que con una sola de las dos el
+    # porcentaje que ve SonarQube es mas bajo que el real.
+    needs: [lint_test_audit, integracion]
+    if: always()
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # SonarQube necesita el historial para atribuir los cambios
+
+      - name: Descargar cobertura de las unitarias
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: coverage-xml
+
+      - name: Descargar cobertura de las de integracion
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: junit-integracion
+
+      # Sin SONAR_TOKEN (por ejemplo en pull requests desde un fork) el paso se omite.
+      - name: SonarQube Cloud
+        if: env.SONAR_TOKEN != ''
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

@@ -1,7 +1,11 @@
-from datetime import date, datetime
-from typing import Literal
+from datetime import date
+from typing import Annotated, Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, StringConstraints
+
+# N-13: una novedad sin descripción no le dice nada al acudiente; la app ya lo exigía, ahora
+# también la API (para la web y cualquier otro cliente).
+DescripcionNovedad = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
 
 class TipoNovedadCreate(BaseModel):
@@ -25,13 +29,12 @@ class NovedadCreate(BaseModel):
     id_estudiante: int
     id_tipo_novedad: int
     fecha: date
-    descripcion: str
+    descripcion: DescripcionNovedad
     accion_tomada: str | None = None
-    registrado_por: int
 
 
 class NovedadUpdate(BaseModel):
-    descripcion: str | None = None
+    descripcion: DescripcionNovedad | None = None
     accion_tomada: str | None = None
     fecha_resolucion: date | None = None
     id_tipo_novedad: int | None = None

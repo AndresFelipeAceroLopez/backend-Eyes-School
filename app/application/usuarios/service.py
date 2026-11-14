@@ -3,15 +3,19 @@ from __future__ import annotations
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.usuarios.schemas import UsuarioCreate, UsuarioOut, UsuarioUpdate
-from app.core.exceptions import ConflictException, NotFoundException
-from app.core.security import hash_password
+from app.core.exceptions import BusinessRuleException, ConflictException, NotFoundException
+from app.core.reloj import Reloj, ahora_utc
+from app.core.security import hash_password_async, verify_password_async
+from app.infrastructure.repositories.sesion_repository import SesionRepository
 from app.infrastructure.repositories.usuario_repository import RolRepository, UsuarioRepository
 
 
 class UsuarioService:
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession, reloj: Reloj = ahora_utc):
         self.repo = UsuarioRepository(session)
         self.rol_repo = RolRepository(session)
+        self.sesiones = SesionRepository(session)
+        self.reloj = reloj
 
     async def list(
         self,
@@ -38,12 +42,16 @@ class UsuarioService:
 
         raw = data.model_dump()
         if raw.get("password"):
-            raw["password"] = hash_password(raw["password"])
+            raw["password"] = await hash_password_async(raw["password"])
 
         user = await self.repo.create(raw)
         return UsuarioOut.model_validate(await self.repo.get_by_id_with_rol(user.id_usuario))
 
-    async def update(self, id_usuario: int, data: UsuarioUpdate) -> UsuarioOut:
+    async def update(
+        self, id_usuario: int, data: UsuarioUpdate, exigir_password_actual: bool = False
+    ) -> UsuarioOut:
+        """`exigir_password_actual`: el usuario edita su propia cuenta (no es un admin), así
+        que cambiar la contraseña requiere confirmar la actual."""
         user = await self.repo.get_by_id_with_rol(id_usuario)
         if not user:
             raise NotFoundException("Usuario no encontrado")
@@ -51,8 +59,15 @@ class UsuarioService:
             raise ConflictException("El correo ya está en uso")
 
         raw = data.model_dump(exclude_none=True)
+        raw.pop("password_actual", None)
         if raw.get("password"):
-            raw["password"] = hash_password(raw["password"])
+            if exigir_password_actual:
+                if not data.password_actual:
+                    raise BusinessRuleException("Debe indicar la contraseña actual para cambiarla")
+                if not user.password or not await verify_password_async(data.password_actual, user.password):
+                    raise BusinessRuleException("La contraseña actual no es correcta")
+            raw["password"] = await hash_password_async(raw["password"])
+            raw["password_actualizada"] = self.reloj()
 
         updated = await self.repo.update(user, raw)
         return UsuarioOut.model_validate(await self.repo.get_by_id_with_rol(updated.id_usuario))
@@ -62,6 +77,9 @@ class UsuarioService:
         if not user:
             raise NotFoundException("Usuario no encontrado")
         updated = await self.repo.update(user, {"estado": estado})
+        if not estado:
+            # Una cuenta desactivada pierde sus sesiones de refresco de inmediato.
+            await self.sesiones.revocar_todas(id_usuario)
         return UsuarioOut.model_validate(await self.repo.get_by_id_with_rol(updated.id_usuario))
 
     async def delete(self, id_usuario: int) -> None:

@@ -49,6 +49,20 @@ class AsistenciaRepository(BaseRepository[AsistenciaModel]):
         result = await self.session.execute(query.offset(skip).limit(limit))
         return list(result.scalars().all())
 
+    async def exists_for_day(self, id_estudiante: int, fecha: date, tipo: str) -> bool:
+        """¿Ya hay un registro activo de ese tipo para el estudiante en esa fecha?"""
+        result = await self.session.execute(
+            select(AsistenciaModel.id_asistencia)
+            .where(
+                AsistenciaModel.id_estudiante == id_estudiante,
+                AsistenciaModel.fecha == fecha,
+                AsistenciaModel.tipo == tipo,
+                AsistenciaModel.activo == True,  # noqa: E712
+            )
+            .limit(1)
+        )
+        return result.first() is not None
+
     async def get_by_codigo_qr(self, codigo_qr: str, fecha: date) -> AsistenciaModel | None:
         result = await self.session.execute(
             select(AsistenciaModel).where(

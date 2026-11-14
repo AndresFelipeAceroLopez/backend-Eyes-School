@@ -14,7 +14,7 @@ class BaseRepository(Generic[ModelType]):
         self.session = session
 
     async def get_by_id(self, id: int) -> ModelType | None:
-        pk_col = list(self.model.__table__.primary_key.columns)[0]
+        pk_col = next(iter(self.model.__table__.primary_key.columns))
         result = await self.session.execute(select(self.model).where(pk_col == id))
         return result.scalar_one_or_none()
 
