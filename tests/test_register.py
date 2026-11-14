@@ -40,14 +40,18 @@ class _FakeSession:
 @pytest.fixture
 def registro(monkeypatch):
     _Recorder.created = {}
-    usuario_model = SimpleNamespace(estado=True)
+    # Lo que se mandó al INSERT además de los datos del formulario (estado, pendiente_validacion).
+    usuario_model = SimpleNamespace(insertado={})
 
     class FakeUsuarioService:
         def __init__(self, session):
             pass
 
-        async def create(self, data):
-            return SimpleNamespace(id_usuario=50, id_rol=data.id_rol, estado=True, rol=None)
+        async def create(self, data, **estado_inicial):
+            usuario_model.insertado = estado_inicial
+            return SimpleNamespace(
+                id_usuario=50, id_rol=data.id_rol, estado=estado_inicial.get("estado", True), rol=None
+            )
 
     class FakeUsuarioRepository:
         def __init__(self, session):
@@ -92,7 +96,8 @@ async def test_un_docente_registrado_tiene_perfil_de_profesor_y_queda_inactivo(r
     assert profesor["titulo"] == "Licenciada"
     assert _Recorder.created["ProfesorEspecializacionRepository"][0]["id_profesor"] == 99
     assert user.estado is False
-    assert model.estado is False
+    # Nace inactiva y pendiente en el mismo INSERT: no se crea y luego se modifica (N-31).
+    assert model.insertado == {"estado": False, "pendiente_validacion": True}
     assert session.commits == 1
 
 

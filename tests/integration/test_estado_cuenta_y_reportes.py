@@ -106,3 +106,48 @@ async def test_el_archivo_de_un_reporte_sobrevive_a_un_despliegue(api, tmp_path,
     assert descarga.content == contenido
     assert descarga.headers["content-type"] == "application/pdf"
     assert "attachment" in descarga.headers["content-disposition"]
+
+
+# ------------------------------------------------------- borrado en una sola sentencia
+
+
+@pytest.mark.parametrize(
+    ("id_usuario", "que_es"),
+    [(2, "docente con asignaciones, notas, novedades y horarios"),
+     (3, "estudiante con notas, asistencia y acudientes"),
+     (1, "administrador con reportes")],
+)
+async def test_borrar_un_usuario_con_datos_relacionados_no_deja_nada_colgando(
+    api, db, id_usuario, que_es
+):
+    """CP-INT-025: el borrado pasó de ~20 sentencias a una (7 s → un viaje en QA).
+
+    Con datos reales en todas las tablas que apuntan al usuario: si el orden de los CTE o las FK
+    fallaran, PostgreSQL rechazaría la sentencia entera.
+    """
+    admin = await encabezado(api, ADMIN)
+
+    respuesta = await api.delete(f"/api/v1/usuarios/{id_usuario}", headers=admin)
+
+    assert respuesta.status_code == 204, que_es
+    from sqlalchemy import func, select
+
+    from app.infrastructure.models.actores import (
+        AdministradorModel,
+        EstudianteModel,
+        PadreModel,
+        ProfesorModel,
+    )
+    from app.infrastructure.models.asistencia import AsistenciaModel
+    from app.infrastructure.models.notas import NotaModel
+    from app.infrastructure.models.novedades import NovedadModel
+    from app.infrastructure.models.usuario import UsuarioModel
+
+    quedan = 0
+    for columna in (
+        UsuarioModel.id_usuario, NotaModel.registrado_por, AsistenciaModel.registrado_por,
+        NovedadModel.registrado_por, ProfesorModel.id_usuario, EstudianteModel.id_usuario,
+        PadreModel.id_usuario, AdministradorModel.id_usuario,
+    ):
+        quedan += await db.scalar(select(func.count()).where(columna == id_usuario))
+    assert quedan == 0, que_es

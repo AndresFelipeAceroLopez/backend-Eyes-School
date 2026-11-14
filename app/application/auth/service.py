@@ -76,7 +76,14 @@ class AuthService:
     async def register(self, data: RegisterRequest) -> UsuarioOut:
         user_service = UsuarioService(self.session)
         user_data = UsuarioCreate.model_validate(data.model_dump())
-        user_out = await user_service.create(user_data)
+        # Profesor (1) y Administrador (3) quedan INACTIVOS y pendientes de validación al
+        # autorregistrarse (N-31); se fija en el mismo INSERT en vez de crear y luego modificar.
+        if data.id_rol in (ROL_DOCENTE, ROL_ADMIN):
+            user_out = await user_service.create(
+                user_data, estado=False, pendiente_validacion=True
+            )
+        else:
+            user_out = await user_service.create(user_data)
 
         # El perfil se elige por id_rol, igual que la regla de activación de
         # abajo: en la BD los roles se llaman 'docente'/'admin', así que comparar
@@ -124,20 +131,8 @@ class AuthService:
                 "fecha_asignacion": date.today()
             })
 
-        # Profesor (id_rol=1) y Administrador (id_rol=3) quedan INACTIVOS al
-        # auto-registrarse: deben pasar por la bandeja de validación y ser activados
-        # por un administrador activo antes de poder iniciar sesión. (El login rechaza
-        # estado=False con "Usuario inactivo"; la bandeja lista los estado=False.)
-        # Estudiante (2) y Padre (4) siguen activos por defecto.
-        # Se compara por id_rol (estable) y no por nombre: en la BD los roles se
-        # llaman 'docente'/'admin', no 'profesor'/'administrador'.
-        if id_rol in (ROL_DOCENTE, ROL_ADMIN):
-            user_model = await self.repo.get_by_id(user_out.id_usuario)
-            if user_model:
-                user_model.estado = False
-                user_model.pendiente_validacion = True
-                user_out.estado = False
-
+        # Profesor y Administrador quedaron inactivos desde el INSERT (ver arriba): deben pasar por
+        # la bandeja de validación y ser activados por un administrador antes de iniciar sesión.
         await self.session.commit()
         return user_out
 

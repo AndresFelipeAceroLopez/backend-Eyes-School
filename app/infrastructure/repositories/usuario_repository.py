@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import delete, exists, func, literal_column, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -114,57 +114,85 @@ class UsuarioRepository(BaseRepository[UsuarioModel]):
         )
 
     async def delete_cascade(self, id_usuario: int) -> None:
-        """Elimina el usuario y TODO lo que lo referencia por FK, en orden de
-        dependencia y dentro de la misma transacción de la petición.
+        """Elimina el usuario y TODO lo que lo referencia por FK, en UNA sola sentencia.
 
-        Usa DELETEs por subconsulta (no carga objetos en la sesión) para no
-        disparar lazy-loads en contexto async. El backend NO tenía cascade ni a
-        nivel ORM ni de BD, por eso un `DELETE /usuarios/{id}` reventaba con 500
-        cuando el usuario tenía fila de rol o registros asociados.
+        Antes eran ~20 DELETE seguidos; con la base a 160–300 ms por viaje, `DELETE /usuarios/{id}`
+        tardaba 7 s en QA (CP-INT-025). Ahora cada tabla es un CTE que modifica datos y el usuario
+        es el DELETE final: PostgreSQL ejecuta todo en un viaje. Las FK del esquema son NO ACTION
+        (ninguna RESTRICT), y esas se comprueban al TERMINAR la sentencia, cuando ya no queda nada
+        que apunte al usuario; por eso el orden interno da igual. Las sesiones y los dispositivos
+        caen solos (ON DELETE CASCADE).
         """
-        s = self.session
+        prof = select(ProfesorModel.id_profesor).where(ProfesorModel.id_usuario == id_usuario)
+        est = select(EstudianteModel.id_estudiante).where(EstudianteModel.id_usuario == id_usuario)
+        adm = select(AdministradorModel.id_administrador).where(
+            AdministradorModel.id_usuario == id_usuario
+        )
+        borrados = [
+            # Registros que creó el usuario o que son de su estudiante (una sola pasada por tabla)
+            delete(AsistenciaModel).where(or_(
+                AsistenciaModel.registrado_por == id_usuario, AsistenciaModel.id_estudiante.in_(est)
+            )),
+            delete(AsistenciaAulaModel).where(or_(
+                AsistenciaAulaModel.registrado_por == id_usuario,
+                AsistenciaAulaModel.id_estudiante.in_(est),
+            )),
+            delete(NotaModel).where(or_(
+                NotaModel.registrado_por == id_usuario, NotaModel.id_estudiante.in_(est)
+            )),
+            delete(NovedadModel).where(or_(
+                NovedadModel.registrado_por == id_usuario, NovedadModel.id_estudiante.in_(est)
+            )),
+            # Profesor
+            delete(ProfesorEspecializacionModel).where(
+                ProfesorEspecializacionModel.id_profesor.in_(prof)
+            ),
+            delete(ProfesorHorarioModel).where(ProfesorHorarioModel.id_profesor.in_(prof)),
+            delete(AsignacionModel).where(AsignacionModel.id_profesor.in_(prof)),
+            delete(ProfesorModel).where(ProfesorModel.id_usuario == id_usuario),
+            # Estudiante
+            delete(EstudianteIPSModel).where(EstudianteIPSModel.id_estudiante.in_(est)),
+            delete(EstudianteModel).where(EstudianteModel.id_usuario == id_usuario),
+            # Padre: como acudiente del estudiante o cuando el usuario ES el acudiente
+            delete(PadreModel).where(or_(
+                PadreModel.id_estudiante.in_(est), PadreModel.id_usuario == id_usuario
+            )),
+            # Administrador
+            delete(ReporteModel).where(ReporteModel.id_administrador.in_(adm)),
+            delete(AdministradorModel).where(AdministradorModel.id_usuario == id_usuario),
+        ]
+        ctes = [
+            sentencia.returning(literal_column("1")).cte(f"borrado_{i}")
+            for i, sentencia in enumerate(borrados)
+        ]
+        await self.session.execute(
+            delete(UsuarioModel).where(UsuarioModel.id_usuario == id_usuario).add_cte(*ctes)
+            .execution_options(synchronize_session=False)
+        )
+        await self.session.flush()
 
-        async def run(stmt) -> None:
-            # synchronize_session=False: no necesitamos sincronizar la sesión en
-            # memoria (la petición termina tras el borrado) y así los DELETE por
-            # subconsulta no fallan al intentar evaluarse en Python.
-            await s.execute(stmt.execution_options(synchronize_session=False))
+    async def duplicados(self, correo: str | None, numero: str, tipo: str) -> tuple[bool, bool]:
+        """(¿correo ya usado?, ¿documento ya usado?) en una sola consulta (antes eran dos)."""
+        correo_usado = (
+            exists().where(func.lower(UsuarioModel.correo) == correo.strip().lower())
+            if correo else literal_column("false")
+        )
+        documento_usado = exists().where(
+            UsuarioModel.numero_documento == numero, UsuarioModel.tipo_documento == tipo
+        )
+        fila = (await self.session.execute(select(correo_usado, documento_usado))).one()
+        return bool(fila[0]), bool(fila[1])
 
-        prof_ids = select(ProfesorModel.id_profesor).where(ProfesorModel.id_usuario == id_usuario)
-        est_ids = select(EstudianteModel.id_estudiante).where(EstudianteModel.id_usuario == id_usuario)
-        admin_ids = select(AdministradorModel.id_administrador).where(AdministradorModel.id_usuario == id_usuario)
+    async def crear_con_rol(self, data: dict) -> UsuarioModel:
+        """Inserta y carga el rol: 2 consultas (antes, insert + refresh + relectura con rol = 3).
 
-        # 1) Registros creados por el usuario (FK registradoPor → usuario)
-        await run(delete(AsistenciaModel).where(AsistenciaModel.registrado_por == id_usuario))
-        await run(delete(AsistenciaAulaModel).where(AsistenciaAulaModel.registrado_por == id_usuario))
-        await run(delete(NotaModel).where(NotaModel.registrado_por == id_usuario))
-        await run(delete(NovedadModel).where(NovedadModel.registrado_por == id_usuario))
-
-        # 2) Profesor → especializaciones, horarios, asignaciones y su fila
-        await run(delete(ProfesorEspecializacionModel).where(ProfesorEspecializacionModel.id_profesor.in_(prof_ids)))
-        await run(delete(ProfesorHorarioModel).where(ProfesorHorarioModel.id_profesor.in_(prof_ids)))
-        await run(delete(AsignacionModel).where(AsignacionModel.id_profesor.in_(prof_ids)))
-        await run(delete(ProfesorModel).where(ProfesorModel.id_usuario == id_usuario))
-
-        # 3) Estudiante → sus registros académicos, IPS, vínculos de padre y su fila
-        await run(delete(AsistenciaModel).where(AsistenciaModel.id_estudiante.in_(est_ids)))
-        await run(delete(AsistenciaAulaModel).where(AsistenciaAulaModel.id_estudiante.in_(est_ids)))
-        await run(delete(NotaModel).where(NotaModel.id_estudiante.in_(est_ids)))
-        await run(delete(NovedadModel).where(NovedadModel.id_estudiante.in_(est_ids)))
-        await run(delete(EstudianteIPSModel).where(EstudianteIPSModel.id_estudiante.in_(est_ids)))
-        await run(delete(PadreModel).where(PadreModel.id_estudiante.in_(est_ids)))
-        await run(delete(EstudianteModel).where(EstudianteModel.id_usuario == id_usuario))
-
-        # 4) Administrador → reportes y su fila
-        await run(delete(ReporteModel).where(ReporteModel.id_administrador.in_(admin_ids)))
-        await run(delete(AdministradorModel).where(AdministradorModel.id_usuario == id_usuario))
-
-        # 5) Padre (cuando el usuario ES el acudiente)
-        await run(delete(PadreModel).where(PadreModel.id_usuario == id_usuario))
-
-        # 6) Usuario
-        await run(delete(UsuarioModel).where(UsuarioModel.id_usuario == id_usuario))
-        await s.flush()
+        Los valores por defecto del servidor (`fechaRegistro`) llegan con el RETURNING del INSERT.
+        """
+        usuario = UsuarioModel(**data)
+        self.session.add(usuario)
+        await self.session.flush()
+        await self.session.refresh(usuario, attribute_names=["rol"])
+        return usuario
 
 
 class RolRepository(BaseRepository[RolModel]):
