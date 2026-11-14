@@ -33,4 +33,4 @@ def test_produccion_con_secret_key_propia_arranca():
     ],
 )
 def test_cors_origins_se_lee_como_lista(raw, expected):
-    assert Settings(_env_file=None, CORS_ORIGINS=raw).cors_origins == expected
+    assert Settings(_env_file=None, CORS_ORIGINS=raw).origenes_cors == expected

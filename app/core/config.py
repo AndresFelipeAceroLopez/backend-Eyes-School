@@ -60,7 +60,7 @@ class Settings(BaseSettings):
     LOGIN_BLOQUEO_MINUTOS: int = 15
 
     @property
-    def cors_origins(self) -> list[str]:
+    def origenes_cors(self) -> list[str]:
         return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()] or ["*"]
 
     @model_validator(mode="after")
