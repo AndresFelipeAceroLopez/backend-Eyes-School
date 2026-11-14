@@ -654,16 +654,16 @@
           }
         },
         {
-          "name": "CP-INT-005 Login de un docente recién registrado (inactivo) → 401",
+          "name": "CP-INT-005 Login de un docente recién registrado (pendiente) → 403 con el motivo (N-31)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('CP-INT-005 → 401', () => pm.response.to.have.status(401));",
+                  "pm.test('CP-INT-005 → 403', () => pm.response.to.have.status(403));",
                   "pm.test('CP-INT-005 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
-                  "pm.test('CP-INT-005 cuerpo', () => { pm.expect(pm.response.json().detail).to.eql('Usuario inactivo'); });"
+                  "pm.test('CP-INT-005 cuerpo', () => { pm.expect(pm.response.json().detail).to.include('pendiente de validación'); });"
                 ]
               }
             }
@@ -3522,6 +3522,104 @@
           }
         },
         {
+          "name": "CP-INT-029 Admin desactiva la cuenta → 200 con estado false (BE-13)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-029 → 200', () => pm.response.to.have.status(200));",
+                  "pm.test('CP-INT-029 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
+                  "pm.test('CP-INT-029 cuerpo', () => { pm.expect(pm.response.json().estado).to.eql(false); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_admin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/usuarios/{{usuario_temporal_id}}/estado?estado=false",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{usuario_temporal_id}}",
+                "estado"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "false"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "CP-INT-010 Una cuenta desactivada no renueva su sesión → 401 (BE-13)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.sendRequest({ url: pm.environment.get('base_url') + '/auth/login', method: 'POST',",
+                  "  header: { 'Content-Type': 'application/json' },",
+                  "  body: { mode: 'raw', raw: JSON.stringify({ correo: 'qa.temporal.' + pm.collectionVariables.get('sufijo') + '@example.com', password: pm.environment.get('QA_PASSWORD') }) }",
+                  "}, (err, res) => pm.collectionVariables.set('login_desactivada', err ? 'error' : res.code + ' ' + res.text()));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('CP-INT-010 → 401', () => pm.response.to.have.status(401));",
+                  "pm.test('CP-INT-010 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
+                  "pm.test('CP-INT-010 cuerpo', () => { pm.expect(pm.collectionVariables.get('login_desactivada')).to.include('Cuenta desactivada'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"refresh_token\": \"{{refresh_temporal_2}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
           "name": "CP-INT-006 Sexto intento con la clave CORRECTA tras 5 fallos → 429 (BE-16)",
           "event": [
             {
@@ -3575,91 +3673,6 @@
             "body": {
               "mode": "raw",
               "raw": "{\"correo\": \"qa.temporal.{{sufijo}}@example.com\", \"password\": \"{{QA_PASSWORD}}\"}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          }
-        },
-        {
-          "name": "CP-INT-029 Admin desactiva la cuenta → 200 con estado false (BE-13)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('CP-INT-029 → 200', () => pm.response.to.have.status(200));",
-                  "pm.test('CP-INT-029 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));",
-                  "pm.test('CP-INT-029 cuerpo', () => { pm.expect(pm.response.json().estado).to.eql(false); });"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token_admin}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/usuarios/{{usuario_temporal_id}}/estado?estado=false",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "usuarios",
-                "{{usuario_temporal_id}}",
-                "estado"
-              ],
-              "query": [
-                {
-                  "key": "estado",
-                  "value": "false"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "CP-INT-010 Una cuenta desactivada no renueva su sesión → 401 (BE-13)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('CP-INT-010 → 401', () => pm.response.to.have.status(401));",
-                  "pm.test('CP-INT-010 TIEMPO ≤ ' + (pm.environment.get('umbral_ms') || 800) + ' ms', () => pm.expect(pm.response.responseTime).to.be.below(Number(pm.environment.get('umbral_ms') || 800)));"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/auth/refresh",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "refresh"
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\"refresh_token\": \"{{refresh_temporal_2}}\"}",
               "options": {
                 "raw": {
                   "language": "json"

@@ -59,3 +59,9 @@ markers = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["app"]
+[tool.coverage.run]
+# SQLAlchemy async ejecuta las consultas dentro de greenlets: sin esto, coverage.py pierde el
+# rastro después de cada `await` a la base y marca como no ejecutadas líneas que sí corrieron
+# (SonarQube veía 75,7 % de código nuevo cubierto en el PR #58; medido bien, es más). `thread`
+# cubre lo que va a hilos con anyio (bcrypt, el PDF del boletín).
+concurrency = ["greenlet", "thread"]

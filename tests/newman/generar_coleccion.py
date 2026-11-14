@@ -58,7 +58,7 @@ caso(7, "Login con el correo en mayúsculas → 200 (BE-12)", "POST", "/auth/log
 caso(8, "Refresh con un refresh token válido → 200", "POST", "/auth/refresh", body={"refresh_token": "{{refresh_estudiante}}"}, checks=["pm.expect(pm.response.json()).to.have.property('access_token')"])
 caso(11, "Recuperar contraseña: respuesta neutra → 200", "POST", "/auth/forgot-password", body={"correo": "nadie.{{sufijo}}@example.com"}, checks=["pm.expect(pm.response.json().message).to.include('Si el correo está registrado')"])
 caso(16, "Registro de un docente → 201 e inactivo", "POST", "/auth/register", body={**cuenta("docente"), "correo": "docente.{{sufijo}}@example.com", "id_rol": 1}, status=201, capturar={"usuario_docente_id": "id_usuario"}, checks=["pm.expect(pm.response.json().estado).to.eql(false)"])
-caso(5, "Login de un docente recién registrado (inactivo) → 401", "POST", "/auth/login", body={"correo": "docente.{{sufijo}}@example.com", "password": "{{QA_PASSWORD}}"}, status=401, checks=["pm.expect(pm.response.json().detail).to.eql('Usuario inactivo')"])
+caso(5, "Login de un docente recién registrado (pendiente) → 403 con el motivo (N-31)", "POST", "/auth/login", body={"correo": "docente.{{sufijo}}@example.com", "password": "{{QA_PASSWORD}}"}, status=403, checks=["pm.expect(pm.response.json().detail).to.include('pendiente de validación')"])
 caso(17, "Registro de un padre vinculado a un estudiante → 201", "POST", "/auth/register", body={**cuenta("padre"), "correo": "padre.{{sufijo}}@example.com", "id_rol": 4, "id_estudiante_vinculado": "{{id_estudiante_ds01}}", "parentesco": "Madre"}, status=201, capturar={"usuario_padre_id": "id_usuario"})
 caso(18, "Registro con el correo repetido en otras mayúsculas → 409 (BE-12)", "POST", "/auth/register", body={**cuenta("dup"), "correo": "PADRE.{{sufijo}}@example.com", "id_rol": 4}, status=409)
 caso(19, "Registro con documento repetido → 409", "POST", "/auth/register", body={**cuenta("padre"), "correo": "otro.{{sufijo}}@example.com", "id_rol": 4}, status=409)
@@ -143,8 +143,9 @@ caso(71, "Reporte por /static sin token → 404 (BE-15)", "GET", "{{reporte_arch
 # foto de la cuenta con la que se prueban. Ahora corren también contra QA, pero sobre una cuenta
 # TEMPORAL que la carpeta crea al empezar y la limpieza borra al final: nunca se bloquea ni se
 # desactiva una cuenta del seed. El orden importa: primero lo que necesita la cuenta activa
-# (009, 072, 058), después el bloqueo (006) y al final la desactivación (029, 010), que usa una
-# sesión abierta antes de bloquearla.
+# (009, 072, 058), después la desactivación (029, 010), que usa una sesión abierta antes, y al
+# final el bloqueo (006): los fallos se cuentan aunque la cuenta esté desactivada, y el bloqueo
+# se evalúa antes que el estado, así que si fuera primero taparía el mensaje de N-31.
 t = "Sesión con cuenta temporal"
 REFRESH_TEMPORAL_1 = {"refresh_token": "{{refresh_temporal_1}}"}
 LOGIN_TEMPORAL = {"correo": "qa.temporal.{{sufijo}}@example.com", "password": "{{QA_PASSWORD}}"}
@@ -166,12 +167,19 @@ CINCO_FALLOS = [
     "};",
     "fallo(0);",
 ]
+# N-31: el login de la cuenta desactivada dice que está desactivada, no pendiente.
+LOGIN_DESACTIVADA = [
+    "pm.sendRequest({ url: pm.environment.get('base_url') + '/auth/login', method: 'POST',",
+    "  header: { 'Content-Type': 'application/json' },",
+    "  body: { mode: 'raw', raw: JSON.stringify({ correo: 'qa.temporal.' + pm.collectionVariables.get('sufijo') + '@example.com', password: pm.environment.get('QA_PASSWORD') }) }",
+    "}, (err, res) => pm.collectionVariables.set('login_desactivada', err ? 'error' : res.code + ' ' + res.text()));",
+]
 caso(9, "Refresh después de cerrar sesión → 401 (BE-13, BE-17)", "POST", "/auth/refresh", body=REFRESH_TEMPORAL_1, status=401, pre=CERRAR_SESION_1, checks=["pm.expect(pm.collectionVariables.get('logout_temporal')).to.eql('204')"], carpeta=t)
 caso(72, "Avatar que no es una imagen → 400 (BE-14)", "POST", "/auth/me/avatar", rol="temporal", form="datos/reporte.pdf", status=400, checks=["pm.expect(pm.response.json().detail).to.include('imagen')"], carpeta=t)
 caso(58, "La cuenta registra su teléfono para notificaciones → 201 (BE-18)", "POST", "/dispositivos", rol="temporal", body={"token_fcm": "qa-newman-{{sufijo}}-dispositivo", "plataforma": "android"}, status=201, checks=["pm.expect(pm.response.json().token_fcm).to.eql('qa-newman-' + pm.collectionVariables.get('sufijo') + '-dispositivo')"], carpeta=t)
-caso(6, "Sexto intento con la clave CORRECTA tras 5 fallos → 429 (BE-16)", "POST", "/auth/login", body=LOGIN_TEMPORAL, status=429, pre=CINCO_FALLOS, checks=["pm.expect(pm.response.json().detail).to.include('Demasiados intentos')"], carpeta=t)
 caso(29, "Admin desactiva la cuenta → 200 con estado false (BE-13)", "PATCH", "/usuarios/{{usuario_temporal_id}}/estado", rol="admin", query={"estado": "false"}, checks=["pm.expect(pm.response.json().estado).to.eql(false)"], carpeta=t)
-caso(10, "Una cuenta desactivada no renueva su sesión → 401 (BE-13)", "POST", "/auth/refresh", body={"refresh_token": "{{refresh_temporal_2}}"}, status=401, carpeta=t)
+caso(10, "Una cuenta desactivada no renueva su sesión → 401 (BE-13)", "POST", "/auth/refresh", body={"refresh_token": "{{refresh_temporal_2}}"}, status=401, pre=LOGIN_DESACTIVADA, checks=["pm.expect(pm.collectionVariables.get('login_desactivada')).to.include('Cuenta desactivada')"], carpeta=t)
+caso(6, "Sexto intento con la clave CORRECTA tras 5 fallos → 429 (BE-16)", "POST", "/auth/login", body=LOGIN_TEMPORAL, status=429, pre=CINCO_FALLOS, checks=["pm.expect(pm.response.json().detail).to.include('Demasiados intentos')"], carpeta=t)
 
 ORDEN = ["Auth", "Usuarios", "Asistencia", "Notas", "Novedades", "Padres y dashboard",
          "Horarios y asignaciones", "Reportes y archivos", "Sesión con cuenta temporal"]

@@ -53,7 +53,7 @@ def _errores_de(ruta: str, metodo: str, operacion: dict) -> list[int]:
     if ruta in _PUBLICAS_CON_401:
         codigos.add(401)
     if ruta in _CON_429:
-        codigos.add(429)
+        codigos |= {403, 429}  # 403: cuenta pendiente de validación o desactivada (N-31)
     if "{" in ruta:
         codigos.add(404)
     if metodo in _ESCRITURA and ruta not in _SESION:

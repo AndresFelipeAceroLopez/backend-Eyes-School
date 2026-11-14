@@ -23,6 +23,7 @@ from app.core.config import settings
 from app.core.email import build_reset_email_html, send_email
 from app.core.exceptions import (
     BusinessRuleException,
+    ForbiddenException,
     TooManyRequestsException,
     UnauthorizedException,
 )
@@ -54,6 +55,10 @@ AVATAR_DIR = "static/avatars"
 AVATAR_MAX_BYTES = 2 * 1024 * 1024
 AVATAR_FORMATOS = {"JPEG": "jpg", "PNG": "png", "WEBP": "webp"}
 
+# N-31: el login distingue por qué una cuenta no está activa. Lo muestran la web y la app tal cual.
+MENSAJE_CUENTA_PENDIENTE = "Cuenta pendiente de validación. Un administrador debe aprobarla."
+MENSAJE_CUENTA_DESACTIVADA = "Cuenta desactivada. Comunícate con el administrador del colegio."
+
 # id_rol de la tabla roles (ver seed_data.sql).
 ROL_DOCENTE = 1
 ROL_ESTUDIANTE = 2
@@ -71,7 +76,14 @@ class AuthService:
     async def register(self, data: RegisterRequest) -> UsuarioOut:
         user_service = UsuarioService(self.session)
         user_data = UsuarioCreate.model_validate(data.model_dump())
-        user_out = await user_service.create(user_data)
+        # Profesor (1) y Administrador (3) quedan INACTIVOS y pendientes de validación al
+        # autorregistrarse (N-31); se fija en el mismo INSERT en vez de crear y luego modificar.
+        if data.id_rol in (ROL_DOCENTE, ROL_ADMIN):
+            user_out = await user_service.create(
+                user_data, estado=False, pendiente_validacion=True
+            )
+        else:
+            user_out = await user_service.create(user_data)
 
         # El perfil se elige por id_rol, igual que la regla de activación de
         # abajo: en la BD los roles se llaman 'docente'/'admin', así que comparar
@@ -119,19 +131,8 @@ class AuthService:
                 "fecha_asignacion": date.today()
             })
 
-        # Profesor (id_rol=1) y Administrador (id_rol=3) quedan INACTIVOS al
-        # auto-registrarse: deben pasar por la bandeja de validación y ser activados
-        # por un administrador activo antes de poder iniciar sesión. (El login rechaza
-        # estado=False con "Usuario inactivo"; la bandeja lista los estado=False.)
-        # Estudiante (2) y Padre (4) siguen activos por defecto.
-        # Se compara por id_rol (estable) y no por nombre: en la BD los roles se
-        # llaman 'docente'/'admin', no 'profesor'/'administrador'.
-        if id_rol in (ROL_DOCENTE, ROL_ADMIN):
-            user_model = await self.repo.get_by_id(user_out.id_usuario)
-            if user_model:
-                user_model.estado = False
-                user_out.estado = False
-
+        # Profesor y Administrador quedaron inactivos desde el INSERT (ver arriba): deben pasar por
+        # la bandeja de validación y ser activados por un administrador antes de iniciar sesión.
         await self.session.commit()
         return user_out
 
@@ -152,7 +153,10 @@ class AuthService:
                 logger.warning("Inicio de sesión fallido: correo no registrado")
             raise UnauthorizedException("Credenciales inválidas")
         if not user.estado:
-            raise UnauthorizedException("Usuario inactivo")
+            # N-31. Va después de comprobar la contraseña: sin ella no se revela el estado.
+            if user.pendiente_validacion:
+                raise ForbiddenException(MENSAJE_CUENTA_PENDIENTE)
+            raise ForbiddenException(MENSAJE_CUENTA_DESACTIVADA)
 
         await self.repo.reiniciar_fallos(user.id_usuario)
 

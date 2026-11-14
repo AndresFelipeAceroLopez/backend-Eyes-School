@@ -34,18 +34,23 @@ class UsuarioService:
             raise NotFoundException("Usuario no encontrado")
         return UsuarioOut.model_validate(user)
 
-    async def create(self, data: UsuarioCreate) -> UsuarioOut:
-        if data.correo and await self.repo.correo_exists(data.correo):
+    async def create(self, data: UsuarioCreate, **estado_inicial) -> UsuarioOut:
+        """`estado_inicial`: campos que se fijan ya en el INSERT (p. ej. `estado=False` del
+        autorregistro), para no crear la cuenta y modificarla después en otra consulta."""
+        correo_usado, documento_usado = await self.repo.duplicados(
+            data.correo, data.numero_documento, data.tipo_documento
+        )
+        if correo_usado:
             raise ConflictException("El correo ya está registrado")
-        if await self.repo.documento_exists(data.numero_documento, data.tipo_documento):
+        if documento_usado:
             raise ConflictException("El documento ya está registrado")
 
         raw = data.model_dump()
         if raw.get("password"):
             raw["password"] = await hash_password_async(raw["password"])
+        raw.update(estado_inicial)
 
-        user = await self.repo.create(raw)
-        return UsuarioOut.model_validate(await self.repo.get_by_id_with_rol(user.id_usuario))
+        return UsuarioOut.model_validate(await self.repo.crear_con_rol(raw))
 
     async def update(
         self, id_usuario: int, data: UsuarioUpdate, exigir_password_actual: bool = False
@@ -76,7 +81,9 @@ class UsuarioService:
         user = await self.repo.get_by_id_with_rol(id_usuario)
         if not user:
             raise NotFoundException("Usuario no encontrado")
-        updated = await self.repo.update(user, {"estado": estado})
+        # Sea para activarla o para desactivarla, el admin ya la revisó: deja de estar pendiente
+        # (N-31). Así una cuenta desactivada después no se confunde con una por validar.
+        updated = await self.repo.update(user, {"estado": estado, "pendiente_validacion": False})
         if not estado:
             # Una cuenta desactivada pierde sus sesiones de refresco de inmediato.
             await self.sesiones.revocar_todas(id_usuario)

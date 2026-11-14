@@ -1,7 +1,6 @@
-import mimetypes
 
 from fastapi import APIRouter, File, Query, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 
 from app.application.common.tipos import ENTERO32_MAX, Entero32
 from app.application.reportes.schemas import ReporteCreate, ReporteEstadoUpdate, ReporteOut
@@ -55,9 +54,15 @@ _TIPOS_DE_ARCHIVO = {
 )
 async def download_archivo(id_reporte: Entero32, db: DbSession):
     """Descarga el archivo del reporte forzando el nombre (Content-Disposition: attachment)."""
-    path, filename = await ReporteService(db).get_archivo_path(id_reporte)
-    media_type, _ = mimetypes.guess_type(filename)
-    return FileResponse(path, media_type=media_type or "application/octet-stream", filename=filename)
+    archivo = await ReporteService(db).get_archivo(id_reporte)
+    if archivo.ruta_en_disco:
+        return FileResponse(archivo.ruta_en_disco, media_type=archivo.tipo, filename=archivo.nombre)
+    nombre_ascii = archivo.nombre.encode("ascii", "ignore").decode() or "reporte"
+    return Response(
+        content=archivo.contenido,
+        media_type=archivo.tipo,
+        headers={"Content-Disposition": f'attachment; filename="{nombre_ascii}"'},
+    )
 
 
 @router.patch("/{id_reporte}/estado", response_model=ReporteOut, dependencies=[require_roles("admin")])

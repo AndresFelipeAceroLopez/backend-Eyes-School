@@ -1,4 +1,4 @@
--- Restaura en QA (qaeyesschool) lo que alteró la corrida de schemathesis del 13/11/2026.
+-- Restaura en QA lo que alteró la corrida de schemathesis del 13/11/2026.
 --
 -- QUÉ PASÓ: la repetición de schemathesis (contrato, BC-07) se lanzó con --include-method GET y
 -- un --include-path-regex. schemathesis los combina con OR, no con AND, así que también probó 11
@@ -8,13 +8,18 @@
 --   · especializaciones 1, 3, 6 y 10 desactivadas (PUT no admite `activo`);
 --   · novedades 1, 2, 5 y 9 borradas (DELETE es físico; el API no fija id ni estos estados).
 --
--- Se corre UNA vez contra qaeyesschool (por ejemplo desde la consola SSH de apieyeschool-q o con
--- psql y la URL externa leída con Read-Host). Es idempotente y se niega a correr en otra base.
+-- Se corre UNA vez contra la base de QA, con `python -m scripts.qa.restaurar_qa --base <nombre>`
+-- desde la consola SSH de apieyeschool-q. Es idempotente y se niega a correr en otra base.
 
+-- La base de QA (qaeyesschool) se declara antes de correr esto. El 14/11 se corrió primero en
+-- la consola de producción (eyesschool_wru2) por error y este guardia lo detuvo:
+--     SET eyes.base_qa = '<nombre>';
+-- scripts/qa/restaurar_qa.py lo hace solo, después de comprobar que corre en apieyeschool-q.
 DO $$
 BEGIN
-    IF current_database() <> 'qaeyesschool' THEN
-        RAISE EXCEPTION 'Esta restauración es solo para qaeyesschool (base actual: %)', current_database();
+    IF current_database() IS DISTINCT FROM current_setting('eyes.base_qa', true) THEN
+        RAISE EXCEPTION 'Esta restauración es solo para la base de QA declarada en eyes.base_qa (actual: %, declarada: %)',
+            current_database(), current_setting('eyes.base_qa', true);
     END IF;
 END $$;
 
