@@ -1,6 +1,6 @@
-from datetime import date
+from datetime import date, datetime
 
-from sqlalchemy import Boolean, Date, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, LargeBinary, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infrastructure.models.base import Base
@@ -38,6 +38,26 @@ class ReporteModel(Base):
     archivo_generado: Mapped[str | None] = mapped_column("archivoGenerado", Text)
 
     administrador: Mapped["AdministradorModel"] = relationship(back_populates="reportes")
+
+
+class ReporteArchivoModel(Base):
+    """N-23: el contenido de los archivos de reporte, guardado en la base.
+
+    Antes se escribían en `static/reportes` del App Service, que Oryx recrea en cada despliegue:
+    todo archivo subido se perdía en el siguiente. La clave es la misma ruta que la API devuelve
+    al subir (`/static/reportes/<uuid>.<ext>`), así el contrato con la web no cambia.
+    """
+
+    __tablename__ = "reporte_archivos"
+    __table_args__ = {"schema": "public"}
+
+    ruta: Mapped[str] = mapped_column("ruta", Text, primary_key=True)
+    contenido: Mapped[bytes] = mapped_column("contenido", LargeBinary, nullable=False)
+    tipo: Mapped[str] = mapped_column("tipo", String(120), nullable=False)
+    tamano: Mapped[int] = mapped_column("tamano", Integer, nullable=False)
+    creado: Mapped[datetime] = mapped_column(
+        "creado", DateTime, nullable=False, server_default=func.now()
+    )
 
 
 from app.infrastructure.models.actores import AdministradorModel, EstudianteModel  # noqa: E402

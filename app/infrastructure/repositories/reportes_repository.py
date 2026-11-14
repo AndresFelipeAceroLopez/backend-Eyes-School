@@ -1,7 +1,11 @@
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.infrastructure.models.reportes import EstudianteIPSModel, ReporteModel
+from app.infrastructure.models.reportes import (
+    EstudianteIPSModel,
+    ReporteArchivoModel,
+    ReporteModel,
+)
 from app.infrastructure.repositories.base_repository import BaseRepository
 
 
@@ -17,6 +21,25 @@ class ReporteRepository(BaseRepository[ReporteModel]):
             .limit(limit)
         )
         return list(result.scalars().all())
+
+
+class ReporteArchivoRepository:
+    """Contenido de los archivos de reporte (N-23). Se busca por la ruta que devuelve la API."""
+
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def guardar(self, ruta: str, contenido: bytes, tipo: str) -> None:
+        self.session.add(
+            ReporteArchivoModel(ruta=ruta, contenido=contenido, tipo=tipo, tamano=len(contenido))
+        )
+        await self.session.flush()
+
+    async def obtener(self, ruta: str) -> ReporteArchivoModel | None:
+        return await self.session.get(ReporteArchivoModel, ruta)
+
+    async def eliminar(self, ruta: str) -> None:
+        await self.session.execute(delete(ReporteArchivoModel).where(ReporteArchivoModel.ruta == ruta))
 
 
 class EstudianteIPSRepository(BaseRepository[EstudianteIPSModel]):
